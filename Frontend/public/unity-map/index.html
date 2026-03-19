@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <title>Mapbox + Unity (3D Buildings)</title>
+    
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #fff; }
+        
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        #unity-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 500px; height: 400px;
+            z-index: 10;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none; 
+            transition: opacity 0.2s ease-in-out; 
+            transform: translate(-50%, calc(-100% - 40px));
+            overflow: hidden;
+            background: transparent; 
+        }
+        
+        #unity-container.active {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        #unity-canvas {
+            width: 100% !important;
+            height: 100% !important;
+            pointer-events: auto !important;
+            outline: none !important;
+            border: none !important;
+            box-shadow: none !important; 
+        }
+        
+        #close-btn {
+            position: absolute; top: 10px; right: 10px; width: 30px; height: 30px;
+            background: rgba(255,255,255,0.9); border: none; border-radius: 50%;
+            cursor: pointer; z-index: 200; font-size: 16px; font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        #close-btn:hover { background: #fff; transform: scale(1.1); }
+
+        #unity-loading-bar {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            display: block; 
+            z-index: 100; background: white; padding: 20px; border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        #unity-progress-bar-empty { width: 140px; height: 18px; background: #ccc; margin-top: 10px; }
+        #unity-progress-bar-full { width: 0%; height: 100%; background: #4CAF50; }
+
+        .custom-marker {
+            width: 60px; height: 60px;
+            position: relative;
+            cursor: pointer;
+            transition: z-index 0.3s;
+            z-index: 1; 
+        }
+        .custom-marker:hover { z-index: 100; }
+        
+        .custom-marker img {
+            position: absolute;
+            width: 45px; height: 45px;
+            object-fit: cover;
+            border: 2px solid white;
+            border-radius: 4px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .custom-marker img:nth-child(1) { top: 8px; left: 8px; transform: rotate(-12deg); z-index: 1; }
+        .custom-marker img:nth-child(2) { top: 8px; left: 8px; transform: rotate(3deg); z-index: 2; }
+        .custom-marker img:nth-child(3) { top: 8px; left: 8px; transform: rotate(15deg); z-index: 3; }
+
+        .custom-marker:hover img:nth-child(1) { transform: translate(-30px, -10px) rotate(-25deg) scale(1.5); z-index: 4; }
+        .custom-marker:hover img:nth-child(2) { transform: translate(0px, -25px) rotate(0deg) scale(1.5); z-index: 5; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .custom-marker:hover img:nth-child(3) { transform: translate(30px, -10px) rotate(25deg) scale(1.5); z-index: 6; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div id="unity-container">
+        <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+        <button id="close-btn" onclick="closeUnity()">✕</button>
+    </div>
+    
+    <div id="unity-loading-bar">
+        <div>Unity Loading...</div>
+        <div id="unity-progress-bar-empty">
+            <div id="unity-progress-bar-full"></div>
+        </div>
+    </div>
+
+    <script>
+      var myUnityInstance = null;
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var activeMarkerLngLat = null;
+      var map = null;
+
+      var buildUrl = "Build";
+      var config = {
+        dataUrl: buildUrl + "/webgl.data",
+        frameworkUrl: buildUrl + "/webgl.framework.js",
+        codeUrl: buildUrl + "/webgl.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "MapBoxweb",
+        productVersion: "0.1.0",
+        matchWebGLToCanvasSize: false,
+        devicePixelRatio: 1,
+      };
+
+      var script = document.createElement("script");
+      script.src = buildUrl + "/webgl.loader.js";
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+        }).then((unityInstance) => {
+          myUnityInstance = unityInstance;
+          loadingBar.style.display = "none";
+        }).catch((message) => {
+          console.error("Unity 로딩 실패:", message);
+        });
+      };
+      document.body.appendChild(script);
+
+      mapboxgl.accessToken = "***SCRUBBED_MAPBOX_TOKEN***";
+      
+      // ★ 1. 지도가 로드될 때부터 입체감이 보이도록 줌과 기울기를 조절했습니다 ★
+      map = new mapboxgl.Map({
+          container: "map",
+          style: "mapbox://styles/mapbox/streets-v12",
+          center: [126.9769, 37.5796],
+          zoom: 15,          // 3D 건물이 보이도록 줌을 좀 더 당겼습니다 (기존 12 -> 15)
+          pitch: 55,         // 카메라를 55도 각도로 눕혀서 입체감을 줍니다
+          bearing: -17.6,    // 지도를 살짝 회전시켜서 더 예쁘게 보이게 합니다
+          preserveDrawingBuffer: true 
+      });
+
+      // ★ 2. 맵 스타일이 로드될 때 3D 건물 레이어를 강제로 끼워넣는 코드입니다 ★
+      map.on('style.load', () => {
+          const layers = map.getStyle().layers;
+          // 건물이 글자(도로명 등)를 가리지 않게 하려고 라벨 레이어를 찾습니다.
+          const labelLayerId = layers.find(
+              (layer) => layer.type === 'symbol' && layer.layout['text-field']
+          ).id;
+
+          map.addLayer(
+              {
+                  'id': 'add-3d-buildings',
+                  'source': 'composite',
+                  'source-layer': 'building',
+                  'filter': ['==', 'extrude', 'true'],
+                  'type': 'fill-extrusion',
+                  'minzoom': 15,
+                  'paint': {
+                      'fill-extrusion-color': '#e0e0e0', // 3D 건물 색상 (밝은 회색)
+                      'fill-extrusion-height': [
+                          'interpolate', ['linear'], ['zoom'],
+                          15, 0, 15.05, ['get', 'height']
+                      ],
+                      'fill-extrusion-base': [
+                          'interpolate', ['linear'], ['zoom'],
+                          15, 0, 15.05, ['get', 'min_height']
+                      ],
+                      'fill-extrusion-opacity': 0.8 // 건물 투명도 (0.8이면 살짝 비침)
+                  }
+              },
+              labelLayerId
+          );
+      });
+
+      let lastCaptureTime = 0;
+      const captureInterval = 50; 
+
+      map.on('move', () => {
+          updateUnityPosition();
+          if (container.classList.contains('active')) {
+              const now = Date.now();
+              if (now - lastCaptureTime > captureInterval) {
+                  lastCaptureTime = now;
+                  captureAndSendBackground();
+              }
+          }
+      });
+      
+      map.on('zoom', () => {
+          updateUnityPosition();
+          if (container.classList.contains('active')) {
+              const now = Date.now();
+              if (now - lastCaptureTime > captureInterval) {
+                  lastCaptureTime = now;
+                  captureAndSendBackground();
+              }
+          }
+      });
+      
+      map.on('moveend', () => {
+          if (container.classList.contains('active')) {
+              captureAndSendBackground();
+          }
+      });
+      
+      map.on('click', (e) => {
+          const features = map.queryRenderedFeatures(e.point);
+          if (features.length === 0 && container.classList.contains('active')) {
+              closeUnity();
+          }
+      });
+
+      map.on('load', () => {
+          addMarker("gyeongbokgung", 126.9769, 37.5796, [
+              "https://picsum.photos/seed/gyeongbok1/100/100",
+              "https://picsum.photos/seed/gyeongbok2/100/100",
+              "https://picsum.photos/seed/gyeongbok3/100/100"
+          ]);
+          addMarker("test", 126.98, 37.58, [
+              "https://picsum.photos/seed/test1/100/100",
+              "https://picsum.photos/seed/test2/100/100",
+              "https://picsum.photos/seed/test3/100/100"
+          ]);
+      });
+
+      function addMarker(id, lng, lat, photoUrls) {
+          const el = document.createElement('div');
+          el.className = 'custom-marker';
+
+          photoUrls.forEach((url) => {
+              const img = document.createElement('img');
+              img.src = url;
+              el.appendChild(img);
+          });
+
+          el.addEventListener('click', (e) => {
+              e.stopPropagation();
+              showUnity(id, lng, lat);
+          });
+
+          new mapboxgl.Marker(el)
+              .setLngLat([lng, lat])
+              .addTo(map);
+      }
+
+      function updateUnityPosition() {
+          if (!activeMarkerLngLat || !map) return;
+          var pos = map.project(activeMarkerLngLat);
+          container.style.left = pos.x + "px";
+          container.style.top = pos.y + "px";
+      }
+
+      function showUnity(id, lng, lat) {
+          if (!myUnityInstance) return;
+          
+          activeMarkerLngLat = [lng, lat];
+          updateUnityPosition();
+          
+          setTimeout(() => {
+              captureAndSendBackground();
+              container.classList.add('active'); 
+              setTimeout(() => {
+                  myUnityInstance.SendMessage('MapManager', 'OpenCarousel', id);
+              }, 150); 
+          }, 50);
+      }
+
+      function closeUnity() {
+          container.classList.remove('active'); 
+          activeMarkerLngLat = null;
+          if(myUnityInstance) {
+              myUnityInstance.SendMessage('MapManager', 'CloseCarousel');
+          }
+      }
+
+      function captureAndSendBackground() {
+          try {
+              const mapCanvas = map.getCanvas();
+              const containerRect = container.getBoundingClientRect(); 
+              const mapRect = mapCanvas.getBoundingClientRect();       
+
+              const width = containerRect.width;
+              const height = containerRect.height;
+              
+              const dpr = window.devicePixelRatio || 1;
+              const cropX = (containerRect.left - mapRect.left) * dpr;
+              const cropY = (containerRect.top - mapRect.top) * dpr;
+              
+              const cropWidth = width * dpr;  
+              const cropHeight = height * dpr;
+              
+              const tempCanvas = document.createElement('canvas');
+              tempCanvas.width = cropWidth;   
+              tempCanvas.height = cropHeight; 
+              const ctx = tempCanvas.getContext('2d');
+              
+              ctx.drawImage(
+                  mapCanvas,
+                  cropX, cropY, cropWidth, cropHeight, 
+                  0, 0, cropWidth, cropHeight                  
+              );
+              tempCanvas.toBlob((blob) => {
+                  const blobUrl = URL.createObjectURL(blob);
+                  myUnityInstance.SendMessage('BackgroundReceiver', 'ReceiveBackgroundUrl', blobUrl);
+              }, 'image/png'); 
+              
+          } catch(e) {
+              console.error("배경 캡처 실패:", e);
+          }
+      }
+    </script>
+</body>
+</html>
