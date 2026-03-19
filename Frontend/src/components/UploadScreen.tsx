@@ -11,7 +11,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { usePhotoContext } from '../context/PhotoContext';
 import { Photo } from '../type';
 import { supabase } from '../lib/supabaseClient';
-
+import exifr from 'exifr';
 interface UploadScreenProps {
   onClose: () => void;
 }
@@ -25,14 +25,27 @@ export function UploadScreen({ onClose }: UploadScreenProps) {
   // Use a string for folder name to allow custom input, though we can suggest defaults
   const [folderName, setFolderName] = useState<string>('places');
   const [isUploading, setIsUploading] = useState(false);
+  const [exifData, setExifData] = useState<{ lat?: number, lng?: number, takeTime?: string }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrl(objectUrl);
+      
+      try {
+        const parsed = await exifr.parse(file);
+        setExifData({
+          lat: parsed?.latitude,
+          lng: parsed?.longitude,
+          takeTime: parsed?.DateTimeOriginal ? new Date(parsed.DateTimeOriginal).toISOString() : undefined
+        });
+      } catch (err) {
+        console.warn("EXIF 정보를 읽을 수 없습니다.", err);
+        setExifData({});
+      }
     }
   };
 
@@ -92,7 +105,7 @@ export function UploadScreen({ onClose }: UploadScreenProps) {
         url: publicUrl,
         title: description,
         location: "Unknown",
-        date: new Date().toISOString(),
+        date: exifData.takeTime || new Date().toISOString(),
         tags: [],
         category: folderName.trim(), // UI/DB에는 사용자가 입력한 원래 이름(한글 등) 사용
         isFavorite: false
@@ -103,8 +116,8 @@ export function UploadScreen({ onClose }: UploadScreenProps) {
         folder: folderName.trim(), // DB 저장은 원래 이름으로
         description: description,
         tags: tags,
-        lat: 37.5665, // 현재는 서울/한국의 기본 위도 또는 0
-        lng: 126.9780
+        lat: exifData.lat || 37.5665, // EXIF 좌표가 있으면 사용, 없으면 서울
+        lng: exifData.lng || 126.9780
       });
 
       setTimeout(onClose, 1000);
