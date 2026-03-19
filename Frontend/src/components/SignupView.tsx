@@ -21,7 +21,7 @@ export function SignupView({ onNavigate }: SignupViewProps) {
 
     try {
       // 1. Supabase 인증 회원가입
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -32,26 +32,6 @@ export function SignupView({ onNavigate }: SignupViewProps) {
       });
 
       if (authError) throw authError;
-
-      // 2. public.users 테이블에 추가
-      if (authData.user && authData.user.email) {
-        const { error: dbError } = await supabase
-          .from('users') // public.users (소문자)
-          .insert({
-            email: authData.user.email,
-            password: 'managed_by_supabase',
-            created_time: new Date().toISOString(), // TIMESTAMPTZ 일치
-            last_login: new Date().toISOString() // 초기 로그인 시간
-          });
-
-        if (dbError) {
-          console.error('Failed to create user record in public.users:', dbError);
-          alert(`Database Insert Failed: ${dbError.message}. Please report this.`);
-          // We might want to stop here or throw, depending on desired UX.
-          // For debugging, showing the alert is key.
-          throw dbError; // Prevent success message
-        }
-      }
 
       alert('Check your email for the confirmation link!');
       onNavigate('login');

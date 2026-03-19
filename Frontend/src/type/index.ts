@@ -21,7 +21,7 @@ export type Category = string;
 // 데이터베이스 인터페이스 (ER 다이어그램 기반 - 최적화된 스키마)
 
 export interface DBUser {
-    user_id: number; // BIGINT (기본키)
+    user_id: string; // UUID (기본키)
     email: string;
     password?: string;
     created_time?: string; // TIMESTAMPTZ (시간대 포함 타임스탬프)
@@ -30,7 +30,7 @@ export interface DBUser {
 
 export interface DBCategory {
     category_id: number; // BIGINT
-    user_id?: number | null; // users 테이블 외래키
+    user_id?: string | null; // users 테이블 외래키
     name: string;
     icon_url?: string | null;
     sort?: number | null;
@@ -39,7 +39,7 @@ export interface DBCategory {
 
 export interface DBLocationCluster {
     cluster_id: number; // BIGINT
-    user_id?: number | null; // FK to users
+    user_id?: string | null; // FK to users
     center_lat?: number; // DECIMAL
     center_lon?: number; // DECIMAL
     radius_meters?: number;
@@ -64,7 +64,7 @@ export interface DBMediaDescription {
 
 export interface DBMedia {
     media_id: number; // BIGINT
-    user_id?: number | null; // FK to users
+    user_id?: string | null; // FK to users
     category_id?: number | null; // FK to category
     location_id?: number | null; // FK to location
     media_type?: string; // VARCHAR(50)
@@ -86,6 +86,10 @@ export interface PhotoContextType {
     categories: string[];
     addPhoto: (photo: Photo, file: File, meta: { folder: string, description: string, tags: string, lat?: number, lng?: number }) => Promise<void>;
     toggleFavorite: (id: string) => void;
+    toggleFavoriteDB: (userId: string, mediaId: number, isCurrentlyFavorite: boolean) => Promise<void>;
+    checkIsFavorite: (userId: string, mediaId: number) => Promise<boolean>;
     addCategory: (category: string) => void;
+    updateCategory: (oldName: string, newName: string) => Promise<boolean>;
+    deleteCategory: (categoryName: string) => Promise<boolean>;
     deletePhoto: (id: string) => void;
 }
