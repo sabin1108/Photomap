@@ -1,4 +1,4 @@
-import { Compass, Map, Heart, Calendar, Settings, Image as ImageIcon, Menu, LogOut } from 'lucide-react';
+import { Compass, Map, Heart, Calendar, Settings, Image as ImageIcon, Menu, LogOut, Network } from 'lucide-react';
 import { cn } from './ui/utils';
 import { Button } from './ui/button';
 import { useState } from 'react';
@@ -16,6 +16,7 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
   const categories = [
     { id: 'all', icon: Compass, label: 'Explore' },
     { id: 'map', icon: Map, label: 'Map View' },
+    { id: 'node', icon: Network, label: 'Spatial Node' },
     { id: 'favorites', icon: Heart, label: 'Favorites' },
     { id: 'timeline', icon: Calendar, label: 'Timeline' },
     { id: 'albums', icon: ImageIcon, label: 'Albums' },

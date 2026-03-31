@@ -84,12 +84,18 @@ export interface DBMedia {
 export interface PhotoContextType {
     photos: Photo[];
     categories: string[];
-    addPhoto: (photo: Photo, file: File, meta: { folder: string, description: string, tags: string, lat?: number, lng?: number }) => Promise<void>;
+    addPhoto: (photo: Photo, file: File | null, meta: { title?: string, folder: string, description: string, tags: string, lat?: number, lng?: number, address?: string }) => Promise<void>;
+    addPhotos: (items: { photo: Photo, meta: { title?: string, folder: string, description: string, tags: string, lat?: number, lng?: number, address?: string } }[]) => Promise<void>;
     toggleFavorite: (id: string) => void;
     toggleFavoriteDB: (userId: string, mediaId: number, isCurrentlyFavorite: boolean) => Promise<void>;
     checkIsFavorite: (userId: string, mediaId: number) => Promise<boolean>;
     addCategory: (category: string) => void;
     updateCategory: (oldName: string, newName: string) => Promise<boolean>;
+    updatePhotoCategory: (id: string, newCategoryName: string) => Promise<boolean>;
+    updatePhotoDescription: (id: string, newDescription: string, newTitle?: string) => Promise<boolean>;
+    batchDeletePhotos: (ids: string[]) => Promise<boolean>;
+    batchMovePhotos: (ids: string[], categoryName: string) => Promise<boolean>;
+    batchDeleteCategories: (names: string[]) => Promise<boolean>;
     deleteCategory: (categoryName: string) => Promise<boolean>;
     deletePhoto: (id: string) => void;
 }

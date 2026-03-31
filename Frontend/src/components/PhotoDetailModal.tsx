@@ -1,7 +1,10 @@
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Photo } from "../type";
 import { X, MapPin, Calendar, Folder, AlignLeft, Heart, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "./ui/button";
+import { usePhotoContext } from "../context/PhotoContext";
 
 interface PhotoDetailModalProps {
     photo: Photo | null;
@@ -11,12 +14,38 @@ interface PhotoDetailModalProps {
 }
 
 export function PhotoDetailModal({ photo, onClose, onToggleFavorite, onDelete }: PhotoDetailModalProps) {
+    const { categories, updatePhotoCategory, updatePhotoDescription } = usePhotoContext();
+    const [isEditingCategory, setIsEditingCategory] = useState(false);
+    const [isEditingDesc, setIsEditingDesc] = useState(false);
+    const [tempTitle, setTempTitle] = useState(photo?.title || "");
+    const [tempDesc, setTempDesc] = useState(photo?.description || "");
+
+    useEffect(() => {
+        if (photo) {
+            setTempTitle(photo.title || "");
+            setTempDesc(photo.description || "");
+        }
+    }, [photo]);
+
     // photo가 null이면 모달을 닫은 상태로 간주
     if (!photo) return null;
-    return (
+
+    // 앨범 변경 핸들러
+    const handleCategoryChange = async (newCat: string) => {
+        const success = await updatePhotoCategory(photo.id, newCat);
+        if (success) setIsEditingCategory(false);
+    };
+
+    // 설명/제목 변경 핸들러
+    const handleDescSave = async () => {
+        const success = await updatePhotoDescription(photo.id, tempDesc, tempTitle);
+        if (success) setIsEditingDesc(false);
+    };
+
+    return createPortal(
         <AnimatePresence>
             <motion.div
-                className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
+                className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -45,7 +74,6 @@ export function PhotoDetailModal({ photo, onClose, onToggleFavorite, onDelete }:
                             alt={photo.title}
                             className="w-full h-full object-contain"
                         />
-                        {/* 데스크탑 닫기 버튼 (이미지 위 좌측상단에 띄우거나 패널 우측상단에 띄움. 여기선 패널 쪽으로 옮김) */}
                     </div>
 
                     {/* 우측: 상세 정보 패널 영역 */}
@@ -83,9 +111,31 @@ export function PhotoDetailModal({ photo, onClose, onToggleFavorite, onDelete }:
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">Album</p>
-                                    <div className="flex justify-between items-center">
-                                        <p className="text-stone-700 font-medium">{photo.category || "Uncategorized"}</p>
-                                        <button className="text-xs text-[#E09F87] font-medium hover:underline">Move</button>
+                                    <div className="flex justify-between items-center h-8">
+                                        {isEditingCategory ? (
+                                            <select 
+                                                className="text-stone-700 bg-white border border-stone-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#E09F87]"
+                                                value={photo.category || "Uncategorized"}
+                                                onChange={(e) => handleCategoryChange(e.target.value)}
+                                                autoFocus
+                                                onBlur={() => setIsEditingCategory(false)}
+                                            >
+                                                <option value="Uncategorized">Uncategorized</option>
+                                                {categories.map(cat => (
+                                                    <option key={cat} value={cat}>{cat}</option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <>
+                                                <p className="text-stone-700 font-medium">{photo.category || "Uncategorized"}</p>
+                                                <button 
+                                                    onClick={() => setIsEditingCategory(true)}
+                                                    className="text-xs text-[#E09F87] font-medium hover:underline"
+                                                >
+                                                    Move
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -98,11 +148,6 @@ export function PhotoDetailModal({ photo, onClose, onToggleFavorite, onDelete }:
                                 <div>
                                     <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">Location</p>
                                     <p className="text-stone-700 font-medium leading-relaxed">{photo.location || "Unknown Location"}</p>
-                                    {photo.lat && photo.lng && (
-                                        <p className="text-stone-400 text-xs mt-1 font-mono">
-                                            {photo.lat.toFixed(4)}, {photo.lng.toFixed(4)}
-                                        </p>
-                                    )}
                                 </div>
                             </div>
 
@@ -112,11 +157,51 @@ export function PhotoDetailModal({ photo, onClose, onToggleFavorite, onDelete }:
                                     <AlignLeft size={22} className="stroke-[1.5]" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">Description</p>
-                                    {photo.description ? (
-                                        <p className="text-stone-600 text-sm leading-relaxed">{photo.description}</p>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">Description</p>
+                                        {!isEditingDesc && (
+                                            <button 
+                                                onClick={() => setIsEditingDesc(true)}
+                                                className="text-xs text-[#E09F87] font-medium hover:underline"
+                                            >
+                                                {photo.description ? "Edit" : "Add"}
+                                            </button>
+                                        )}
+                                    </div>
+                                    {isEditingDesc ? (
+                                        <div className="space-y-2 w-full">
+                                            <input 
+                                                className="w-full text-stone-800 font-medium text-sm p-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#E09F87] bg-white"
+                                                value={tempTitle}
+                                                onChange={(e) => setTempTitle(e.target.value)}
+                                                placeholder="Photo Title"
+                                                autoFocus
+                                            />
+                                            <textarea 
+                                                className="w-full text-stone-600 text-sm leading-relaxed p-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#E09F87] bg-white h-24 resize-none"
+                                                value={tempDesc}
+                                                onChange={(e) => setTempDesc(e.target.value)}
+                                                placeholder="Add a description..."
+                                            />
+                                            <div className="flex gap-2 justify-end">
+                                                <button 
+                                                    onClick={() => setIsEditingDesc(false)}
+                                                    className="text-xs text-stone-400 hover:text-stone-600"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button 
+                                                    onClick={handleDescSave}
+                                                    className="text-xs text-white bg-[#E09F87] px-2 py-1 rounded"
+                                                >
+                                                    Save
+                                                </button>
+                                            </div>
+                                        </div>
                                     ) : (
-                                        <button className="text-[#E09F87] text-sm font-medium hover:underline">Add a note...</button>
+                                        <p className="text-stone-600 text-sm leading-relaxed">
+                                            {photo.description || "Add a note..."}
+                                        </p>
                                     )}
                                 </div>
                             </div>
@@ -152,6 +237,7 @@ export function PhotoDetailModal({ photo, onClose, onToggleFavorite, onDelete }:
                     </div>
                 </motion.div>
             </motion.div>
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
-}
+}

@@ -8,6 +8,7 @@ import { FavoritesView } from './components/FavoritesView';
 import { AlbumsView } from './components/AlbumsView';
 import { LoginView } from './components/LoginView';
 import { SignupView } from './components/SignupView';
+import { NodeView } from './components/node';
 import { useState, useMemo } from 'react';
 import { Toaster } from './components/ui/sonner';
 import { Plus } from 'lucide-react';
@@ -62,6 +63,10 @@ export default function App() {
         {activeCategory === 'map' ? (
           <div className="w-full h-full relative z-20">
             <Map2DView onNavigate={setActiveCategory} />
+          </div>
+        ) : activeCategory === 'node' ? (
+          <div className="w-full h-full relative z-20">
+            <NodeView />
           </div>
         ) : activeCategory === 'timeline' ? (
           <div className="w-full h-full relative z-20">
