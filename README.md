@@ -72,7 +72,7 @@ PhotoMap은 수많은 사진 데이터를 단순히 저장하는 것을 넘어, 
 
 ### 3. MapBox를 이용한 unity 연결 3D 지도
 [![jido-jigubonsajin.png](https://i.postimg.cc/J7fjSWsy/jido-jigubonsajin.png)](https://postimg.cc/grKw6Qqd)
-[![jido.gif](https://i.postimg.cc/TY50Nt1B/jido.gif)](https://postimg.cc/RN9wNQcT)
+<img width="400" height="338" alt="지도" src="https://github.com/user-attachments/assets/4f0dfb81-1f2a-4f0d-8d3c-a5fd4cd8e7ec" />
 
 -  Unity WebGL 기반을 이용한 사진 확대 및 호버 시스템
 -  3D 지도인 MapBox api를 통해 지도를 시각화
