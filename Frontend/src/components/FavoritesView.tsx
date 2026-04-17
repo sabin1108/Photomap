@@ -11,10 +11,14 @@ import {
 } from "./ui/dialog";
 
 import { Photo } from '../type';
-import { usePhotoContext } from '../context/PhotoContext';
+import { usePhotoStore } from '../store/usePhotoStore';
+import { useShallow } from 'zustand/react/shallow';
 
 export function FavoritesView() {
-    const { photos, toggleFavorite, categories } = usePhotoContext();
+    const { photos, categories } = usePhotoStore(
+        useShallow(state => ({ photos: state.photos, categories: state.categories }))
+    );
+    const toggleFavorite = usePhotoStore(state => state.toggleFavorite);
     const [activeTab, setActiveTab] = useState('all');
     const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 

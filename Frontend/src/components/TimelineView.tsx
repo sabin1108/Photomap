@@ -1,11 +1,10 @@
-import { useRef, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Calendar, MapPin, ArrowRight, Filter } from 'lucide-react';
 import { cn } from './ui/utils';
 import { Button } from './ui/button';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
-import { usePhotoContext } from '../context/PhotoContext';
-import { Photo } from '../type';
+import { usePhotoStore } from '../store/usePhotoStore';
 
 interface TimelineEvent {
   id: string;
@@ -19,41 +18,33 @@ interface TimelineEvent {
 }
 
 export function TimelineView() {
-  const { photos } = usePhotoContext();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Group photos into timeline events dynamically
-  const timelineData: TimelineEvent[] = useMemo(() => {
-    // 1. Sort photos by date (assuming date string is parseable or just relying on order)
-    // For simplicity, we'll just map each photo to an event for now, 
-    // OR we can group them. Let's group by location + date approx to mimic "events".
-    // A simple approach is to treat each photo as an event or group nearby ones.
-    // Given the data structure, let's map each Photo to an event for now since they have titles/descriptions.
+  const photos = usePhotoStore(state => state.photos);
 
+  // 필요한 필드만 추출 — photos가 바뀔 때만 재계산 (useMemo)
+  const timelineData: TimelineEvent[] = useMemo(() => {
     return photos.map(photo => {
       const dateDate = new Date(photo.date);
       const year = isNaN(dateDate.getFullYear()) ? new Date().getFullYear() : dateDate.getFullYear();
       const month = isNaN(dateDate.getMonth()) ? 'Recent' : dateDate.toLocaleString('default', { month: 'long' });
-
       return {
         id: photo.id,
-        date: photo.date, // "May 2024"
-        year: year,
-        month: month,
+        date: photo.date,
+        year,
+        month,
         title: photo.title,
         location: photo.location,
         description: photo.description || '',
-        images: [photo.url] // Currently 1 photo per "Photo" object, but UI supports multiple. 
+        images: [photo.url],
       };
     });
   }, [photos]);
 
-  // Group by year for display
   const years = Array.from(new Set(timelineData.map(d => d.year))).sort((a, b) => b - a);
 
   return (
     <div className="w-full h-full bg-[#F5F2EB] flex flex-col relative overflow-hidden">
-      {/* Header */}
       <div className="flex-none px-6 pt-16 pb-6 md:px-10 md:py-8 flex items-end justify-between z-10">
         <div>
           <h1 className="text-3xl md:text-4xl font-light text-stone-800 tracking-tight">
@@ -75,7 +66,6 @@ export function TimelineView() {
         </div>
       </div>
 
-      {/* Timeline Container */}
       <div
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto px-4 md:px-10 pb-20 scrollbar-hide"

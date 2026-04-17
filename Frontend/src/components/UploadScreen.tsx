@@ -8,18 +8,20 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
-import { useState, useRef, ChangeEvent } from 'react';
+import React, { useState, useRef, ChangeEvent } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
-import { usePhotoContext } from '../context/PhotoContext';
+import { usePhotoStore } from '../store/usePhotoStore';
 import { Photo } from '../type';
 import { supabase } from '../lib/supabaseClient';
 import exifr from 'exifr';
 interface UploadScreenProps {
   onClose: () => void;
+  initialLocation?: string;
+  initialCategory?: string;
 }
 
-function LocationSearch({
+const LocationSearch = React.memo(function LocationSearch({
   value,
   onChangeText,
   onSelectPlace,
@@ -32,12 +34,21 @@ function LocationSearch({
   placeholder?: string;
   className?: string;
 }) {
+  const [internalValue, setInternalValue] = useState(value);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Sync internal state if parent forcibly updates it (e.g. from marker select)
+  // We use a ref to prevent infinite loops if the parent updates to the exact same value.
+  const prevValueRef = useRef(value);
+  if (value !== prevValueRef.current) {
+    prevValueRef.current = value;
+    setInternalValue(value);
+  }
+
   const fetchSuggestions = (q: string) => {
-    onChangeText(q);
+    setInternalValue(q); // Only update local state instantly for 60fps typing
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -45,45 +56,47 @@ function LocationSearch({
 
     if (!q || q.length < 2) {
       setSuggestions([]);
+      onChangeText(q); // If cleared, update parent immediately
       return;
     }
 
     timeoutRef.current = setTimeout(async () => {
+      onChangeText(q); // Sync parent only after typing pauses (debounced)
       setIsSearching(true);
-    try {
-      const KAKAO_KEY = import.meta.env.VITE_KAKAO_MAP_API_KEY || import.meta.env.VITE_KAKAO_MAP;
-      const headers = { Authorization: `KakaoAK ${KAKAO_KEY}` };
-      
-      // 1. 키워드 검색 (장소명 위주)
-      const keywordResp = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(q)}&size=5`, { headers });
-      if (!keywordResp.ok) {
-        const errData = await keywordResp.json();
-        toast.error(`카카오 API 인증 오류: ${errData.message || '키 또는 도메인 설정 확인 필요'}`);
-        return;
-      }
-      const keywordData = await keywordResp.json();
-      let results = keywordData.documents || [];
+      try {
+        const KAKAO_KEY = import.meta.env.VITE_KAKAO_MAP_API_KEY || import.meta.env.VITE_KAKAO_MAP;
+        const headers = { Authorization: `KakaoAK ${KAKAO_KEY}` };
 
-      // 2. 키워드 검색 결과가 없으면 상세 주소 검색 시도
-      if (results.length === 0) {
-        const addressResp = await fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(q)}&size=5`, { headers });
-        if (!addressResp.ok) {
-           const errData = await addressResp.json();
-           toast.error(`카카오 API 주소 오류: ${errData.message}`);
-           return;
+        // 1. 키워드 검색 (장소명 위주)
+        const keywordResp = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(q)}&size=5`, { headers });
+        if (!keywordResp.ok) {
+          const errData = await keywordResp.json();
+          toast.error(`카카오 API 인증 오류: ${errData.message || '키 또는 도메인 설정 확인 필요'}`);
+          return;
         }
-        const addressData = await addressResp.json();
-        results = addressData.documents || [];
-      }
+        const keywordData = await keywordResp.json();
+        let results = keywordData.documents || [];
 
-      setSuggestions(results);
-    } catch (err) {
-      console.error("Kakao Geocoding failed", err);
-      toast.error("카카오 지도 API 통신 중 문제가 발생했습니다.");
-    } finally {
-      setIsSearching(false);
-    }
-  }, 400);
+        // 2. 키워드 검색 결과가 없으면 상세 주소 검색 시도
+        if (results.length === 0) {
+          const addressResp = await fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(q)}&size=5`, { headers });
+          if (!addressResp.ok) {
+            const errData = await addressResp.json();
+            toast.error(`카카오 API 주소 오류: ${errData.message}`);
+            return;
+          }
+          const addressData = await addressResp.json();
+          results = addressData.documents || [];
+        }
+
+        setSuggestions(results);
+      } catch (err) {
+        console.error("Kakao Geocoding failed", err);
+        toast.error("카카오 지도 API 통신 중 문제가 발생했습니다.");
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
   };
 
   return (
@@ -93,7 +106,7 @@ function LocationSearch({
         <Input
           placeholder={placeholder || "Search location..."}
           className={cn("pl-10 text-sm bg-white border-stone-200 focus:border-[#E09F87] transition-colors", className)}
-          value={value}
+          value={internalValue}
           onChange={(e) => fetchSuggestions(e.target.value)}
         />
         {isSearching && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 border-2 border-[#E09F87] border-t-transparent rounded-full animate-spin" />}
@@ -123,9 +136,10 @@ function LocationSearch({
       )}
     </div>
   );
-}
+});
+LocationSearch.displayName = "LocationSearch";
 
-function CustomDateTimePicker({
+const CustomDateTimePicker = React.memo(function CustomDateTimePicker({
   value,
   onChange
 }: {
@@ -191,7 +205,7 @@ function CustomDateTimePicker({
       <PopoverTrigger asChild>
         <div className="relative flex items-center group w-full cursor-pointer">
           <CalendarIcon className="absolute left-3 w-4 h-4 text-stone-400 group-hover:text-[#E09F87] transition-colors pointer-events-none z-10" />
-          <div className="h-9 w-full flex items-center pl-9 pr-3 text-sm bg-white border border-stone-200 group-hover:border-[#E09F87] transition-all text-stone-600 rounded-lg shadow-sm">
+          <div className="h-9 w-full flex items-center pl-9 pr-3 text-sm bg-white border border-stone-200 group-hover:border-[#E09F87] transition-colors text-stone-600 rounded-lg shadow-sm">
             {displayString}
           </div>
         </div>
@@ -250,11 +264,10 @@ function CustomDateTimePicker({
       </PopoverContent>
     </Popover>
   );
-}
+});
+CustomDateTimePicker.displayName = "CustomDateTimePicker";
 
-export function UploadScreen({ onClose }: UploadScreenProps) {
-  const { addPhotos, categories } = usePhotoContext();
-  const [selectedFiles, setSelectedFiles] = useState<{
+export type UploadItem = {
     file: File;
     preview: string;
     exif: { lat?: number, lng?: number, takeTime?: string };
@@ -262,24 +275,112 @@ export function UploadScreen({ onClose }: UploadScreenProps) {
     description: string;
     tags: string;
     address: string;
+    customDate?: string;
     customLat?: number;
     customLng?: number;
-    customDate?: string;
     status: 'idle' | 'uploading' | 'done' | 'error';
-  }[]>([]);
-  const [folderName, setFolderName] = useState<string>('places');
+};
+
+const UploadPhotoItem = React.memo(({
+  item,
+  idx,
+  updateFileDetail,
+  updateFileLocation
+}: {
+  item: UploadItem;
+  idx: number;
+  updateFileDetail: (index: number, field: 'title' | 'description' | 'tags' | 'address' | 'customDate', value: string) => void;
+  updateFileLocation: (index: number, address: string, lat: number, lng: number) => void;
+}) => {
+  return (
+    <div className="relative focus-within:z-20 flex flex-col sm:flex-row gap-4 p-4 border border-stone-100 rounded-2xl bg-stone-50 transition-colors focus-within:border-[#E09F87]/50 focus-within:bg-[#E09F87]/5">
+      <div className="w-full sm:w-24 h-48 sm:h-24 shrink-0 rounded-xl overflow-hidden relative shadow-sm">
+        <ImageWithFallback src={item.preview} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+        {item.exif.lat && (
+          <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-md text-[10px] px-2 py-1 rounded-full flex items-center gap-1 shadow-sm font-medium text-stone-700">
+            <MapPin className="w-3 h-3 text-[#E09F87]" /> GPS
+          </div>
+        )}
+      </div>
+      <div className="flex-1 space-y-3">
+        <Input
+          placeholder={`Title for ${item.file.name}`}
+          className="h-9 text-sm bg-white border-stone-200 focus:border-[#E09F87] transition-colors"
+          value={item.title}
+          onChange={(e) => updateFileDetail(idx, 'title', e.target.value)}
+        />
+        <Textarea
+          placeholder={`Description for ${item.file.name}`}
+          className="h-16 text-sm bg-white border-stone-200 focus:border-[#E09F87] resize-none transition-colors"
+          value={item.description}
+          onChange={(e) => updateFileDetail(idx, 'description', e.target.value)}
+        />
+        <Input
+          placeholder="Tags (Comma separated, e.g. @sunset, @bridge)"
+          className="h-9 text-sm bg-white border-stone-200 focus:border-[#E09F87] transition-colors"
+          value={item.tags}
+          onChange={(e) => updateFileDetail(idx, 'tags', e.target.value)}
+        />
+        <CustomDateTimePicker
+          value={item.customDate}
+          onChange={(dateObj) => {
+            if (dateObj) {
+              updateFileDetail(idx, 'customDate', dateObj.toISOString());
+            } else {
+              updateFileDetail(idx, 'customDate', '');
+            }
+          }}
+        />
+        <LocationSearch
+          value={item.address}
+          onChangeText={(text) => updateFileDetail(idx, 'address', text)}
+          placeholder="Search or enter detailed address"
+          className="h-9"
+          onSelectPlace={(address, lat, lng) => updateFileLocation(idx, address, lat, lng)}
+        />
+      </div>
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  return prevProps.item === nextProps.item && prevProps.idx === nextProps.idx;
+});
+UploadPhotoItem.displayName = "UploadPhotoItem";
+
+export function UploadScreen({ onClose, initialLocation, initialCategory }: UploadScreenProps) {
+  const addPhotos = usePhotoStore(state => state.addPhotos);
+  const categories = usePhotoStore(state => state.categories);
+  const [selectedFiles, setSelectedFiles] = useState<UploadItem[]>([]);
+  const [folderName, setFolderName] = useState<string>(initialCategory || 'places');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
 
   const [batchTitle, setBatchTitle] = useState('');
   const [batchDescription, setBatchDescription] = useState('');
-  const [address, setAddress] = useState('');
-  const [isBatchOpen, setIsBatchOpen] = useState(false);
+  const [address, setAddress] = useState(initialLocation || '');
+  const [isBatchOpen, setIsBatchOpen] = useState(!!initialLocation);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
+
+      // 파일 유효성 검사
+      const MAX_SIZE_MB = 20;
+      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/gif'];
+      const oversized = files.filter(f => f.size > MAX_SIZE_MB * 1024 * 1024);
+      const invalidType = files.filter(f => !ALLOWED_TYPES.includes(f.type.toLowerCase()));
+
+      if (invalidType.length > 0) {
+        toast.error(`지원하지 않는 파일 형식입니다: ${invalidType.map(f => f.name).join(', ')}`);
+        e.target.value = '';
+        return;
+      }
+      if (oversized.length > 0) {
+        toast.error(`파일 크기는 ${MAX_SIZE_MB}MB 이하여야 합니다: ${oversized.map(f => f.name).join(', ')}`);
+        e.target.value = '';
+        return;
+      }
+
       const newFiles = await Promise.all(files.map(async (file) => {
         const objectUrl = URL.createObjectURL(file);
         let exif: { lat?: number, lng?: number, takeTime?: string } = {};
@@ -307,6 +408,7 @@ export function UploadScreen({ onClose }: UploadScreenProps) {
       }));
 
       setSelectedFiles(prev => [...prev, ...newFiles]);
+      e.target.value = ''; // 같은 파일 재선택 허용
     }
   };
 
@@ -415,23 +517,26 @@ export function UploadScreen({ onClose }: UploadScreenProps) {
       await addPhotos(uploadItems);
     }
 
-    if (failCount === 0) {
-      setTimeout(onClose, 1000);
-    } else {
-      toast.error(`${failCount}개의 파일 업로드에 실패했습니다.`);
-    }
-
     setIsUploading(false);
+
+    if (failCount === 0) {
+      toast.success(`${uploadItems.length}장의 사진이 업로드되었습니다! 🎉`);
+      setTimeout(onClose, 1200);
+    } else if (uploadItems.length > 0) {
+      toast.warning(`${uploadItems.length}장 업로드 성공, ${failCount}장 실패했습니다.`);
+    } else {
+      toast.error('모든 사진 업로드에 실패했습니다. 네트워크 상태를 확인해 주세요.');
+    }
   };
 
   return (
     <div className="absolute inset-0 z-50 bg-[#F9F8F6] flex flex-col overflow-hidden">
       {/* 헤더 */}
       <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-white/50 backdrop-blur-md sticky top-0 z-10 border-b border-stone-100">
-        <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-stone-100 rounded-full">
+        <Button variant="ghost" size="icon" aria-label="Close" onClick={onClose} className="hover:bg-stone-100 rounded-full">
           <X className="w-6 h-6 text-stone-600" />
         </Button>
-        <span className="font-semibold text-lg text-stone-800">New Memory</span>
+        <span className="font-semibold text-lg text-stone-800 text-balance">New Memory</span>
         <Button
           variant="ghost"
           className="text-terracotta-500 font-medium hover:text-terracotta-600 hover:bg-orange-50 rounded-full px-4"
@@ -493,7 +598,7 @@ export function UploadScreen({ onClose }: UploadScreenProps) {
             <div
               onClick={triggerFileInput}
               className={cn(
-                "aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center transition-all cursor-pointer relative overflow-hidden group",
+                "aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center transition-colors cursor-pointer relative overflow-hidden group",
                 "border-stone-200 hover:border-[#E09F87] hover:text-[#E09F87] text-stone-400 bg-white"
               )}
             >
@@ -568,53 +673,13 @@ export function UploadScreen({ onClose }: UploadScreenProps) {
               </div>
               <div className="space-y-4 pr-1">
                 {selectedFiles.map((item, idx) => (
-                  <div key={idx} className="relative focus-within:z-20 flex flex-col sm:flex-row gap-4 p-4 border border-stone-100 rounded-2xl bg-stone-50 transition-colors focus-within:border-[#E09F87]/50 focus-within:bg-[#E09F87]/5">
-                    <div className="w-full sm:w-24 h-48 sm:h-24 shrink-0 rounded-xl overflow-hidden relative shadow-sm">
-                      <ImageWithFallback src={item.preview} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
-                      {item.exif.lat && (
-                        <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-md text-[10px] px-2 py-1 rounded-full flex items-center gap-1 shadow-sm font-medium text-stone-700">
-                          <MapPin className="w-3 h-3 text-[#E09F87]" /> GPS
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-3">
-                      <Input
-                        placeholder={`Title for ${item.file.name}`}
-                        className="h-9 text-sm bg-white border-stone-200 focus:border-[#E09F87] transition-colors"
-                        value={item.title}
-                        onChange={(e) => updateFileDetail(idx, 'title', e.target.value)}
-                      />
-                      <Textarea
-                        placeholder={`Description for ${item.file.name}`}
-                        className="h-16 text-sm bg-white border-stone-200 focus:border-[#E09F87] resize-none transition-colors"
-                        value={item.description}
-                        onChange={(e) => updateFileDetail(idx, 'description', e.target.value)}
-                      />
-                      <Input
-                        placeholder="Tags (Comma separated, e.g. @sunset, @bridge)"
-                        className="h-9 text-sm bg-white border-stone-200 focus:border-[#E09F87] transition-colors"
-                        value={item.tags}
-                        onChange={(e) => updateFileDetail(idx, 'tags', e.target.value)}
-                      />
-                      <CustomDateTimePicker
-                        value={item.customDate}
-                        onChange={(dateObj) => {
-                          if (dateObj) {
-                            updateFileDetail(idx, 'customDate', dateObj.toISOString());
-                          } else {
-                            updateFileDetail(idx, 'customDate', '');
-                          }
-                        }}
-                      />
-                      <LocationSearch
-                        value={item.address}
-                        onChangeText={(text) => updateFileDetail(idx, 'address', text)}
-                        placeholder="Search or enter detailed address"
-                        className="h-9"
-                        onSelectPlace={(address, lat, lng) => updateFileLocation(idx, address, lat, lng)}
-                      />
-                    </div>
-                  </div>
+                  <UploadPhotoItem
+                    key={idx}
+                    item={item}
+                    idx={idx}
+                    updateFileDetail={updateFileDetail}
+                    updateFileLocation={updateFileLocation}
+                  />
                 ))}
               </div>
             </section>
@@ -666,8 +731,6 @@ export function UploadScreen({ onClose }: UploadScreenProps) {
                 </div>
               </div>
             </section>
-
-            {/* 메타데이터 (날짜/위치) 섹션 제거됨 */}
 
 
           </div>

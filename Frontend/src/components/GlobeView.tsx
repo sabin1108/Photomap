@@ -1,7 +1,7 @@
 import createGlobe from 'cobe';
 import { useEffect, useRef, useMemo } from 'react';
 import { useSpring } from 'motion/react';
-import { usePhotoContext } from '../context/PhotoContext';
+import { usePhotoStore } from '../store/usePhotoStore';
 
 // interface GlobeViewProps {
 //   onLocationSelect: (location: string) => void;
@@ -10,7 +10,7 @@ import { usePhotoContext } from '../context/PhotoContext';
 export function GlobeView() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointerInteracting = useRef<number | null>(null);
-  const { photos } = usePhotoContext();
+  const photos = usePhotoStore(state => state.photos);
 
   // Motion/react spring. 
   const r = useSpring(0, {

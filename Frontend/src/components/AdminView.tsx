@@ -1,4 +1,5 @@
-import { usePhotoContext } from '../context/PhotoContext';
+import { usePhotoStore } from '../store/usePhotoStore';
+import { useShallow } from 'zustand/react/shallow';
 import {
   Table,
   TableBody,
@@ -10,14 +11,45 @@ import {
 import { Badge } from './ui/badge';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
-import { Calendar, Heart } from 'lucide-react';
+import { Calendar, Heart, Zap } from 'lucide-react';
+import { toast } from 'sonner';
+import { Photo } from '../type';
 
 interface AdminViewProps {
   onNavigate: (category: string) => void;
 }
 
 export function AdminView({ onNavigate }: AdminViewProps) {
-  const { photos } = usePhotoContext();
+  const photos = usePhotoStore(useShallow(state => state.photos));
+
+  const injectMockData = () => {
+    const mockPhotos: Photo[] = Array.from({ length: 1000 }).map((_, i) => ({
+      id: `mock-${Date.now()}-${i}`,
+      url: 'https://images.unsplash.com/error', 
+      title: `Stress Node ${i}`,
+      location: `Virtual City`,
+      lat: 37.5665 + (Math.random() - 0.5) * 0.5,
+      lng: 126.9780 + (Math.random() - 0.5) * 0.5,
+      date: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
+      tags: ['stress', `batch-${Math.floor(i / 100)}`],
+      category: 'stress_test',
+      isFavorite: false
+    }));
+
+    usePhotoStore.setState((state) => ({ 
+      photos: [...state.photos, ...mockPhotos] 
+    }));
+    toast.success('1,000장의 가상 사진 데이터가 프론트엔드 상태에 강제 주입되었습니다!', {
+      description: 'NodeView나 PhotoFeed로 이동하여 성능을 테스트해보세요.',
+    });
+  };
+
+  const clearMockData = () => {
+    usePhotoStore.setState((state) => ({
+      photos: state.photos.filter(p => !p.id.startsWith('mock-'))
+    }));
+    toast.info('부하 테스트용 가상 데이터를 모두 삭제했습니다.');
+  };
 
   return (
     <div className="w-full h-full flex flex-col bg-[#F5F2EB] p-4 md:p-8 overflow-hidden z-20">
@@ -37,8 +69,25 @@ export function AdminView({ onNavigate }: AdminViewProps) {
             <Heart className="w-4 h-4 text-rose-500" /> 
             Favorites View
           </Button>
+          <div className="flex gap-2 bg-stone-100 p-1 rounded-lg">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2 bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-700 h-9"
+              onClick={injectMockData}
+            >
+              <Zap className="w-4 h-4 text-amber-500" />
+              부하 테스트 (+1K)
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2 bg-white hover:bg-red-50 border-stone-200 text-red-500 hover:text-red-600 h-9"
+              onClick={clearMockData}
+            >
+              초기화
+            </Button>
+          </div>
           <Button 
-            variant="outline" 
+            variant="outline"  
             className="flex items-center gap-2 bg-white/60 hover:bg-stone-50 border-stone-200 text-stone-700"
             onClick={() => onNavigate('timeline')}
           >

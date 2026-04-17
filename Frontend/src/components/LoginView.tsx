@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Button } from './ui/button';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 
 interface LoginViewProps {
   onNavigate: (view: string) => void;
@@ -16,24 +17,40 @@ export function LoginView({ onNavigate }: LoginViewProps) {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 클라이언트 사이드 유효성 검사
+    if (!email.trim()) {
+      toast.error('이메일을 입력해 주세요.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('올바른 이메일 형식이 아닙니다.');
+      return;
+    }
+    if (!password) {
+      toast.error('비밀번호를 입력해 주세요.');
+      return;
+    }
+
     setLoading(true);
-
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        alert(error.message); // 현재는 간단한 오류 처리만 수행
+        // Supabase 에러 메시지를 사용자 친화적으로 변환
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('이메일 또는 비밀번호가 올바르지 않습니다.');
+        } else if (error.message.includes('Email not confirmed')) {
+          toast.error('이메일 인증이 필요합니다. 받은 편지함을 확인해 주세요.');
+        } else {
+          toast.error(error.message);
+        }
       } else {
-        // 로그인 성공 시 자동으로 AuthContext가 업데이트됩니다.
-        // App.tsx가 인증 상태를 처리하므로 반드시 이동할 필요는 없을 수 있습니다.
-        // 하지만 onNavigate가 전달되면 호출할 수 있습니다.
+        toast.success('환영합니다!');
         onNavigate('all');
       }
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (err) {
+      console.error('Login error:', err);
+      toast.error('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       setLoading(false);
     }

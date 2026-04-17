@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Button } from './ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 
 interface SignupViewProps {
   onNavigate: (view: string) => void;
@@ -17,28 +18,45 @@ export function SignupView({ onNavigate }: SignupViewProps) {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
+    // 클라이언트 사이드 유효성 검사
+    if (!fullName.trim()) {
+      toast.error('이름을 입력해 주세요.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('올바른 이메일 형식이 아닙니다.');
+      return;
+    }
+    if (password.length < 8) {
+      toast.error('비밀번호는 8자 이상이어야 합니다.');
+      return;
+    }
+
+    setLoading(true);
     try {
-      // 1. Supabase 인증 회원가입
       const { error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName,
-          }
-        }
+        options: { data: { full_name: fullName } }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          toast.error('이미 사용 중인 이메일입니다. 로그인을 시도해 보세요.');
+        } else {
+          toast.error(authError.message);
+        }
+        return;
+      }
 
-      alert('Check your email for the confirmation link!');
+      toast.success('가입이 완료되었습니다! 이메일을 확인하여 인증을 완료해 주세요.', {
+        duration: 5000,
+      });
       onNavigate('login');
-
-    } catch (error: any) {
-      console.error('Signup error:', error);
-      alert(error.message || 'An error occurred during signup');
+    } catch (err: any) {
+      console.error('Signup error:', err);
+      toast.error('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       setLoading(false);
     }

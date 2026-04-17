@@ -1,7 +1,7 @@
 import { Compass, Map, Image as ImageIcon, Menu, LogOut, Network, Database } from 'lucide-react';
-import { cn } from './ui/utils';
 import { Button } from './ui/button';
 import { useState } from 'react';
+import { Sidebar as SidebarUI } from './ui/sidebar';
 
 interface SidebarProps {
   className?: string;
@@ -13,95 +13,65 @@ interface SidebarProps {
 export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const categories = [
-    { id: 'all', icon: Compass, label: 'Explore' },
-    { id: 'map', icon: Map, label: 'Map View' },
-    { id: 'node', icon: Network, label: 'Spatial Node' },
-    { id: 'albums', icon: ImageIcon, label: 'Albums' },
-  ];
+  const handleSelect = (category: string) => {
+    onSelectCategory(category);
+    setIsOpen(false);
+  };
 
   return (
     <>
-      {/* 모바일 토글 */}
+      {/* 모바일 토글 버튼 */}
       <div className="md:hidden fixed top-4 left-4 z-50">
-        <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)} className="bg-white/50 backdrop-blur-md hover:bg-white/70">
-          <Menu className="w-6 h-6 text-stone-700" />
+        <Button variant="ghost" size="icon" aria-label="Toggle Menu" onClick={() => setIsOpen(!isOpen)} className="bg-white/50 backdrop-blur-md hover:bg-white/70 shadow-sm border border-stone-200">
+          <Menu className="w-5 h-5 text-stone-700" />
         </Button>
       </div>
 
-      {/* 사이드바 */}
-      <div className={cn(
-        "fixed md:relative h-full z-40 transition-transform duration-300 ease-in-out",
-        "w-64 bg-white/40 backdrop-blur-2xl border-r border-white/20 shadow-xl md:shadow-none",
-        "flex flex-col py-8 px-4",
-        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
-        className
-      )}>
-        <div className="mb-10 px-4">
-          <h1 className="text-2xl font-light tracking-wider text-stone-800">
-            TRAVEL<span className="font-semibold text-terracotta-500">ARC</span>
-          </h1>
-          <p className="text-xs text-stone-500 mt-1 uppercase tracking-widest">Digital Archive</p>
-        </div>
+      <SidebarUI.Root isOpen={isOpen} setIsOpen={setIsOpen} className={className}>
+        <SidebarUI.Header title="TRAVELARC" subtitle="Digital Archive" />
 
-        <nav className="flex-1 space-y-2">
-          {categories.map((category) => {
-            const Icon = category.icon;
-            const isActive = activeCategory === category.id;
+        <SidebarUI.Nav>
+          <SidebarUI.Item
+            icon={Compass}
+            label="Explore"
+            isActive={activeCategory === 'all'}
+            onClick={() => handleSelect('all')}
+          />
+          <SidebarUI.Item
+            icon={Map}
+            label="Map View"
+            isActive={activeCategory === 'map'}
+            onClick={() => handleSelect('map')}
+          />
+          <SidebarUI.Item
+            icon={Network}
+            label="Spatial Node"
+            isActive={activeCategory === 'node'}
+            onClick={() => handleSelect('node')}
+          />
+          <SidebarUI.Item
+            icon={ImageIcon}
+            label="Albums"
+            isActive={activeCategory === 'albums'}
+            onClick={() => handleSelect('albums')}
+          />
+        </SidebarUI.Nav>
 
-            return (
-              <button
-                key={category.id}
-                onClick={() => {
-                  onSelectCategory(category.id);
-                  setIsOpen(false);
-                }}
-                className={cn(
-                  "w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group",
-                  isActive
-                    ? "bg-white/60 shadow-sm text-stone-900"
-                    : "text-stone-500 hover:bg-white/30 hover:text-stone-800"
-                )}
-              >
-                <Icon className={cn(
-                  "w-5 h-5 transition-colors",
-                  isActive ? "text-[#E09F87]" : "text-stone-400 group-hover:text-stone-600"
-                )} strokeWidth={1.5} />
-                <span className="text-sm font-medium">{category.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="mt-auto px-4 space-y-2">
-          <button
-            onClick={() => {
-              onSelectCategory('admin');
-              setIsOpen(false);
-            }}
-            className="flex items-center gap-3 text-stone-500 hover:text-stone-800 transition-colors w-full px-4 py-2"
-          >
-            <Database className="w-5 h-5" strokeWidth={1.5} />
-            <span className="text-sm font-medium">Data Admin</span>
-          </button>
-
-          <button
+        <SidebarUI.Footer>
+          <SidebarUI.Item
+            icon={Database}
+            label="Data Admin"
+            isActive={activeCategory === 'admin'}
+            onClick={() => handleSelect('admin')}
+          />
+          <SidebarUI.Item
+            icon={LogOut}
+            label="Log Out"
             onClick={onSignOut}
-            className="flex items-center gap-3 text-stone-500 hover:text-red-500 transition-colors w-full px-4 py-2"
-          >
-            <LogOut className="w-5 h-5" strokeWidth={1.5} />
-            <span className="text-sm font-medium">Log Out</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 모바일용 오버레이 */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/10 z-30 md:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+            className="text-red-500 hover:text-red-700 hover:bg-red-50 mt-2"
+          />
+        </SidebarUI.Footer>
+      </SidebarUI.Root>
     </>
   );
 }
