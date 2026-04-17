@@ -27,7 +27,6 @@ export function useGridBreakpoints() {
       setGap(newGap);
     };
 
-    // Initial call
     handleResize();
 
     window.addEventListener('resize', handleResize);

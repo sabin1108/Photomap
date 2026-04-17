@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from './utils';
 
-// Context to share isOpen state if needed inside items
+// 필요한 경우 아이템 내부에서 isOpen 상태를 공유하기 위한 Context
 const SidebarContext = React.createContext<{ isOpen: boolean; setIsOpen: (o: boolean) => void }>({
   isOpen: false,
   setIsOpen: () => { },

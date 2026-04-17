@@ -20,9 +20,9 @@ interface PhotoFeedProps {
   onSelectModeChange?: (isSelect: boolean) => void;
 }
 
-export function PhotoFeed({ 
-  className, 
-  filterCategory, 
+export function PhotoFeed({
+  className,
+  filterCategory,
   hideHeader,
   isExternalSelectMode,
   onSelectModeChange
@@ -34,7 +34,7 @@ export function PhotoFeed({
   const batchMovePhotos = usePhotoStore(state => state.batchMovePhotos);
   const categories = usePhotoStore(state => state.categories);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
-  
+
   // 배치 처리용 상태
   const [internalSelectMode, setInternalSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -51,11 +51,11 @@ export function PhotoFeed({
   // 카테고리에 따른 필터링 (useMemo로 최적화)
   const displayPhotos = useMemo(() => {
     if (!filterCategory) return photos;
-    
+
     if (filterCategory === 'system_all') return photos;
     if (filterCategory === 'system_favorites') return photos.filter(p => p.isFavorite);
     if (filterCategory === 'system_uncategorized') return photos.filter(p => !p.category || p.category === '기타' || p.category === 'Uncategorized');
-    
+
     if (filterCategory.startsWith('loc_')) {
       const targetLocation = filterCategory.replace('loc_', '');
       return photos.filter(p => p.location === targetLocation);
@@ -69,7 +69,7 @@ export function PhotoFeed({
     count: rowCount,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 150, // rough estimate of row height, auto-adjusts
-    overscan: 3, 
+    overscan: 3,
   });
 
   const toggleSelectMode = () => {
@@ -79,7 +79,7 @@ export function PhotoFeed({
 
   const handlePhotoClick = (photo: Photo) => {
     if (isSelectMode) {
-      setSelectedIds(prev => 
+      setSelectedIds(prev =>
         prev.includes(photo.id) ? prev.filter(i => i !== photo.id) : [...prev, photo.id]
       );
     } else {
@@ -125,7 +125,7 @@ export function PhotoFeed({
             <h2 className="text-3xl font-light text-stone-800 mb-2">Recent Memories</h2>
             <div className="h-1 w-20 bg-[#E09F87] rounded-full opacity-60"></div>
           </div>
-          
+
           <Button
             variant={isSelectMode ? "secondary" : "outline"}
             size="sm"
@@ -145,7 +145,7 @@ export function PhotoFeed({
           <p className="text-sm">Try uploading some photos to this album!</p>
         </div>
       ) : (
-        <div 
+        <div
           className="relative w-full pb-24"
           style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
         >
@@ -165,7 +165,7 @@ export function PhotoFeed({
                 {Array.from({ length: columns }).map((_, colIndex) => {
                   const photoIndex = virtualRow.index * columns + colIndex;
                   const photo = displayPhotos[photoIndex];
-                  
+
                   if (!photo) return <div key={`empty-${colIndex}`} />;
 
                   const isSelected = selectedIds.includes(photo.id);
@@ -192,7 +192,7 @@ export function PhotoFeed({
 
                       {/* 선택 모드 체크박스 */}
                       {isSelectMode && (
-                        <div 
+                        <div
                           className={cn(
                             "absolute top-2 right-2 w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center transition-colors z-20",
                             isSelected ? "bg-[#E09F87] border-[#E09F87] text-white" : "bg-white/50 border-white text-transparent"
@@ -226,7 +226,7 @@ export function PhotoFeed({
         </div>
       )}
 
-      {/* Floating Action Bar */}
+      {/* 플로팅 액션 바 */}
       <AnimatePresence>
         {isSelectMode && selectedIds.length > 0 && (
           <motion.div
@@ -262,10 +262,10 @@ export function PhotoFeed({
                   >
                     <p className="text-[10px] uppercase tracking-widest text-stone-400 px-3 py-1 font-bold">Select Album</p>
                     <button
-                        onClick={() => handleBatchMove('Uncategorized')}
-                        className="text-left px-3 py-2 text-sm text-stone-600 hover:bg-stone-50 hover:text-[#E09F87] rounded-lg transition-colors"
-                      >
-                        Uncategorized
+                      onClick={() => handleBatchMove('Uncategorized')}
+                      className="text-left px-3 py-2 text-sm text-stone-600 hover:bg-stone-50 hover:text-[#E09F87] rounded-lg transition-colors"
+                    >
+                      Uncategorized
                     </button>
                     {categories.map((cat) => (
                       <button
@@ -277,22 +277,22 @@ export function PhotoFeed({
                       </button>
                     ))}
                     <div className="border-t border-stone-100 mt-1 pt-2 px-2 pb-1 flex gap-2">
-                        <input
-                            type="text"
-                            placeholder="New Album..."
-                            className="w-full text-xs p-1.5 border border-stone-200 rounded focus:outline-none focus:border-[#E09F87]"
-                            value={newAlbumName}
-                            onChange={(e) => setNewAlbumName(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleCreateAndMove(newAlbumName);
-                            }}
-                        />
-                        <button 
-                            className="bg-[#E09F87] text-white px-2 rounded hover:bg-[#D08E76] text-xs font-medium"
-                            onClick={() => handleCreateAndMove(newAlbumName)}
-                        >
-                            Add
-                        </button>
+                      <input
+                        type="text"
+                        placeholder="New Album..."
+                        className="w-full text-xs p-1.5 border border-stone-200 rounded focus:outline-none focus:border-[#E09F87]"
+                        value={newAlbumName}
+                        onChange={(e) => setNewAlbumName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleCreateAndMove(newAlbumName);
+                        }}
+                      />
+                      <button
+                        className="bg-[#E09F87] text-white px-2 rounded hover:bg-[#D08E76] text-xs font-medium"
+                        onClick={() => handleCreateAndMove(newAlbumName)}
+                      >
+                        Add
+                      </button>
                     </div>
                   </motion.div>
                 )}
@@ -308,7 +308,7 @@ export function PhotoFeed({
               </Button>
             </div>
 
-            <button 
+            <button
               onClick={() => setSelectedIds([])}
               className="p-2 text-stone-400 hover:text-stone-600 transition-colors"
               title="Deselect All"

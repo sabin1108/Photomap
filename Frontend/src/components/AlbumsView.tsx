@@ -117,7 +117,7 @@ export function AlbumsView() {
   };
   const handleBatchDeleteAlbums = async () => { if (selectedAlbumNames.length > 0 && window.confirm('Delete selected?')) { await batchDeleteCategories(selectedAlbumNames); setIsSelectMode(false); setSelectedAlbumNames([]); } };
 
-  // --- Render Active Album Screen ---
+  // --- 활성화된 앨범 화면 렌더링 ---
   if (activeAlbum) {
     const albumInfo = [...systemAlbums, ...placeAlbums, ...customAlbums].find(a => a.id === activeAlbum);
     return (
@@ -162,7 +162,7 @@ export function AlbumsView() {
   return (
     <div className="w-full h-full bg-[#F5F2EB] flex flex-col relative overflow-hidden font-sans selection:bg-[#E09F87] selection:text-white pb-24">
 
-      {/* STICKY HEADER SYSTEM (Tabs & Search) */}
+      {/* 스티키 헤더 시스템 (탭 및 검색) */}
       <div className="flex-none pt-12 md:pt-16 pb-4 px-4 md:px-8 border-b border-stone-200/50 z-10 bg-[#F5F2EB]/90 backdrop-blur-xl shrink-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
 
@@ -176,7 +176,7 @@ export function AlbumsView() {
           </div>
 
           <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-center">
-            {/* Search Bar */}
+            {/* 검색바 */}
             <div className="relative w-full md:w-64">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-stone-400" />
@@ -200,7 +200,7 @@ export function AlbumsView() {
           </div>
         </div>
 
-        {/* TABS (Segmented Control style) */}
+        {/* 탭 메뉴 (Segmented Control 스타일) */}
         <div className="flex gap-1 overflow-x-auto mt-4 md:mt-6 pb-1 [&::-webkit-scrollbar]:hidden snap-x">
           {(['all', 'system', 'places', 'collections'] as const).map(tab => (
             <button
@@ -316,7 +316,7 @@ export function AlbumsView() {
         )}
       </div>
 
-      {/* Floating Batch Control */}
+      {/* 플로팅 배치 작업 컨트롤 */}
       <AnimatePresence>
         {isSelectMode && selectedAlbumNames.length > 0 && (
           <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-stone-900/95 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-full shadow-2xl text-white">
@@ -328,7 +328,7 @@ export function AlbumsView() {
         )}
       </AnimatePresence>
 
-      {/* Editor/Creator Modals */}
+      {/* 편집/관리 모달 영역 */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-sm rounded-[2rem] border-stone-200 bg-[#F5F2EB]">
           <DialogTitle>New Collection</DialogTitle>

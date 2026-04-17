@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { zoom, zoomIdentity, ZoomTransform } from 'd3-zoom';
+import { zoom, } from 'd3-zoom';
 import { select } from 'd3-selection';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { Photo } from '../type';

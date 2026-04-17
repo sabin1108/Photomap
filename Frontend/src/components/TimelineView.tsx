@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef } from 'react';
 import { Calendar, MapPin, ArrowRight, Filter } from 'lucide-react';
 import { cn } from './ui/utils';
 import { Button } from './ui/button';
@@ -71,7 +71,7 @@ export function TimelineView() {
         className="flex-1 overflow-y-auto px-4 md:px-10 pb-20 scrollbar-hide"
       >
         <div className="max-w-4xl mx-auto relative min-h-[500px]">
-          {/* Center Line */}
+          {/* 중앙 구분선 */}
           <div className="absolute left-[20px] md:left-1/2 top-4 bottom-0 w-px bg-gradient-to-b from-[#E09F87] via-stone-300 to-transparent md:-translate-x-1/2" />
 
           <div className="space-y-12 md:space-y-24 py-8">
@@ -80,14 +80,14 @@ export function TimelineView() {
 
               return (
                 <div key={year} className="relative">
-                  {/* Year Marker */}
+                  {/* 연도 표시기 */}
                   <div className="flex items-center md:justify-center mb-8 md:mb-12 relative">
                     <div className="bg-[#E09F87] text-white px-4 py-1.5 rounded-full text-sm font-bold tracking-widest shadow-lg z-10 border-4 border-[#F5F2EB]">
                       {year}
                     </div>
                   </div>
 
-                  {/* Events */}
+                  {/* 이벤트 목록 */}
                   <div className="space-y-12">
                     {yearEvents.map((event, idx) => {
                       const isLeft = idx % 2 === 0;
@@ -97,13 +97,13 @@ export function TimelineView() {
                           "relative flex flex-col md:flex-row items-start",
                           isLeft ? "md:flex-row-reverse" : ""
                         )}>
-                          {/* Timeline Dot */}
+                          {/* 타임라인 포인트 */}
                           <div className="absolute left-[20px] md:left-1/2 w-4 h-4 bg-white border-4 border-[#E09F87] rounded-full translate-y-6 md:-translate-x-1/2 z-10" />
 
-                          {/* Content Spacer for Desktop (Empty side) */}
+                          {/* 데스크탑용 콘텐츠 스페이서 (반대편 여백) */}
                           <div className="hidden md:block md:w-1/2" />
 
-                          {/* Card Content */}
+                          {/* 카드 콘텐츠 */}
                           <div className={cn(
                             "pl-12 md:pl-0 w-full md:w-1/2",
                             isLeft ? "md:pr-12 md:text-right" : "md:pl-12"
@@ -114,7 +114,7 @@ export function TimelineView() {
                               isLeft ? "items-start md:items-end" : "items-start"
                             )}>
 
-                              {/* Date & Location Tag */}
+                              {/* 날짜 및 장소 태그 */}
                               <div className="flex items-center gap-3 text-xs font-medium text-[#E09F87] uppercase tracking-wider">
                                 <span className="flex items-center gap-1">
                                   <Calendar className="w-3 h-3" /> {event.month}
@@ -125,7 +125,7 @@ export function TimelineView() {
                                 </span>
                               </div>
 
-                              {/* Main Content */}
+                              {/* 메인 콘텐츠 */}
                               <div>
                                 <h3 className="text-xl font-semibold text-stone-800 mb-2 group-hover:text-[#E09F87] transition-colors">{event.title}</h3>
                                 <p className="text-sm text-stone-500 leading-relaxed line-clamp-2">
@@ -133,10 +133,10 @@ export function TimelineView() {
                                 </p>
                               </div>
 
-                              {/* Images Grid */}
+                              {/* 이미지 그리드 */}
                               {event.images.length > 0 && (
                                 <>
-                                  {/* Mobile: Carousel */}
+                                  {/* 모바일: 캐러셀 */}
                                   <div className="block sm:hidden w-full mt-2">
                                     <Carousel className="w-full relative" opts={{ align: "start", loop: true }}>
                                       <CarouselContent>
@@ -157,7 +157,7 @@ export function TimelineView() {
                                     </Carousel>
                                   </div>
 
-                                  {/* Desktop: Grid */}
+                                  {/* 데스크탑: 그리드 */}
                                   <div className={cn(
                                     "hidden sm:grid gap-2 w-full mt-2",
                                     event.images.length > 1 ? "grid-cols-2" : "grid-cols-1"
@@ -187,7 +187,7 @@ export function TimelineView() {
             })}
           </div>
 
-          {/* End Marker */}
+          {/* 종료 표시기 */}
           <div className="flex justify-center pb-10">
             <div className="w-3 h-3 bg-stone-300 rounded-full" />
           </div>

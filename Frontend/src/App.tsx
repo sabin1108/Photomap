@@ -59,7 +59,7 @@ export default function App() {
       setActiveCategory('all');
     } catch (err) {
       console.error('SignOut error:', err);
-      // import toast at file top if needed
+      // 필요 시 파일 상단에서 toast 임포트
     }
   };
 

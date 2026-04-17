@@ -15,16 +15,16 @@ export function PerformanceMonitor() {
     const loop = () => {
       const now = performance.now();
       frameCount++;
-      
-      // Update stats every second
+
+      // 1초마다 통계 업데이트
       if (now - lastTime >= 1000) {
         setFps(Math.round((frameCount * 1000) / (now - lastTime)));
         frameCount = 0;
         lastTime = now;
-        
+
         setDomCount(document.getElementsByTagName('*').length);
-        
-        // Window.performance.memory is a Chrome-specific API
+
+        // 크롬 전용 API.
         if ((performance as any).memory) {
           const usedJSHeapSize = (performance as any).memory.usedJSHeapSize / (1024 * 1024);
           setMemory(`${usedJSHeapSize.toFixed(1)} MB`);
@@ -43,19 +43,19 @@ export function PerformanceMonitor() {
         📊 Live Diagnostics
       </div>
       <div className="flex justify-between items-center">
-        <span className="text-stone-400">FPS:</span> 
+        <span className="text-stone-400">FPS:</span>
         <span className={fps < 30 ? "text-rose-500 font-bold" : "text-emerald-400 font-bold"}>{fps}</span>
       </div>
       <div className="flex justify-between items-center">
-        <span className="text-stone-400">Photos:</span> 
+        <span className="text-stone-400">Photos:</span>
         <span className="text-amber-400 font-bold">{photosCount.toLocaleString()}</span>
       </div>
       <div className="flex justify-between items-center">
-        <span className="text-stone-400">DOM Nodes:</span> 
+        <span className="text-stone-400">DOM Nodes:</span>
         <span className="text-blue-400 font-bold">{domCount.toLocaleString()}</span>
       </div>
       <div className="flex justify-between items-center">
-        <span className="text-stone-400">Memory:</span> 
+        <span className="text-stone-400">Memory:</span>
         <span className="text-purple-400 font-bold">{memory}</span>
       </div>
     </div>

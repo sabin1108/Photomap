@@ -39,8 +39,8 @@ const LocationSearch = React.memo(function LocationSearch({
   const [isSearching, setIsSearching] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Sync internal state if parent forcibly updates it (e.g. from marker select)
-  // We use a ref to prevent infinite loops if the parent updates to the exact same value.
+  // 부모 컴포넌트에서 값이 강제로 업데이트될 경우 내부 상태 동기화
+  // 동일한 값으로 인한 무한 루프 방지를 위해 ref를 사용합니다.
   const prevValueRef = useRef(value);
   if (value !== prevValueRef.current) {
     prevValueRef.current = value;
@@ -48,7 +48,7 @@ const LocationSearch = React.memo(function LocationSearch({
   }
 
   const fetchSuggestions = (q: string) => {
-    setInternalValue(q); // Only update local state instantly for 60fps typing
+    setInternalValue(q); // 60fps의 부드러운 타이핑 반응을 위해 로컬 State만 즉시 업데이트
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -56,12 +56,12 @@ const LocationSearch = React.memo(function LocationSearch({
 
     if (!q || q.length < 2) {
       setSuggestions([]);
-      onChangeText(q); // If cleared, update parent immediately
+      onChangeText(q); // 입력 내용이 비워지면 부모 컴포넌트에 즉시 반영
       return;
     }
 
     timeoutRef.current = setTimeout(async () => {
-      onChangeText(q); // Sync parent only after typing pauses (debounced)
+      onChangeText(q); // 타이핑이 멈춘 후 (debounced) 부모 컴포넌트와 동기화
       setIsSearching(true);
       try {
         const KAKAO_KEY = import.meta.env.VITE_KAKAO_MAP_API_KEY || import.meta.env.VITE_KAKAO_MAP;
@@ -268,17 +268,17 @@ const CustomDateTimePicker = React.memo(function CustomDateTimePicker({
 CustomDateTimePicker.displayName = "CustomDateTimePicker";
 
 export type UploadItem = {
-    file: File;
-    preview: string;
-    exif: { lat?: number, lng?: number, takeTime?: string };
-    title: string;
-    description: string;
-    tags: string;
-    address: string;
-    customDate?: string;
-    customLat?: number;
-    customLng?: number;
-    status: 'idle' | 'uploading' | 'done' | 'error';
+  file: File;
+  preview: string;
+  exif: { lat?: number, lng?: number, takeTime?: string };
+  title: string;
+  description: string;
+  tags: string;
+  address: string;
+  customDate?: string;
+  customLat?: number;
+  customLng?: number;
+  status: 'idle' | 'uploading' | 'done' | 'error';
 };
 
 const UploadPhotoItem = React.memo(({

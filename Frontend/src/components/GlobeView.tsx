@@ -3,16 +3,14 @@ import { useEffect, useRef, useMemo } from 'react';
 import { useSpring } from 'motion/react';
 import { usePhotoStore } from '../store/usePhotoStore';
 
-// interface GlobeViewProps {
-//   onLocationSelect: (location: string) => void;
-// }
+
 
 export function GlobeView() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointerInteracting = useRef<number | null>(null);
   const photos = usePhotoStore(state => state.photos);
 
-  // Motion/react spring. 
+  // Motion/react spring 엔진 사용
   const r = useSpring(0, {
     mass: 1,
     stiffness: 280,
@@ -68,7 +66,7 @@ export function GlobeView() {
       globe.destroy();
       window.removeEventListener('resize', onResize);
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="w-full h-full flex items-center justify-center relative z-0">
@@ -108,7 +106,6 @@ export function GlobeView() {
           }}
         />
 
-        {/* Decorative elements for the "Nostalgic" vibe */}
         <div className="absolute top-0 right-0 p-4 pointer-events-none opacity-50">
           <div className="text-[10px] uppercase tracking-widest text-[#E09F87]">
             Lat 35.9° N / Long 127.7° E

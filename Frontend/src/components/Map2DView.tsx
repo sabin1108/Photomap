@@ -66,11 +66,11 @@ export function Map2DView({}: Map2DViewProps) {
 
   return (
     <div className="w-full h-full relative bg-[#F5F2EB] overflow-hidden flex flex-col">
-      {/* Map Controls / Header (Overlayed on Iframe) */}
+      {/* 지도 컨트롤 및 헤더 (Iframe 위에 오버레이) */}
       <div className="absolute top-0 left-0 right-0 z-[40] p-4 pt-16 md:p-6 md:pt-6 pointer-events-auto">
         <div className="flex flex-row items-center gap-2 max-w-full">
           <div className="flex-1 flex items-center gap-2 max-w-[85%] lg:max-w-md">
-            {/* Search Bar */}
+            {/* 검색바 */}
             <div className="flex-1 bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-sm border border-white/50 flex items-center gap-2 overflow-hidden">
               <Search className="w-5 h-5 text-stone-400 ml-2 flex-shrink-0" />
               <input
@@ -82,7 +82,7 @@ export function Map2DView({}: Map2DViewProps) {
               />
             </div>
 
-            {/* Combined Filter & Management Button */}
+            {/* 필터 및 관리 통합 버튼 */}
             <Drawer.Root open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
               <Drawer.Trigger asChild>
                 <button className={cn(
@@ -113,7 +113,7 @@ export function Map2DView({}: Map2DViewProps) {
                       </Drawer.Title>
                       <p className="text-sm text-stone-500 mb-6 font-medium">지도에 표시할 태그를 선택하거나 관리하세요.</p>
                       
-                      {/* Drawer Search */}
+                      {/* 드로어 내 검색 */}
                       <div className="bg-stone-100/80 p-3 rounded-2xl flex items-center gap-2 mb-6 border border-stone-200/50">
                         <Search className="w-4 h-4 text-stone-400" />
                         <input 
@@ -125,9 +125,9 @@ export function Map2DView({}: Map2DViewProps) {
                         />
                       </div>
 
-                      {/* Category List */}
+                      {/* 카테고리 목록 */}
                       <div className="overflow-y-auto pr-2 flex-1 no-scrollbar space-y-2">
-                        {/* 'All' Option */}
+                        {/* '전체' 옵션 */}
                         <div 
                           onClick={() => { setActiveFilter('all'); setIsDrawerOpen(false); }}
                           className={cn(
@@ -198,7 +198,7 @@ export function Map2DView({}: Map2DViewProps) {
         </div>
       </div>
 
-      {/* Unity + Mapbox Iframe Area */}
+      {/* Unity + Mapbox Iframe 영역 */}
       <div className="flex-1 relative w-full h-full bg-[#EBE6DA]">
         <iframe 
           ref={iframeRef}
