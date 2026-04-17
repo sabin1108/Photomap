@@ -1,13 +1,9 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { PhotoProvider } from "./context/PhotoContext";
-import { AuthProvider } from "./context/AuthContext";
+import { useAuthStore } from "./store/useAuthStore";
 
-createRoot(document.getElementById("root")!).render(
-  <AuthProvider>
-    <PhotoProvider>
-      <App />
-    </PhotoProvider>
-  </AuthProvider>
-);
+// Supabase 인증 상태 구독 초기화 (앱 전체에서 한 번만)
+useAuthStore.getState()._init();
+
+createRoot(document.getElementById("root")!).render(<App />);
