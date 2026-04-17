@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, CheckCircle2, Trash, Move, X, MousePointer2 } from 'lucide-react';
+import { MapPin, CheckCircle2, Trash, Trash2, Move, X, MousePointer2, Heart } from 'lucide-react';
 import { cn } from './ui/utils';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { usePhotoContext } from '../context/PhotoContext';
-import { PhotoDetailModal } from './PhotoDetailModal';
+import { usePhotoStore } from '../store/usePhotoStore';
+import { PhotoModal } from './ui/photo-modal';
 import { Button } from './ui/button';
 import type { Photo } from '../type';
+import { useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useGridBreakpoints } from '../hooks/useGridBreakpoints';
 
 interface PhotoFeedProps {
   className?: string;
@@ -24,7 +27,12 @@ export function PhotoFeed({
   isExternalSelectMode,
   onSelectModeChange
 }: PhotoFeedProps) {
-  const { photos, toggleFavorite, deletePhoto, batchDeletePhotos, batchMovePhotos, categories } = usePhotoContext();
+  const photos = usePhotoStore(state => state.photos);
+  const toggleFavorite = usePhotoStore(state => state.toggleFavorite);
+  const deletePhoto = usePhotoStore(state => state.deletePhoto);
+  const batchDeletePhotos = usePhotoStore(state => state.batchDeletePhotos);
+  const batchMovePhotos = usePhotoStore(state => state.batchMovePhotos);
+  const categories = usePhotoStore(state => state.categories);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   
   // 배치 처리용 상태
@@ -32,6 +40,9 @@ export function PhotoFeed({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isMoveMenuOpen, setIsMoveMenuOpen] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState('');
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  const { columns, gap } = useGridBreakpoints();
 
   // 외부 props가 있으면 그것을 사용, 없으면 내부 상태 사용
   const isSelectMode = isExternalSelectMode !== undefined ? isExternalSelectMode : internalSelectMode;
@@ -45,8 +56,21 @@ export function PhotoFeed({
     if (filterCategory === 'system_favorites') return photos.filter(p => p.isFavorite);
     if (filterCategory === 'system_uncategorized') return photos.filter(p => !p.category || p.category === '기타' || p.category === 'Uncategorized');
     
+    if (filterCategory.startsWith('loc_')) {
+      const targetLocation = filterCategory.replace('loc_', '');
+      return photos.filter(p => p.location === targetLocation);
+    }
+
     return photos.filter(p => p.category === filterCategory || p.tags.includes(filterCategory));
   }, [photos, filterCategory]);
+
+  const rowCount = Math.ceil(displayPhotos.length / columns);
+  const rowVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 150, // rough estimate of row height, auto-adjusts
+    overscan: 3, 
+  });
 
   const toggleSelectMode = () => {
     setIsSelectMode(!isSelectMode);
@@ -89,7 +113,7 @@ export function PhotoFeed({
   };
 
   return (
-    <div className={cn("p-6 md:p-10 h-full overflow-y-auto custom-scrollbar relative", className)}>
+    <div className={cn("p-4 md:p-10 h-full overflow-y-auto custom-scrollbar relative", className)} ref={parentRef}>
       {!hideHeader && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -121,58 +145,82 @@ export function PhotoFeed({
           <p className="text-sm">Try uploading some photos to this album!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-24">
-          {displayPhotos.map((photo, index) => {
-            const isSelected = selectedIds.includes(photo.id);
+        <div 
+          className="relative w-full pb-24"
+          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             return (
-              <motion.div
-                key={photo.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05, duration: 0.4 }}
-                onClick={() => handlePhotoClick(photo)}
-                className={cn(
-                  "group relative aspect-[4/5] overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 bg-stone-100",
-                  isSelected && "ring-4 ring-[#E09F87] ring-offset-2"
-                )}
+              <div
+                key={virtualRow.index}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                className="absolute top-0 left-0 w-full grid"
+                style={{
+                  transform: `translateY(${virtualRow.start}px)`,
+                  gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                  gap: `${gap}px`
+                }}
               >
-                <div className={cn("w-full h-full transition-transform duration-700", !isSelectMode && "group-hover:scale-105")}>
-                  <ImageWithFallback
-                    src={photo.url}
-                    alt={photo.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                {Array.from({ length: columns }).map((_, colIndex) => {
+                  const photoIndex = virtualRow.index * columns + colIndex;
+                  const photo = displayPhotos[photoIndex];
+                  
+                  if (!photo) return <div key={`empty-${colIndex}`} />;
 
-                {/* 선택 모드 체크박스 커스텀 UI */}
-                {isSelectMode && (
-                  <div 
-                    className={cn(
-                      "absolute top-4 right-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors z-10",
-                      isSelected ? "bg-[#E09F87] border-[#E09F87] text-white" : "bg-white/50 border-white text-transparent"
-                    )}
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                  </div>
-                )}
+                  const isSelected = selectedIds.includes(photo.id);
+                  return (
+                    <div
+                      key={photo.id}
+                      onClick={() => handlePhotoClick(photo)}
+                      className={cn(
+                        "group relative aspect-square overflow-hidden cursor-pointer bg-stone-100",
+                        isSelected && "opacity-80"
+                      )}
+                    >
+                      <div className={cn("w-full h-full transition-transform duration-700", !isSelectMode && "group-hover:scale-105")}>
+                        <ImageWithFallback
+                          src={photo.url}
+                          alt={photo.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
 
-                {/* 오버레이 */}
-                <div className={cn(
-                  "absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent transition-opacity duration-300",
-                  isSelectMode ? (isSelected ? "opacity-40" : "opacity-0") : "opacity-0 group-hover:opacity-100"
-                )} />
+                      {isSelected && (
+                        <div className="absolute inset-0 bg-black/10 ring-4 ring-inset ring-[#E09F87] z-20 pointer-events-none" />
+                      )}
 
-                {!isSelectMode && (
-                  <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100">
-                    <p className="text-white font-medium text-lg tracking-wide">{photo.title}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <MapPin className="w-3 h-3 text-[#E09F87]" />
-                      <span className="text-white/80 text-xs uppercase tracking-wider line-clamp-1">{photo.location}</span>
+                      {/* 선택 모드 체크박스 */}
+                      {isSelectMode && (
+                        <div 
+                          className={cn(
+                            "absolute top-2 right-2 w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center transition-colors z-20",
+                            isSelected ? "bg-[#E09F87] border-[#E09F87] text-white" : "bg-white/50 border-white text-transparent"
+                          )}
+                        >
+                          <CheckCircle2 className="w-3 h-3" />
+                        </div>
+                      )}
+
+                      {/* 오버레이 */}
+                      <div className={cn(
+                        "absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent transition-opacity duration-300 pointer-events-none",
+                        isSelectMode ? (isSelected ? "opacity-40" : "opacity-0") : "opacity-0 md:group-hover:opacity-100 opacity-100 lg:opacity-0"
+                      )} />
+
+                      {!isSelectMode && (
+                        <div className="absolute bottom-0 left-0 right-0 p-2 md:p-3 transition-opacity duration-300 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 pointer-events-none">
+                          <p className="text-white font-semibold text-[10px] md:text-xs tracking-wide truncate drop-shadow-md">{photo.title}</p>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <MapPin className="w-2 h-2 md:w-3 md:h-3 text-[#E09F87]" />
+                            <span className="text-white/90 text-[8px] md:text-[9px] uppercase tracking-wider truncate drop-shadow-sm">{photo.location}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-white/60 text-[10px] mt-2 font-mono">{photo.date}</p>
-                  </div>
-                )}
-              </motion.div>
+                  );
+                })}
+              </div>
             );
           })}
         </div>
@@ -271,15 +319,46 @@ export function PhotoFeed({
         )}
       </AnimatePresence>
 
-      <PhotoDetailModal 
-        photo={selectedPhoto}
-        onClose={() => setSelectedPhoto(null)}
-        onToggleFavorite={(id) => {
-          toggleFavorite(id);
-          setSelectedPhoto(prev => prev ? { ...prev, isFavorite: !prev.isFavorite } : null);
-        }}
-        onDelete={deletePhoto}
-      />
+      <PhotoModal.Root photo={selectedPhoto} onClose={() => setSelectedPhoto(null)}>
+        <PhotoModal.Image />
+        <PhotoModal.Panel>
+          <PhotoModal.Header />
+          <PhotoModal.Metadata />
+          <PhotoModal.Actions>
+            <Button
+              variant="outline"
+              className={cn(
+                "flex-1 h-12 rounded-xl border-stone-200 gap-2 transition-all",
+                selectedPhoto?.isFavorite
+                  ? "bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100 hover:text-rose-600"
+                  : "text-stone-500 hover:bg-stone-50 hover:border-stone-300"
+              )}
+              onClick={() => {
+                if (selectedPhoto) {
+                  toggleFavorite(selectedPhoto.id);
+                  setSelectedPhoto(prev => prev ? { ...prev, isFavorite: !prev.isFavorite } : null);
+                }
+              }}
+            >
+              <Heart size={18} className={selectedPhoto?.isFavorite ? "fill-rose-500" : ""} />
+              {selectedPhoto?.isFavorite ? "Favorited" : "Favorite"}
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-12 h-12 p-0 rounded-xl border-stone-200 text-stone-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors"
+              onClick={() => {
+                if (selectedPhoto && window.confirm("Are you sure you want to delete this photo?")) {
+                  deletePhoto(selectedPhoto.id);
+                  setSelectedPhoto(null);
+                }
+              }}
+            >
+              <Trash2 size={18} />
+            </Button>
+          </PhotoModal.Actions>
+        </PhotoModal.Panel>
+      </PhotoModal.Root>
     </div>
   );
 }
