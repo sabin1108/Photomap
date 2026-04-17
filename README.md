@@ -99,7 +99,7 @@ PhotoMap은 수많은 사진 데이터를 단순히 저장하는 것을 넘어, 
   
   | 개선 전 (DOM 과부하로 인한 화면 프리즈 현상) | 개선 후 (가상화 적용으로 60FPS 방어 성공) |
   | :---: | :---: |
-  | [![과부하 개선전]((https://i.postimg.cc/XNzxgRjc/peulijeu-hyeonsang.gif)](https://postimg.cc/jCyzxkJL)) | [![과부하 개선후](https://i.postimg.cc/KcHQ56Gw/peulijeuhyeonsang-haegyeol.gif)](https://postimg.cc/ThnrdHWJ) |
+  | [![과부하 개선전](https://i.postimg.cc/qvLBc8ff/peulijeuhyeonsangchoejongbon.gif)](https://postimg.cc/hXXqcQPM) | [![과부하 개선후](https://i.postimg.cc/KcHQ56Gw/peulijeuhyeonsang-haegyeol.gif)](https://postimg.cc/ThnrdHWJ) |
 
 * **상태 관리 아키텍처 개편 (Context API → Zustand)**
   * 기존 Context API의 불필요한 전역 리렌더링 문제를 파악하고 Zustand로 전환했습니다. Selector 패턴을 적용해 상태 구독 범위를 최소화하여 컴포넌트 렌더링 커밋 시간을 **약 30%(9.7ms → 6.2ms) 단축**했습니다.
