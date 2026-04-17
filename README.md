@@ -55,6 +55,8 @@ PhotoMap은 수많은 사진 데이터를 단순히 저장하는 것을 넘어, 
 - `docs/` : 프로젝트 기술 설계 및 성과 문서화
 - `README.md` : 프로젝트 로드맵 및 개요 문서
 
+##DB 설계
+[![image.png](https://i.postimg.cc/MH8grFRf/image.png)](https://postimg.cc/62YH8zMB)
 
 
 ## 주요 기능
