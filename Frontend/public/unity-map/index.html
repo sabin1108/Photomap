@@ -3,12 +3,11 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Mapbox + Unity (Session & Optimization)</title>
-
+    <title>Unity + Mapbox (Secure Integrated View)</title>
+    <!-- Mapbox v3.1.2 (Latest compatible for the project logic) -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         * {
             margin: 0;
@@ -33,8 +32,7 @@
             z-index: 1;
         }
 
-
-        #unity-container {
+        #close-btn {
             position: absolute;
             top: 0;
             left: 0;
@@ -79,11 +77,6 @@
             font-size: 16px;
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        }
-
-        #close-btn:hover {
-            background: #fff;
-            transform: scale(1.1);
         }
 
         #unity-loading-bar {
@@ -199,8 +192,6 @@
 
 <body>
     <div id="map"></div>
-
-
     <div id="unity-container">
         <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
         <button id="close-btn" onclick="closeUnity()">✕</button>
@@ -213,91 +204,120 @@
     </div>
 
     <script>
-        // 수파베이스 클라이언트
         let supabaseClient = null;
-
-        // 설정 수신 및 초기화
-        window.addEventListener('message', (event) => {
-            if (!event.data) return;
-
-            // 보안 설정 수신
-            if (event.data.type === 'INIT_CONFIG') {
-                console.log("📥 [Iframe] Config received:", event.data.data);
-                const { supabaseUrl, supabaseKey, mapboxToken, adminEmail } = event.data.data;
-
-                if (!mapboxToken) {
-                    console.error("❌ [Iframe] Mapbox token is missing in config!");
-                    document.body.style.background = "#fee"; // 에러 시 배경색 변경
-                }
-
-                // 맵박스 초기화
-                if (mapboxToken) {
-                    console.log("🗺️ [Iframe] Initializing Mapbox...");
-                    initializeMap(mapboxToken);
-                }
-
-                // 수파베이스 초기화
-                if (!supabaseClient && supabaseUrl && supabaseKey) {
-                    console.log("🔐 [Iframe] Initializing Supabase...");
-                    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-                    if (map && map.isStyleLoaded()) loadRealDataFromDB(adminEmail);
-                }
-            }
-
-            // 마커 데이터 수신
-            if (event.data.type === 'UPDATE_MARKERS') {
-                const photos = event.data.data;
-                if (map && map.isStyleLoaded()) applyExternalPhotos(photos);
-                else if (map) map.once('load', () => applyExternalPhotos(photos));
-            }
-        });
-
-        var myUnityInstance = null;
-        var container = document.querySelector("#unity-container");
-        var canvas = document.querySelector("#unity-canvas");
-        var loadingBar = document.querySelector("#unity-loading-bar");
-        var progressBarFull = document.querySelector("#unity-progress-bar-full");
-        var activeMarkerLngLat = null;
-        var map = null;
-
+        let isInitialized = false;
+        let map = null;
         let rawDBData = [];
         let htmlMarkers = {};
         let activeSourceIds = [];
         let sourceDateMap = {};
         let currentMode = "MAP";
+        let hasFlown = false;
+        let myUnityInstance = null;
+        let activeMarkerLngLat = null;
+        let lastCaptureTime = 0;
 
-        // 경로를 상대 경로로 수정 (Build 폴더가 index.html과 같은 위치에 있음)
-        var buildUrl = "Build";
-        var config = {
+        const container = document.querySelector("#unity-container");
+        const canvas = document.querySelector("#unity-canvas");
+        const loadingBar = document.querySelector("#unity-loading-bar");
+        const progressBarFull = document.querySelector("#unity-progress-bar-full");
+
+        // 환경 변수 저장용
+        window.adminEmail = "";
+        window.adminPassword = "";
+
+        // React 부모로부터 설정 수신
+        window.addEventListener('message', (event) => {
+            if (!event.data) return;
+            if (event.data.type === 'INIT_CONFIG') {
+                if (isInitialized) return;
+                console.log("📥 [Iframe] Config received:", event.data.data);
+
+                // 설정 수신 알림
+                window.parent.postMessage({ type: 'CONFIG_RECEIVED' }, '*');
+
+                const { supabaseUrl, supabaseKey, mapboxToken, adminEmail, adminPassword } = event.data.data;
+                window.adminEmail = (adminEmail || "").trim();
+                window.adminPassword = (adminPassword || "").trim();
+
+                if (mapboxToken && !map) {
+                    isInitialized = true;
+                    // 토큰 정제 (공백 및 따옴표 제거)
+                    const cleanToken = mapboxToken.trim().replace(/^["']|["']$/g, '');
+                    console.log("🗺️ [Iframe] Initializing Mapbox v3 with secure token (length: " + cleanToken.length + ")");
+
+                    if (window.mapboxgl) {
+                        window.mapboxgl.accessToken = cleanToken;
+                    }
+
+                    // 토큰 반영 및 안정성을 위한 딜레이
+                    setTimeout(() => {
+                        initializeMap(cleanToken);
+                    }, 100);
+                }
+
+                if (!supabaseClient && supabaseUrl && supabaseKey) {
+                    console.log("🔐 [Iframe] Initializing Supabase client...");
+                    supabaseClient = window.supabase.createClient(supabaseUrl.trim(), supabaseKey.trim());
+                    if (map && map.isStyleLoaded()) loadRealDataFromDB();
+                }
+            }
+
+            if (event.data.type === 'UPDATE_MARKERS') {
+                const photos = event.data.data;
+                console.log("📥 [Iframe] Updating markers:", photos.length, "photos");
+                rawDBData = photos;
+                if (map && map.isStyleLoaded()) {
+                    applyMapMode();
+                } else if (map) {
+                    map.once('style.load', () => applyMapMode());
+                }
+            }
+        });
+
+        // Unity 로더
+        const buildUrl = "Build";
+        const unityConfig = {
             dataUrl: buildUrl + "/webgl.data", frameworkUrl: buildUrl + "/webgl.framework.js",
             codeUrl: buildUrl + "/webgl.wasm", streamingAssetsUrl: "StreamingAssets",
             companyName: "DefaultCompany", productName: "MapBoxweb", productVersion: "0.1.0",
-            matchWebGLToCanvasSize: false, devicePixelRatio: 1,
+            devicePixelRatio: 1,
         };
 
-        var script = document.createElement("script");
+        const script = document.createElement("script");
         script.src = buildUrl + "/webgl.loader.js";
         script.onload = () => {
-            createUnityInstance(canvas, config, (progress) => { progressBarFull.style.width = 100 * progress + "%"; })
-                .then((unityInstance) => { myUnityInstance = unityInstance; loadingBar.style.display = "none"; })
-                .catch((message) => { console.error("Unity 로딩 실패:", message); });
+            createUnityInstance(canvas, unityConfig, (progress) => { progressBarFull.style.width = 100 * progress + "%"; })
+                .then((instance) => { myUnityInstance = instance; loadingBar.style.display = "none"; })
+                .catch((err) => console.error("Unity loading failed:", err));
         };
         document.body.appendChild(script);
 
-        // 지도 및 이벤트 초기화
         function initializeMap(token) {
             if (!token || map) return;
-            mapboxgl.accessToken = token;
+
+            if (window.mapboxgl) {
+                window.mapboxgl.accessToken = token;
+            } else if (typeof mapboxgl !== 'undefined') {
+                mapboxgl.accessToken = token;
+            }
+
+            console.log("🚀 Creating map instance...");
             map = new mapboxgl.Map({
                 container: "map", style: "mapbox://styles/mapbox/streets-v12",
                 center: [127.7669, 35.9078], zoom: 2.0, pitch: 0, projection: 'globe', preserveDrawingBuffer: true
             });
 
+            map.on('error', (e) => {
+                console.error("❌ [Mapbox Error]", e.error?.message || e);
+            });
+
             map.on('style.load', () => {
+                console.log("🎨 [Iframe] Map style loaded.");
                 map.setFog({ 'color': 'rgb(186, 210, 235)', 'high-color': 'rgb(36, 92, 223)', 'horizon-blend': 0.02, 'space-color': 'rgb(11, 11, 25)', 'star-intensity': 0.6 });
+
                 const layers = map.getStyle().layers;
                 const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field'])?.id;
-
                 map.addLayer({
                     'id': 'add-3d-buildings', 'source': 'composite', 'source-layer': 'building',
                     'filter': ['==', 'extrude', 'true'], 'type': 'fill-extrusion', 'minzoom': 15,
@@ -308,224 +328,245 @@
                         'fill-extrusion-opacity': 0.8
                     }
                 }, labelLayerId);
-            });
 
-            // 지도 인터랙션 이벤트
-            map.on('load', () => {
-                console.log("✅ [Iframe] Mapbox style loaded");
                 if (supabaseClient) loadRealDataFromDB();
             });
 
-            map.on('error', (e) => {
-                console.error("❌ [Iframe] Mapbox error:", e);
-            });
-
+            map.on('render', updateMarkersRealtime);
             map.on('move', () => { updateUnityPosition(); handleMapInteraction(); });
             map.on('zoom', () => { updateUnityPosition(); handleMapInteraction(); });
-            map.on('moveend', () => { if (container.classList.contains('active')) captureAndSendBackground(); });
-            map.on('mousedown', closeUnityOnInteract);
-            map.on('wheel', closeUnityOnInteract);
-            map.on('touchstart', closeUnityOnInteract);
-            
-            // 렌더링 시마다 마커 업데이트 (map이 초기화된 후 등록)
-            map.on('render', updateMarkersRealtime);
-        }
-
-        // 부모 창에서 전달받은 마커 데이터를 적용하는 함수
-        function applyExternalPhotos(photos) {
-            console.log("📸 [Iframe] Applying external photos:", photos.length);
-            rawDBData = photos;
-            if (map && map.isStyleLoaded()) applyMapMode();
+            map.on('mousedown', () => closeUnity());
+            map.on('wheel', () => closeUnity());
+            map.on('touchstart', () => closeUnity());
         }
 
         function handleMapInteraction() {
             if (container.classList.contains('active')) {
                 const now = Date.now();
-                if (now - lastCaptureTime > captureInterval) {
+                if (now - lastCaptureTime > 50) {
                     lastCaptureTime = now;
                     captureAndSendBackground();
                 }
             }
         }
 
-        function closeUnityOnInteract() { if (container.classList.contains('active')) closeUnity(); }
+        async function loadRealDataFromDB() {
+            if (!supabaseClient) return;
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) {
+                    console.log("🔐 [Iframe] Admin login attempt...");
+                    const { error } = await supabaseClient.auth.signInWithPassword({
+                        email: window.adminEmail || 'admin11@gmail.com',
+                        password: window.adminPassword || 'adminadmin'
+                    });
+                    if (error) { console.error("❌ Auth failed:", error.message); return; }
+                }
+                console.log("✅ [Iframe] Fetching data...");
+                const { data, error } = await supabaseClient
+                    .from('location')
+                    .select('location_id, lat, lon, created_time, media ( file_url, thumbnail_url, take_time, created_time )');
+
+                if (error) throw error;
+                // Note: Even when loading from DB directly, we should map to Photo structure
+                rawDBData = data.map(loc => ({
+                    id: String(loc.location_id),
+                    url: (loc.media && loc.media.length > 0) ? (loc.media[0].thumbnail_url || loc.media[0].file_url) : '',
+                    allUrls: (loc.media || []).map(m => m.file_url).join('|'),
+                    lat: loc.lat,
+                    lng: loc.lon
+                }));
+                applyMapMode();
+            } catch (e) { console.error("❌ DB failure:", e); }
+        }
 
         function updateMarkersRealtime() {
             const activeLayers = activeSourceIds.map(sid => `inv-cluster-${sid}`).concat(activeSourceIds.map(sid => `inv-uncluster-${sid}`));
-            if (activeLayers.length === 0) return;
-
-            let allLoaded = true;
-            activeSourceIds.forEach(sid => { if (!map.getSource(sid) || !map.isSourceLoaded(sid)) allLoaded = false; });
-            if (!allLoaded) return;
+            if (activeLayers.length === 0 || !map.isStyleLoaded()) return;
 
             const features = map.queryRenderedFeatures({ layers: activeLayers });
             const keepMarkers = new Set();
 
-            for (let i = 0; i < features.length; i++) {
-                const feature = features[i];
+            features.forEach(feature => {
                 const coords = feature.geometry.coordinates;
                 const sourceId = feature.layer.source;
                 const dateStr = sourceDateMap[sourceId];
-
-                let markerKey = feature.properties.cluster ? `cluster_${sourceId}_${feature.properties.cluster_id}` : `unclustered_${sourceId}_${feature.properties.id}`;
+                const markerKey = feature.properties.cluster ? `cluster_${sourceId}_${feature.properties.cluster_id}` : `unclustered_${sourceId}_${feature.properties.id}`;
                 keepMarkers.add(markerKey);
 
                 if (!htmlMarkers[markerKey]) {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'marker-wrapper';
-                    wrapper.addEventListener('mousedown', (e) => e.stopPropagation());
-                    wrapper.addEventListener('touchstart', (e) => e.stopPropagation());
-
                     const innerEl = document.createElement('div');
                     innerEl.className = 'custom-marker';
 
                     if (feature.properties.cluster) {
-                        // ★ 썸네일(thumbnails) 데이터를 사용해서 지도 마커를 가볍게 렌더링!
                         map.getSource(sourceId).getClusterLeaves(feature.properties.cluster_id, 3, 0, (err, leaves) => {
                             if (err || !leaves) return;
-                            let displayThumbnails = [];
-                            leaves.forEach(leaf => { displayThumbnails = displayThumbnails.concat(leaf.properties.thumbnails.split('|')); });
+                            let thumbUrls = [];
+                            leaves.forEach(leaf => {
+                                const urls = (leaf.properties.thumbnails || "").split('|').filter(Boolean);
+                                thumbUrls = thumbUrls.concat(urls);
+                            });
 
-                            displayThumbnails.slice(0, 3).forEach((url) => {
-                                const img = document.createElement('img'); img.src = url; innerEl.appendChild(img);
+                            // Remove existing imgs before adding new ones
+                            innerEl.innerHTML = '';
+                            thumbUrls.slice(0, 3).forEach((url, idx) => {
+                                if (url) {
+                                    const img = document.createElement('img');
+                                    img.src = url;
+                                    img.style.zIndex = idx + 1;
+                                    img.onerror = () => { img.style.backgroundColor = '#ddd'; };
+                                    innerEl.appendChild(img);
+                                }
                             });
                         });
-
-                        wrapper.addEventListener('click', (e) => {
+                        wrapper.onclick = (e) => {
                             e.stopPropagation();
-                            // ★ 유니티를 켤 때는 고화질 원본(urls) 데이터를 넘깁니다!
                             map.getSource(sourceId).getClusterLeaves(feature.properties.cluster_id, 999, 0, (err, leaves) => {
                                 if (err || !leaves) return;
-                                let allUrls = [];
-                                leaves.forEach(leaf => { allUrls = allUrls.concat(leaf.properties.urls.split('|')); });
-                                showUnity('cluster_' + feature.properties.cluster_id, coords[0], coords[1], allUrls);
+                                let urls = [];
+                                leaves.forEach(l => {
+                                    const leafUrls = (l.properties.urls || "").split('|').filter(Boolean);
+                                    urls = urls.concat(leafUrls);
+                                });
+                                showUnity(markerKey, coords[0], coords[1], urls);
                             });
+                        };
+                    } else {
+                        const thumbUrls = (feature.properties.thumbnails || "").split('|').filter(Boolean);
+                        innerEl.innerHTML = '';
+                        thumbUrls.slice(0, 3).forEach((url, idx) => {
+                            if (url) {
+                                const img = document.createElement('img');
+                                img.src = url;
+                                img.style.zIndex = idx + 1;
+                                img.onerror = () => { img.style.backgroundColor = '#ddd'; };
+                                innerEl.appendChild(img);
+                            }
                         });
+                        wrapper.onclick = (e) => {
+                            e.stopPropagation();
+                            showUnity(feature.properties.id, coords[0], coords[1], (feature.properties.urls || "").split('|').filter(Boolean));
+                        };
                     }
-                    else {
-                        // ★ 낱개일 때도 지도에는 썸네일 표시, 유니티에는 원본 전송
-                        const thumbUrls = feature.properties.thumbnails.split('|');
-                        const origUrls = feature.properties.urls.split('|');
-
-                        thumbUrls.slice(0, 3).forEach((url) => {
-                            const img = document.createElement('img'); img.src = url; innerEl.appendChild(img);
-                        });
-
-                        wrapper.addEventListener('click', (e) => {
-                            e.stopPropagation(); showUnity(feature.properties.id, coords[0], coords[1], origUrls);
-                        });
-                    }
-
                     wrapper.appendChild(innerEl);
-
                     if (currentMode === "DATE" && dateStr) {
                         const dateLabel = document.createElement('div');
                         dateLabel.className = 'date-label';
                         dateLabel.innerText = dateStr;
                         wrapper.appendChild(dateLabel);
                     }
-
                     htmlMarkers[markerKey] = new mapboxgl.Marker(wrapper).setLngLat(coords).addTo(map);
                 } else {
                     htmlMarkers[markerKey].setLngLat(coords);
                 }
-            }
+            });
 
             for (const key in htmlMarkers) {
                 if (!keepMarkers.has(key)) { htmlMarkers[key].remove(); delete htmlMarkers[key]; }
             }
         }
 
+        function applyMapMode() {
+            clearMapData();
+            currentMode = "MAP";
+            const features = rawDBData.map(loc => {
+                // Handle different data structures safely
+                const id = loc.id || (loc.location_id ? String(loc.location_id) : Math.random().toString());
+                const lat = loc.lat || 0;
+                const lng = loc.lng || loc.lon || 0;
+                const thumbnails = loc.url || (loc.media && loc.media.length > 0 ? (loc.media[0].thumbnail_url || loc.media[0].file_url) : '');
+                const fullUrls = loc.allUrls || (loc.media ? loc.media.map(m => m.file_url).join('|') : loc.url || '');
+
+                return {
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [lng, lat] },
+                    properties: {
+                        id: id,
+                        urls: fullUrls,
+                        thumbnails: thumbnails
+                    }
+                };
+            });
+            const sourceId = 'photos_map'; activeSourceIds.push(sourceId);
+            map.addSource(sourceId, { type: 'geojson', data: { type: 'FeatureCollection', features }, cluster: true, clusterMaxZoom: 20, clusterRadius: 60 });
+            map.addLayer({ id: `inv-cluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['has', 'point_count'], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
+            map.addLayer({ id: `inv-uncluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
+
+            // 최초 로딩 시 랜덤 사진으로 비행
+            if (rawDBData.length > 0 && !hasFlown) {
+                const randomPhoto = rawDBData[Math.floor(Math.random() * rawDBData.length)];
+                const lng = randomPhoto.lng || randomPhoto.lon || 0;
+                const lat = randomPhoto.lat || 0;
+                if (lng !== 0 || lat !== 0) {
+                    console.log("✈️ [Iframe] Flying to random photo:", [lng, lat]);
+                    map.flyTo({
+                        center: [lng, lat],
+                        zoom: 12,
+                        essential: true,
+                        duration: 5000 // 5초간 부드럽게 이동
+                    });
+                    hasFlown = true;
+                }
+            }
+        }
+
+        function applyDateMode() {
+            // No longer used based on UI request, but keeping function empty to prevent errors
+        }
 
         function clearMapData() {
             Object.values(htmlMarkers).forEach(m => m.remove());
             htmlMarkers = {};
             activeSourceIds.forEach(sid => {
-                if (map.getLayer(`inv-cluster-${sid}`)) map.removeLayer(`inv-cluster-${sid}`);
-                if (map.getLayer(`inv-uncluster-${sid}`)) map.removeLayer(`inv-uncluster-${sid}`);
-                if (map.getSource(sid)) map.removeSource(sid);
+                if (map.getSource(sid)) {
+                    if (map.getLayer(`inv-cluster-${sid}`)) map.removeLayer(`inv-cluster-${sid}`);
+                    if (map.getLayer(`inv-uncluster-${sid}`)) map.removeLayer(`inv-uncluster-${sid}`);
+                    map.removeSource(sid);
+                }
             });
             activeSourceIds = [];
             sourceDateMap = {};
         }
 
-        function applyMapMode() {
-            clearMapData(); currentMode = "MAP";
-            const features = [];
-            rawDBData.forEach(loc => {
-                if (!loc.media || loc.media.length === 0) return;
-                features.push({
-                    type: 'Feature', geometry: { type: 'Point', coordinates: [loc.lon, loc.lat] },
-                    properties: {
-                        id: loc.location_id.toString(),
-                        urls: loc.media.map(m => m.file_url).join('|'), // 유니티용 원본
-                        thumbnails: loc.media.map(m => m.thumbnail_url || m.file_url).join('|') // 지도 렌더링용 썸네일
-                    }
-                });
-            });
-            const sourceId = 'photos_map'; activeSourceIds.push(sourceId);
-            map.addSource(sourceId, { type: 'geojson', data: { type: 'FeatureCollection', features: features }, cluster: true, clusterMaxZoom: 20, clusterRadius: 60 });
-            map.addLayer({ id: `inv-cluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['has', 'point_count'], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
-            map.addLayer({ id: `inv-uncluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
-        }
-
-
-
-        // ==========================================
-        // ★ 실제 유저 세션 연동 데이터 로드 ★
-        // ==========================================
-        async function loadRealDataFromDB(adminEmail) {
-            if (!supabaseClient) return;
-            try {
-                // 1. 현재 브라우저에 저장된 로그인 세션을 확인합니다.
-                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-
-                if (!session) {
-                    const targetEmail = adminEmail || '***SCRUBBED_ADMIN_EMAIL***';
-                    console.log(`⚠️ 현재 로그인된 세션이 없습니다. (${targetEmail}으로 자동 로그인 시도)`);
-                    const { data, error } = await supabaseClient.auth.signInWithPassword({
-                        email: targetEmail,
-                        password: '***SCRUBBED_ADMIN_PASSWORD***'
-                    });
-                    if (error) { console.error("❌ 로그인 실패:", error.message); return; }
-                } else {
-                    console.log("✅ 정상적으로 유저 인증이 완료되었습니다! ID:", session.user.id);
-                }
-
-                // 2. RLS 정책에 의해 로그인한 유저의 사진만 수파베이스가 자동으로 필터링해서 줍니다! (thumbnail_url 포함)
-                const { data, error } = await supabaseClient
-                    .from('location')
-                    .select('location_id, lat, lon, created_time, media ( file_url, thumbnail_url, take_time, created_time )');
-
-                if (error) throw error;
-                rawDBData = data;
-                console.log("📦 내 데이터 로드 완료:", rawDBData);
-
-                applyMapMode();
-
-            } catch (e) { console.error("❌ DB 데이터 로드 에러:", e); }
-        }
-
-        // 초기 데이터 로드 (설정 수신 후 실행됨)
-        // map.on('load', () => { loadRealDataFromDB(); });
-
-        let lastCaptureTime = 0; const captureInterval = 50;
-        // 이벤트 리스너는 initializeMap 내부로 이동됨
-
         function updateUnityPosition() {
             if (!activeMarkerLngLat || !map) return;
-            var pos = map.project(activeMarkerLngLat);
+            const pos = map.project(activeMarkerLngLat);
             container.style.left = pos.x + "px"; container.style.top = pos.y + "px";
         }
 
         function showUnity(id, lng, lat, photoUrls) {
             if (!myUnityInstance) return;
-            activeMarkerLngLat = [lng, lat]; updateUnityPosition();
-            const urlString = photoUrls.join('|');
+            activeMarkerLngLat = [lng, lat];
+            updateUnityPosition();
+
+            // 1. 클릭 시 마커 위치로 줌인 (Focus)
+            if (map) {
+                map.flyTo({
+                    center: [lng, lat],
+                    zoom: 17,
+                    essential: true,
+                    duration: 1000 // 1초간 빠르게 확대
+                });
+            }
+
+            const urlString = photoUrls.filter(u => u).join('|');
+
+            // 2. 유니티 컨테이너 활성화 및 사진 전송
             setTimeout(() => {
                 captureAndSendBackground();
                 container.classList.add('active');
-                setTimeout(() => { myUnityInstance.SendMessage('MapManager', 'OpenCarouselWithUrls', urlString); }, 150);
+
+                // 유니티가 즉시 렌더링되도록 포커스 및 리사이즈 이벤트 강제 발생
+                if (canvas) canvas.focus();
+                window.dispatchEvent(new Event('resize'));
+
+                setTimeout(() => {
+                    myUnityInstance.SendMessage('MapManager', 'OpenCarouselWithUrls', urlString);
+                    // 활성화 직후 다시 한번 리사이즈 트리거
+                    window.dispatchEvent(new Event('resize'));
+                }, 150);
             }, 50);
         }
 
@@ -536,21 +577,23 @@
 
         function captureAndSendBackground() {
             try {
-                const mapCanvas = map.getCanvas(); const containerRect = container.getBoundingClientRect(); const mapRect = mapCanvas.getBoundingClientRect();
+                if (!myUnityInstance || !map) return;
+                const mCanvas = map.getCanvas();
+                const rect = container.getBoundingClientRect();
+                const mRect = mCanvas.getBoundingClientRect();
                 const dpr = window.devicePixelRatio || 1;
-                const cropX = (containerRect.left - mapRect.left) * dpr; const cropY = (containerRect.top - mapRect.top) * dpr;
-                const cropWidth = containerRect.width * dpr; const cropHeight = containerRect.height * dpr;
-                const tempCanvas = document.createElement('canvas'); tempCanvas.width = cropWidth; tempCanvas.height = cropHeight;
-                const ctx = tempCanvas.getContext('2d');
-                ctx.drawImage(mapCanvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-                tempCanvas.toBlob((blob) => {
-                    const blobUrl = URL.createObjectURL(blob);
+                const temp = document.createElement('canvas');
+                temp.width = rect.width * dpr; temp.height = rect.height * dpr;
+                const ctx = temp.getContext('2d');
+                ctx.drawImage(mCanvas, (rect.left - mRect.left) * dpr, (rect.top - mRect.top) * dpr, temp.width, temp.height, 0, 0, temp.width, temp.height);
+                temp.toBlob(b => {
+                    const blobUrl = URL.createObjectURL(b);
                     myUnityInstance.SendMessage('BackgroundReceiver', 'ReceiveBackgroundUrl', blobUrl);
                 }, 'image/png');
-            } catch (e) { console.error("배경 캡처 실패:", e); }
+            } catch (e) { }
         }
 
-        // 부모 창에 준비 완료 알림
+        // 초기화 완료 신호
         window.parent.postMessage({ type: 'IFRAME_READY' }, '*');
     </script>
 </body>

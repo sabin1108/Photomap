@@ -36,7 +36,7 @@ export function Map2DView({ }: Map2DViewProps) {
     return matchesSearch && matchesCategory;
   });
 
-  // iframe 메시지 수신 (준비 완료 등)
+  // iframe 메시지 수신
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'IFRAME_READY') {
@@ -58,7 +58,8 @@ export function Map2DView({ }: Map2DViewProps) {
           supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
           supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
           mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN,
-          adminEmail: import.meta.env.VITE_ADMIN_EMAIL
+          adminEmail: import.meta.env.VITE_ADMIN_EMAIL,
+          adminPassword: import.meta.env.VITE_ADMIN_PASSWORD
         };
 
         console.log("📤 [Parent] Sending config to iframe:", {
@@ -69,20 +70,20 @@ export function Map2DView({ }: Map2DViewProps) {
 
         // 마커 데이터 전송
         iframeRef.current.contentWindow.postMessage(
-          { type: 'UPDATE_MARKERS', data: filteredPhotos }, 
+          { type: 'UPDATE_MARKERS', data: filteredPhotos },
           '*'
         );
 
         // 환경 변수 전송
         iframeRef.current.contentWindow.postMessage(
-          { type: 'INIT_CONFIG', data: config }, 
+          { type: 'INIT_CONFIG', data: config },
           '*'
         );
       }
     };
 
     sendUpdate();
-    
+
     // 만약 초기화가 안 될 경우를 위해 짧은 간격으로 1회 더 시도
     const timer = setTimeout(sendUpdate, 1000);
     return () => clearTimeout(timer);
