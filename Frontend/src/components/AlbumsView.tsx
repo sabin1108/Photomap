@@ -77,29 +77,55 @@ export function AlbumsView() {
     });
   }, [categories, photos]);
 
+  // 검색 및 탭 필터링 로직: 모든 주석은 사용자 요청에 따라 한국어로 작성합니다.
+  const categorizedAlbums = useMemo(() => {
+    // 앨범 필터링 함수: 개수가 0개보다 많고 검색어와 일치하는지 확인합니다.
+    const filterFn = (a: Album) => {
+      const isNotEmpty = a.count > 0;
+      const matchesSearch = searchQuery.trim() 
+        ? a.title.toLowerCase().includes(searchQuery.toLowerCase()) 
+        : true;
+      return isNotEmpty && matchesSearch;
+    };
+
+    // 각 카테고리별로 필터링된 리스트를 반환합니다.
+    return {
+      system: systemAlbums.filter(filterFn),
+      places: placeAlbums.filter(filterFn),
+      collections: customAlbums.filter(filterFn)
+    };
+  }, [systemAlbums, placeAlbums, customAlbums, searchQuery]);
+
+  // 기존의 단일 리스트 필터링 로직 (개별 탭 보기용)
   const filteredAlbums = useMemo(() => {
-    let list: Album[] = [];
-    if (activeTab === 'all') list = [...systemAlbums, ...placeAlbums, ...customAlbums];
-    else if (activeTab === 'system') list = [...systemAlbums];
-    else if (activeTab === 'places') list = [...placeAlbums];
-    else if (activeTab === 'collections') list = [...customAlbums];
+    if (activeTab === 'system') return categorizedAlbums.system;
+    if (activeTab === 'places') return categorizedAlbums.places;
+    if (activeTab === 'collections') return categorizedAlbums.collections;
+    
+    // 전체 보기 탭에서는 모든 리스트를 합쳐서 반환하되, UI 렌더링 시에는 섹션별로 나누어 처리합니다.
+    return [
+      ...categorizedAlbums.system,
+      ...categorizedAlbums.places,
+      ...categorizedAlbums.collections
+    ];
+  }, [activeTab, categorizedAlbums]);
 
-    list = list.filter(a => a.count > 0);
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      list = list.filter(a => a.title.toLowerCase().includes(query));
-    }
-    return list;
-  }, [activeTab, searchQuery, systemAlbums, placeAlbums, customAlbums]);
-
+  // 새로운 보관함 생성 다이얼로그 관리
   const handleOpenCreate = () => { setFormData({ title: '' }); setIsDialogOpen(true); };
+  
+  // 보관함 저장 로직
   const handleSave = () => { if (formData.title.trim()) { addCategory(formData.title.trim()); setIsDialogOpen(false); } };
+  
+  // 보관함 이름 수정 로직
   const handleUpdateAlbum = async () => { if (editingAlbumName && editFormData.title.trim()) { await updateCategory(editingAlbumName, editFormData.title.trim()); setEditingAlbumName(null); } };
-  const handleDeleteAlbum = async () => { if (editingAlbumName) { if (window.confirm('Delete this collection?')) { await deleteCategory(editingAlbumName); setEditingAlbumName(null); } } };
+  
+  // 보관함 삭제 로직
+  const handleDeleteAlbum = async () => { if (editingAlbumName) { if (window.confirm('이 컬렉션을 삭제하시겠습니까?')) { await deleteCategory(editingAlbumName); setEditingAlbumName(null); } } };
 
+  // 가상화 행 개수 계산 (단일 탭 보기용)
   const rowCount = Math.ceil(filteredAlbums.length / columns);
-  //가상화 설정 
+  
+  // React Virtual을 활용한 목록 가상화 설정 (성능 최적화)
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
@@ -107,6 +133,7 @@ export function AlbumsView() {
     overscan: 3,
   });
 
+  // 앨범 클릭 핸들러: 선택 모드와 일반 모드 구분
   const handleAlbumClick = (albumId: string) => {
     if (isSelectMode) {
       if (albumId.startsWith('system_') || albumId.startsWith('loc_')) return;
@@ -115,7 +142,76 @@ export function AlbumsView() {
       setActiveAlbum(albumId);
     }
   };
-  const handleBatchDeleteAlbums = async () => { if (selectedAlbumNames.length > 0 && window.confirm('Delete selected?')) { await batchDeleteCategories(selectedAlbumNames); setIsSelectMode(false); setSelectedAlbumNames([]); } };
+  
+  // 선택된 여러 보관함 일괄 삭제
+  const handleBatchDeleteAlbums = async () => { if (selectedAlbumNames.length > 0 && window.confirm('선택한 항목들을 삭제하시겠습니까?')) { await batchDeleteCategories(selectedAlbumNames); setIsSelectMode(false); setSelectedAlbumNames([]); } };
+
+  // 앨범 카드 렌더링 함수: 반복되는 카드 UI를 공통 함수로 분리하여 관리합니다.
+  const renderAlbumCard = (album: Album) => {
+    const isSelected = selectedAlbumNames.includes(album.id);
+    const isSystem = album.id.startsWith('system_');
+    const isLocation = album.id.startsWith('loc_');
+
+    return (
+      <div
+        key={album.id}
+        className={cn(
+          "aspect-square relative group cursor-pointer overflow-hidden bg-white rounded-xl shadow-sm border border-stone-200/40",
+          isSelectMode && (isSystem || isLocation) && "opacity-40 cursor-not-allowed grayscale"
+        )}
+        onClick={() => handleAlbumClick(album.id)}
+      >
+        {album.cover ? (
+          <ImageWithFallback
+            src={album.cover}
+            className={cn(
+              "w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-105",
+              isSelected && "scale-90 rounded-xl"
+            )}
+          />
+        ) : (
+          <div className="w-full h-full bg-stone-100 flex flex-col items-center justify-center">
+            {album.icon ? <album.icon className="w-6 h-6 md:w-8 md:h-8 text-stone-300" /> : <FolderPlus className="w-6 h-6 md:w-8 md:h-8 text-stone-300" />}
+          </div>
+        )}
+
+        {isSelected && (
+          <div className="absolute inset-0 bg-black/10 ring-4 ring-inset ring-[#E09F87] z-20 pointer-events-none" />
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex flex-col justify-end p-2 md:p-3">
+          <h3 className="text-white text-xs md:text-sm font-semibold truncate tracking-tight shadow-sm drop-shadow-md">{album.title}</h3>
+          <p className="text-white/80 text-[9px] md:text-[10px] font-medium hidden md:block">{album.count}개의 추억</p>
+        </div>
+
+        {/* 선택 모드 시 체크박스 표시 */}
+        {isSelectMode && !isSystem && !isLocation && (
+          <div className={cn(
+            "absolute top-2 left-2 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center transition-colors z-20",
+            isSelected ? "bg-[#E09F87] border-[#E09F87] text-white" : "bg-white/20 backdrop-blur-md border-white/80 text-transparent"
+          )}>
+            <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4" />
+          </div>
+        )}
+
+        {/* 수정 버튼 (일반 모드 시 마우스 오버로 표시) */}
+        {!isSelectMode && !isSystem && !isLocation && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="absolute top-2 right-2 h-7 w-7 md:h-8 md:w-8 text-white bg-black/40 backdrop-blur-md rounded-full opacity-0 lg:group-hover:opacity-100 transition-opacity z-20 hover:bg-black/80"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              setEditingAlbumName(album.id);
+              setEditFormData({ title: album.title });
+            }}
+          >
+            <Pencil className="w-3 h-3 md:w-4 md:h-4" />
+          </Button>
+        )}
+      </div>
+    );
+  };
 
   // --- 활성화된 앨범 화면 렌더링 ---
   if (activeAlbum) {
@@ -168,10 +264,10 @@ export function AlbumsView() {
 
           <div className="flex items-center justify-between md:justify-start gap-4">
             <h1 className="text-3xl font-bold text-stone-900 tracking-tight">
-              Albums
+              보관함
             </h1>
             <Button variant="outline" onClick={handleOpenCreate} className="rounded-full shadow-sm border-stone-200 h-9 px-3 text-stone-600 gap-1.5 md:hidden">
-              <FolderPlus className="w-4 h-4" /> New
+              <FolderPlus className="w-4 h-4" /> 새 폴더
             </Button>
           </div>
 
@@ -191,10 +287,10 @@ export function AlbumsView() {
 
             <div className="hidden md:flex gap-2">
               <Button onClick={handleOpenCreate} className="bg-stone-900 hover:bg-stone-800 text-white rounded-2xl shadow-sm gap-1.5 font-medium h-10">
-                <FolderPlus className="w-4 h-4" /> New
+                <FolderPlus className="w-4 h-4" /> 새 보관함 생성
               </Button>
               <Button variant="outline" onClick={() => { setIsSelectMode(!isSelectMode); setSelectedAlbumNames([]); }} className={cn("rounded-2xl gap-2 border-stone-200 bg-white h-10", isSelectMode && "bg-[#E09F87] border-[#E09F87] text-white")}>
-                {isSelectMode ? <X className="w-4 h-4" /> : <MousePointer2 className="w-4 h-4" />} Select
+                {isSelectMode ? <X className="w-4 h-4" /> : <MousePointer2 className="w-4 h-4" />} {isSelectMode ? '취소' : '선택'}
               </Button>
             </div>
           </div>
@@ -213,106 +309,120 @@ export function AlbumsView() {
                   : "text-stone-500 hover:bg-stone-200/50"
               )}
             >
-              {tab === 'all' ? 'All (Grid)' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'all' && '전체'}
+              {tab === 'system' && '추천'}
+              {tab === 'places' && '위치별'}
+              {tab === 'collections' && '태그별'}
             </button>
           ))}
         </div>
       </div>
 
+      {/* 앨범 목록 영역: 탭 보기에 따라 단일 그리드 혹은 섹션별 그리드를 렌더링합니다. */}
       <div className="flex-1 overflow-y-auto px-1 md:px-4 py-2 md:py-4 [&::-webkit-scrollbar]:hidden bg-transparent" ref={parentRef}>
-        {filteredAlbums.length === 0 ? (
-          <div className="w-full h-40 flex flex-col items-center justify-center text-stone-400 gap-2">
-            <Search className="w-8 h-8 opacity-20" />
-            <p>No albums found for "{searchQuery}"</p>
+        
+        {/* 전체 보기용 섹션별 렌더링 로직 (1층: 주소 정보, 2층: 태그 정보 등) */}
+        {activeTab === 'all' ? (
+          <div className="flex flex-col gap-12 pb-32">
+            
+            {/* 1. 추천 및 시스템 보관함 (All, Favorites) */}
+            {categorizedAlbums.system.length > 0 && (
+              <section className="space-y-4">
+                <div className="px-3 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#E09F87]" />
+                    추천 보관함
+                  </h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 px-3">
+                  {categorizedAlbums.system.map(album => renderAlbumCard(album))}
+                </div>
+              </section>
+            )}
+
+            {/* 구분선: 시각적 구조를 위해 부드러운 선을 추가합니다. */}
+            {categorizedAlbums.system.length > 0 && categorizedAlbums.places.length > 0 && (
+              <div className="h-px bg-stone-200/60 mx-3" />
+            )}
+
+            {/* 2. 위치별 보관함 (1층 - 사용자 요청사항 반영) */}
+            {categorizedAlbums.places.length > 0 && (
+              <section className="space-y-4">
+                <div className="px-3">
+                  <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-[#E09F87]" />
+                    위치별 보관함 (1층)
+                  </h3>
+                  <p className="text-[11px] text-stone-400 mt-1 pl-6">방문했던 도시와 장소별로 자동 분류된 앨범입니다.</p>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 px-3">
+                  {categorizedAlbums.places.map(album => renderAlbumCard(album))}
+                </div>
+              </section>
+            )}
+
+            {/* 구분선 */}
+            {categorizedAlbums.places.length > 0 && categorizedAlbums.collections.length > 0 && (
+              <div className="h-px bg-stone-200/60 mx-3" />
+            )}
+
+            {/* 3. 태그별 컬렉션 (2층 - 사용자 요청사항 반영) */}
+            {categorizedAlbums.collections.length > 0 && (
+              <section className="space-y-4">
+                <div className="px-3">
+                  <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-[#E09F87]" />
+                    태그별 컬렉션 (2층)
+                  </h3>
+                  <p className="text-[11px] text-stone-400 mt-1 pl-6">사용자가 직접 생성하거나 태그별로 묶인 컬렉션입니다.</p>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 px-3">
+                  {categorizedAlbums.collections.map(album => renderAlbumCard(album))}
+                </div>
+              </section>
+            )}
+
+            {/* 검색 결과가 하나도 없을 경우 표시합니다. */}
+            {categorizedAlbums.system.length === 0 && categorizedAlbums.places.length === 0 && categorizedAlbums.collections.length === 0 && (
+              <div className="w-full h-40 flex flex-col items-center justify-center text-stone-400 gap-2">
+                <Search className="w-8 h-8 opacity-20" />
+                <p>"{searchQuery}"에 해당하는 보관함이 없습니다.</p>
+              </div>
+            )}
           </div>
         ) : (
-          // 전체 컨텐츠의 실제 높이를 가상 엘리먼트에게 부여 
-          <div
-            className="relative w-full pb-24"
-            style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => (
-              <div
-                key={virtualRow.index}
-                data-index={virtualRow.index}
-                ref={rowVirtualizer.measureElement}
-                className="absolute top-0 left-0 w-full grid"
-                style={{
-                  transform: `translateY(${virtualRow.start}px)`,
-                  gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-                  gap: `${gap}px`,
-                }}
-              >
-                {Array.from({ length: columns }).map((_, colIndex) => {
-                  const idx = virtualRow.index * columns + colIndex;
-                  const album = filteredAlbums[idx];
-
-                  if (!album) return <div key={`empty-${colIndex}`} />;
-
-                  const isSelected = selectedAlbumNames.includes(album.id);
-                  const isSystem = album.id.startsWith('system_');
-                  const isLocation = album.id.startsWith('loc_');
-
-                  return (
-                    <div
-                      key={album.id}
-                      className={cn(
-                        "aspect-square relative group cursor-pointer overflow-hidden bg-white",
-                        isSelectMode && (isSystem || isLocation) && "opacity-40 cursor-not-allowed grayscale"
-                      )}
-                      onClick={() => handleAlbumClick(album.id)}
-                    >
-                      {album.cover ? (
-                        <ImageWithFallback
-                          src={album.cover}
-                          className={cn(
-                            "w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-105",
-                            isSelected && "scale-90 rounded-xl"
-                          )}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-stone-100 flex flex-col items-center justify-center">
-                          {album.icon ? <album.icon className="w-6 h-6 md:w-8 md:h-8 text-stone-300" /> : <FolderPlus className="w-6 h-6 md:w-8 md:h-8 text-stone-300" />}
-                        </div>
-                      )}
-
-                      {isSelected && (
-                        <div className="absolute inset-0 bg-black/10 ring-4 ring-inset ring-[#E09F87] z-20 pointer-events-none" />
-                      )}
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex flex-col justify-end p-2 md:p-3">
-                        <h3 className="text-white text-xs md:text-sm font-semibold truncate tracking-tight shadow-sm drop-shadow-md">{album.title}</h3>
-                        <p className="text-white/80 text-[9px] md:text-[10px] font-medium hidden md:block">{album.count} items</p>
-                      </div>
-
-                      {isSelectMode && !isSystem && !isLocation && (
-                        <div className={cn(
-                          "absolute top-2 left-2 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center transition-colors z-20",
-                          isSelected ? "bg-[#E09F87] border-[#E09F87] text-white" : "bg-white/20 backdrop-blur-md border-white/80 text-transparent"
-                        )}>
-                          <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4" />
-                        </div>
-                      )}
-
-                      {!isSelectMode && !isSystem && !isLocation && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="absolute top-2 right-2 h-7 w-7 md:h-8 md:w-8 text-white bg-black/40 backdrop-blur-md rounded-full opacity-0 lg:group-hover:opacity-100 transition-opacity z-20 hover:bg-black/80"
-                          onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation();
-                            setEditingAlbumName(album.id);
-                            setEditFormData({ title: album.title });
-                          }}
-                        >
-                          <Pencil className="w-3 h-3 md:w-4 md:h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+          /* 개별 탭 보기: 가상화 기능을 사용하여 대량의 폴더를 효율적으로 렌더링합니다. */
+          filteredAlbums.length === 0 ? (
+            <div className="w-full h-40 flex flex-col items-center justify-center text-stone-400 gap-2">
+              <Search className="w-8 h-8 opacity-20" />
+              <p>해당 카테고리에 조건과 일치하는 보관함이 없습니다.</p>
+            </div>
+          ) : (
+            <div
+              className="relative w-full pb-32"
+              style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => (
+                <div
+                  key={virtualRow.index}
+                  data-index={virtualRow.index}
+                  ref={rowVirtualizer.measureElement}
+                  className="absolute top-0 left-0 w-full grid"
+                  style={{
+                    transform: `translateY(${virtualRow.start}px)`,
+                    gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                    gap: `${gap}px`,
+                  }}
+                >
+                  {Array.from({ length: columns }).map((_, colIndex) => {
+                    const idx = virtualRow.index * columns + colIndex;
+                    const album = filteredAlbums[idx];
+                    if (!album) return <div key={`empty-${colIndex}`} />;
+                    return renderAlbumCard(album);
+                  })}
+                </div>
+              ))}
+            </div>
+          )
         )}
       </div>
 
