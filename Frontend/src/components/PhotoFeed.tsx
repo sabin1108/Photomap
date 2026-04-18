@@ -39,6 +39,13 @@ export function PhotoFeed({
   const categories = usePhotoStore(state => state.categories);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
+  // 모달 동기화 로직: 선택된 사진이 정보가 수정되어도 최신 상태를 유지하도록 스토어와 연결합니다.
+  const currentPhoto = useMemo(() => {
+    if (!selectedPhoto) return null;
+    // 전역 스토어의 사진 데이터에서 현재 선택한 ID와 일치하는 최신 객체를 찾아 반환합니다.
+    return photos.find(p => p.id === selectedPhoto.id) || selectedPhoto;
+  }, [photos, selectedPhoto]);
+
   // 배치 처리용 상태
   const [internalSelectMode, setInternalSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -148,7 +155,7 @@ export function PhotoFeed({
           className="mb-8 flex justify-between items-end"
         >
           <div>
-            <h2 className="text-3xl font-light text-stone-800 mb-2">Recent Memories</h2>
+            <h2 className="text-3xl font-light text-stone-800 mb-2">최근 추억들</h2>
             <div className="h-1 w-20 bg-[#E09F87] rounded-full opacity-60"></div>
           </div>
 
@@ -159,7 +166,7 @@ export function PhotoFeed({
             className={cn("rounded-full gap-2", isSelectMode && "bg-[#E09F87] text-white hover:bg-[#D08E76]")}
           >
             {isSelectMode ? <X className="w-4 h-4" /> : <MousePointer2 className="w-4 h-4" />}
-            {isSelectMode ? "Cancel" : "Select"}
+            {isSelectMode ? "취소" : "선택"}
           </Button>
         </motion.div>
       )}
@@ -174,8 +181,8 @@ export function PhotoFeed({
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-64 text-stone-400">
-            <p className="font-medium text-lg">No photos found here.</p>
-            <p className="text-sm">Try uploading some photos to this album!</p>
+            <p className="font-medium text-lg">여기에는 아직 사진이 없습니다.</p>
+            <p className="text-sm">이 보관함에 첫 번째 사진을 업로드해 보세요!</p>
           </div>
         )
       ) : (
@@ -284,7 +291,7 @@ export function PhotoFeed({
               <span className="w-8 h-8 rounded-full bg-[#E09F87] text-white flex items-center justify-center text-sm font-bold">
                 {selectedIds.length}
               </span>
-              <span className="text-stone-600 font-medium whitespace-nowrap">Selected</span>
+              <span className="text-stone-600 font-medium whitespace-nowrap">선택됨</span>
             </div>
 
             <div className="flex items-center gap-2 relative">
@@ -294,7 +301,7 @@ export function PhotoFeed({
                 onClick={() => setIsMoveMenuOpen(!isMoveMenuOpen)}
               >
                 <Move className="w-4 h-4" />
-                Move
+                이동
               </Button>
 
               <AnimatePresence>
@@ -305,7 +312,7 @@ export function PhotoFeed({
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     className="absolute bottom-full left-0 mb-4 bg-white border border-stone-200 rounded-2xl shadow-xl p-2 min-w-[160px] flex flex-col gap-1 z-[60]"
                   >
-                    <p className="text-[10px] uppercase tracking-widest text-stone-400 px-3 py-1 font-bold">Select Album</p>
+                    <p className="text-[10px] uppercase tracking-widest text-stone-400 px-3 py-1 font-bold">보관함 선택</p>
                     <button
                       onClick={() => handleBatchMove('Uncategorized')}
                       className="text-left px-3 py-2 text-sm text-stone-600 hover:bg-stone-50 hover:text-[#E09F87] rounded-lg transition-colors"
@@ -349,7 +356,7 @@ export function PhotoFeed({
                 onClick={handleBatchDelete}
               >
                 <Trash className="w-4 h-4" />
-                Delete
+                삭제
               </Button>
             </div>
 
@@ -364,7 +371,7 @@ export function PhotoFeed({
         )}
       </AnimatePresence>
 
-      <PhotoModal.Root photo={selectedPhoto} onClose={() => setSelectedPhoto(null)}>
+      <PhotoModal.Root photo={currentPhoto} onClose={() => setSelectedPhoto(null)}>
         <PhotoModal.Image />
         <PhotoModal.Panel>
           <PhotoModal.Header />
@@ -374,27 +381,28 @@ export function PhotoFeed({
               variant="outline"
               className={cn(
                 "flex-1 h-12 rounded-xl border-stone-200 gap-2 transition-all",
-                selectedPhoto?.isFavorite
+                currentPhoto?.isFavorite
                   ? "bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100 hover:text-rose-600"
                   : "text-stone-500 hover:bg-stone-50 hover:border-stone-300"
               )}
               onClick={() => {
-                if (selectedPhoto) {
-                  toggleFavorite(selectedPhoto.id);
-                  setSelectedPhoto(prev => prev ? { ...prev, isFavorite: !prev.isFavorite } : null);
+                if (currentPhoto) {
+                  // 스토어의 좋아요 상태를 토글합니다.
+                  toggleFavorite(currentPhoto.id);
+                  // 위에서 useMemo를 통해 currentPhoto를 최신화하므로 별도의 setSelectedPhoto 업데이트가 필요 없습니다.
                 }
               }}
             >
-              <Heart size={18} className={selectedPhoto?.isFavorite ? "fill-rose-500" : ""} />
-              {selectedPhoto?.isFavorite ? "Favorited" : "Favorite"}
+              <Heart size={18} className={currentPhoto?.isFavorite ? "fill-rose-500" : ""} />
+              {currentPhoto?.isFavorite ? "좋아요 취소" : "좋아요"}
             </Button>
 
             <Button
               variant="outline"
               className="w-12 h-12 p-0 rounded-xl border-stone-200 text-stone-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors"
               onClick={() => {
-                if (selectedPhoto && window.confirm("Are you sure you want to delete this photo?")) {
-                  deletePhoto(selectedPhoto.id);
+                if (currentPhoto && window.confirm("이 사진을 정말로 삭제하시겠습니까?")) {
+                  deletePhoto(currentPhoto.id);
                   setSelectedPhoto(null);
                 }
               }}

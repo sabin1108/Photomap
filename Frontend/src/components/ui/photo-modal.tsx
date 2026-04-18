@@ -20,9 +20,7 @@ function usePhotoModalContext() {
     return context;
 }
 
-// ----------------------------------------------------
-// 1. Root: Context Provider 및 모달 오버레이/애니메이션
-// ----------------------------------------------------
+
 interface RootProps {
     photo: Photo | null;
     onClose: () => void;
@@ -63,9 +61,6 @@ function Root({ photo, onClose, children }: RootProps) {
     );
 }
 
-// ----------------------------------------------------
-// 2. Image: 좌측 사진 렌더링 뷰 (모바일에서는 상단)
-// ----------------------------------------------------
 function Image() {
     const { photo, onClose } = usePhotoModalContext();
     if (!photo) return null;
@@ -89,9 +84,6 @@ function Image() {
     );
 }
 
-// ----------------------------------------------------
-// 3. Panel: 우측 상세 정보 패널 (스크롤 영역) Layout
-// ----------------------------------------------------
 function Panel({ children }: { children: React.ReactNode }) {
     return (
         <div className="w-full md:w-1/3 bg-[#F5F2EB] flex flex-col h-1/2 md:h-full overflow-y-auto relative overscroll-contain">
@@ -100,9 +92,6 @@ function Panel({ children }: { children: React.ReactNode }) {
     );
 }
 
-// ----------------------------------------------------
-// 4. Header: 모달 제목 및 데스크탑 닫기 버튼
-// ----------------------------------------------------
 function Header() {
     const { photo, onClose } = usePhotoModalContext();
     if (!photo) return null;
@@ -123,9 +112,7 @@ function Header() {
     );
 }
 
-// ----------------------------------------------------
-// 5. Metadata: 날짜, 카테고리, 위치, 설명 렌더링 및 수정 로직
-// ----------------------------------------------------
+//Metadata: 날짜, 카테고리, 위치, 설명 렌더링 및 수정 로직
 function Metadata() {
     const { photo } = usePhotoModalContext();
     const categories = usePhotoStore(state => state.categories);
@@ -166,7 +153,7 @@ function Metadata() {
                     <Calendar size={22} className="stroke-[1.5]" />
                 </div>
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">Date Taken</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">촬영일</p>
                     <p className="text-stone-700 font-medium">{photo.date}</p>
                 </div>
             </div>
@@ -176,8 +163,8 @@ function Metadata() {
                 <div className="p-3 bg-white rounded-2xl shadow-sm border border-stone-100/50 text-[#AECBEB] group-hover:bg-[#AECBEB] group-hover:text-white transition-colors">
                     <Folder size={22} className="stroke-[1.5]" />
                 </div>
-                <div className="flex-1">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">Album</p>
+                <div className="flex-1 text-stone-400">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">보관함</p>
                     <div className="flex justify-between items-center h-8">
                         {isEditingCategory ? (
                             <select
@@ -187,19 +174,19 @@ function Metadata() {
                                 autoFocus
                                 onBlur={() => setIsEditingCategory(false)}
                             >
-                                <option value="Uncategorized">Uncategorized</option>
+                                <option value="Uncategorized">미분류</option>
                                 {categories.map((cat) => (
                                     <option key={cat} value={cat}>{cat}</option>
                                 ))}
                             </select>
                         ) : (
                             <>
-                                <p className="text-stone-700 font-medium">{photo.category || "Uncategorized"}</p>
+                                <p className="text-stone-700 font-medium">{photo.category || "미분류"}</p>
                                 <button
                                     onClick={() => setIsEditingCategory(true)}
                                     className="text-xs text-[#E09F87] font-medium hover:underline"
                                 >
-                                    Move
+                                    이동
                                 </button>
                             </>
                         )}
@@ -222,8 +209,8 @@ function Metadata() {
                     <MapPin size={22} className="stroke-[1.5]" />
                 </div>
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">Location</p>
-                    <p className="text-stone-700 font-medium leading-relaxed">{photo.location || "Unknown Location"}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-1">위치 정보</p>
+                    <p className="text-stone-700 font-medium leading-relaxed">{photo.location || "위치 정보 없음"}</p>
                 </div>
             </div>
 
@@ -234,13 +221,13 @@ function Metadata() {
                 </div>
                 <div className="flex-1 w-full min-w-0">
                     <div className="flex justify-between items-center mb-1">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">Description</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">상세 설명</p>
                         {!isEditingDesc && (
                             <button
                                 onClick={() => setIsEditingDesc(true)}
                                 className="text-xs text-[#E09F87] font-medium hover:underline shrink-0 ml-2"
                             >
-                                {photo.description ? "Edit" : "Add"}
+                                {photo.description ? "수정" : "추가"}
                             </button>
                         )}
                     </div>
@@ -250,33 +237,33 @@ function Metadata() {
                                 className="w-full text-stone-800 font-medium text-sm p-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#E09F87] bg-white box-border"
                                 value={tempTitle}
                                 onChange={(e) => setTempTitle(e.target.value)}
-                                placeholder="Photo Title"
+                                placeholder="사진 제목 입력"
                                 autoFocus
                             />
                             <textarea
                                 className="w-full text-stone-600 text-sm leading-relaxed p-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#E09F87] bg-white h-24 resize-none box-border"
                                 value={tempDesc}
                                 onChange={(e) => setTempDesc(e.target.value)}
-                                placeholder="Add a description..."
+                                placeholder="설명을 입력하세요..."
                             />
                             <div className="flex gap-2 justify-end">
                                 <button
                                     onClick={() => setIsEditingDesc(false)}
                                     className="text-xs text-stone-400 hover:text-stone-600 px-2 py-1"
                                 >
-                                    Cancel
+                                    취소
                                 </button>
                                 <button
                                     onClick={handleDescSave}
                                     className="text-xs text-white bg-[#E09F87] px-3 py-1.5 rounded-lg shadow-sm"
                                 >
-                                    Save
+                                    저장
                                 </button>
                             </div>
                         </div>
                     ) : (
                         <p className="text-stone-600 text-sm leading-relaxed overflow-hidden break-words">
-                            {photo.description || "Add a note..."}
+                            {photo.description || "메모를 추가해보세요..."}
                         </p>
                     )}
                 </div>
@@ -285,9 +272,6 @@ function Metadata() {
     );
 }
 
-// ----------------------------------------------------
-// 6. Actions: 좋아요, 삭제 등 외부 주입 버튼 영역
-// ----------------------------------------------------
 function Actions({ children }: { children: React.ReactNode }) {
     return (
         <div className="p-6 bg-white border-t border-stone-100 flex gap-4 w-full flex-shrink-0">
