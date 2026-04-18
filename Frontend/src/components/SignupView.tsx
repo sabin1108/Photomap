@@ -35,25 +35,41 @@ export function SignupView({ onNavigate }: SignupViewProps) {
 
     setLoading(true);
     try {
-      const { error: authError } = await supabase.auth.signUp({
+      const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { full_name: fullName } }
       });
 
       if (authError) {
-        if (authError.message.includes('already registered')) {
-          toast.error('이미 사용 중인 이메일입니다. 로그인을 시도해 보세요.');
+        console.error('❌ [Signup] Auth Error details:', authError);
+
+        // Supabase 에러 메시지 한글화
+        const msg = (authError.message || '').toLowerCase();
+
+        if (msg.includes('already registered') || msg.includes('user already exists')) {
+          toast.error('이미 사용 중인 이메일입니다. 다른 이메일을 사용하거나 로그인해 주세요.');
+        } else if (msg.includes('password') && msg.includes('weak')) {
+          toast.error('비밀번호가 너무 취약합니다. 8자 이상의 더 복잡한 비밀번호를 사용해 주세요.');
+        } else if (msg.includes('email') && msg.includes('valid')) {
+          toast.error('올바른 이메일 주소를 입력해 주세요.');
         } else {
-          toast.error(authError.message);
+          // 어떤 매핑에도 걸리지 않으면 원문 에러를 표시
+          toast.error(authError.message || '회원가입 중 알 수 없는 오류가 발생했습니다.');
         }
         return;
       }
 
-      toast.success('가입이 완료되었습니다! 이메일을 확인하여 인증을 완료해 주세요.', {
-        duration: 5000,
-      });
-      onNavigate('login');
+      // 가입 성공 (이메일 인증이 활성화된 경우)
+      if (data.user && !data.session) {
+        toast.info('인증 메일이 발송되었습니다! 이메일 함을 확인하여 가입을 완료해 주세요.', {
+          duration: 6000,
+        });
+        onNavigate('login');
+      } else if (data.session) {
+        toast.success('회원가입 및 로그인이 완료되었습니다!');
+        onNavigate('all');
+      }
     } catch (err: any) {
       console.error('Signup error:', err);
       toast.error('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
@@ -138,7 +154,7 @@ export function SignupView({ onNavigate }: SignupViewProps) {
               className="w-full h-12 bg-stone-800 hover:bg-stone-700 text-white rounded-xl shadow-lg shadow-stone-800/20 text-base font-medium transition-all mt-6"
               disabled={loading}
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? '계정 생성 중...' : '가입하기'}
             </Button>
           </form>
 

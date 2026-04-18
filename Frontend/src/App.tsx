@@ -28,6 +28,7 @@ export default function App() {
   const { user, loading, signOut, isAdmin } = useAuthStore();
   const photos = usePhotoStore(state => state.photos);
   const initialize = usePhotoStore(state => state.initialize);
+  const clearPhotos = usePhotoStore(state => state.clear);
 
   useEffect(() => {
     // 만약 관리자가 아닌데 관리자 페이지에 머물러 있다면 메인으로 튕겨냄
@@ -75,18 +76,24 @@ export default function App() {
   const handleSignOut = async () => {
     try {
       await signOut();
+      clearPhotos();
       setActiveCategory('all');
     } catch (err) {
       console.error('SignOut error:', err);
-      // 필요 시 파일 상단에서 toast 임포트
     }
   };
 
   if (!user) {
-    if (activeCategory === 'signup') {
-      return <SignupView onNavigate={setActiveCategory} />;
-    }
-    return <LoginView onNavigate={setActiveCategory} />;
+    return (
+      <>
+        {activeCategory === 'signup' ? (
+          <SignupView onNavigate={setActiveCategory} />
+        ) : (
+          <LoginView onNavigate={setActiveCategory} />
+        )}
+        <Toaster />
+      </>
+    );
   }
 
   return (
@@ -160,7 +167,7 @@ export default function App() {
       </main>
 
       {/* 업로드를 위한 플로팅 버튼 (모바일) */}
-      <div className="fixed bottom-6 right-6 z-40 md:hidden">
+      <div className="fixed bottom-20 right-6 z-40 md:hidden">
         <Button
           size="icon"
           aria-label="New Memory"
@@ -172,7 +179,7 @@ export default function App() {
       </div>
 
       {/* 업로드 버튼 (데스크탑) */}
-      <div className="fixed bottom-8 right-8 z-40 hidden md:block">
+      <div className="fixed bottom-24 right-8 z-40 hidden md:block">
         <Button
           className="bg-[#E09F87] hover:bg-[#D08E76] text-white rounded-full px-6 shadow-lg hover:shadow-xl transition-colors duration-200"
           onClick={() => setIsUploadOpen(true)}

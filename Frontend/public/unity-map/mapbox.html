@@ -267,7 +267,6 @@
 
             map.on('style.load', () => {
                 map.setFog({ 'color': 'rgb(186, 210, 235)', 'high-color': 'rgb(36, 92, 223)', 'horizon-blend': 0.02, 'space-color': 'rgb(11, 11, 25)', 'star-intensity': 0.6 });
-                if (supabaseClient) loadRealDataFromDB();
             });
 
             map.on('render', updateMarkersRealtime);
@@ -285,29 +284,6 @@
                     captureAndSendBackground();
                 }
             }
-        }
-
-        async function loadRealDataFromDB() {
-            if (!supabaseClient) return;
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (!session) {
-                    await supabaseClient.auth.signInWithPassword({ email: 'admin11@gmail.com', password: 'adminadmin' });
-                }
-                const { data, error } = await supabaseClient
-                    .from('location')
-                    .select('location_id, lat, lon, created_time, media ( file_url, thumbnail_url, take_time, created_time )');
-
-                if (error) throw error;
-                rawDBData = data.map(loc => ({
-                    id: String(loc.location_id),
-                    url: (loc.media && loc.media.length > 0) ? (loc.media[0].thumbnail_url || loc.media[0].file_url) : '',
-                    allUrls: (loc.media || []).map(m => m.file_url).join('|'),
-                    lat: loc.lat,
-                    lng: loc.lon
-                }));
-                applyMapMode();
-            } catch (e) { console.error("❌ DB error:", e); }
         }
 
         function updateMarkersRealtime() {

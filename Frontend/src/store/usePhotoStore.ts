@@ -10,6 +10,7 @@ interface PhotoStore {
     isInitialized: boolean;   // 초기화 완료 여부
     isLoading: boolean;       // 데이터 로딩 중 여부
     hasMore: boolean;         // 더 불러올 데이터가 있는지 여부
+    currentUserId: string | null; // 현재 로드된 사용자 ID
 
     // [Actions] 데이터 초기화 및 조회
     initialize: (userId: string) => Promise<void>;      // App.tsx 진입 시 호출
@@ -41,6 +42,7 @@ interface PhotoStore {
     batchDeleteCategories: (names: string[]) => Promise<boolean>;
 
     checkIsFavorite: (userId: string, mediaId: number) => Promise<boolean>;
+    clear: () => void; // 스토어 초기화 (로그아웃 시 사용)
 }
 
 const mapMediaToPhoto = (media: DBMedia): Photo => {
@@ -100,10 +102,15 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     isInitialized: false,
     isLoading: false,
     hasMore: true,
+    currentUserId: null,
 
     initialize: async (userId: string) => {
-        if (get().isInitialized) return;
-        set({ isInitialized: true, isLoading: true });
+        // 이미 해당 사용자로 초기화되었다면 중단
+        if (get().isInitialized && get().currentUserId === userId) return;
+
+        console.log(`🔄 [PhotoStore] Initializing for user: ${userId}`);
+        set({ isInitialized: true, isLoading: true, currentUserId: userId, photos: [], categories: [] });
+        
         await Promise.all([
             get().fetchCategories(userId),
             get().fetchPhotos(userId)
@@ -619,5 +626,17 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             toast.error(`삭제 실패: ${error.message}`);
             return false;
         }
+    },
+
+    clear: () => {
+        set({
+            photos: [],
+            categories: [],
+            isInitialized: false,
+            isLoading: false,
+            hasMore: true,
+            currentUserId: null
+        });
+        console.log('🧹 [PhotoStore] Store cleared.');
     }
 }));

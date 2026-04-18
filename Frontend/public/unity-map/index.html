@@ -222,10 +222,6 @@
         const loadingBar = document.querySelector("#unity-loading-bar");
         const progressBarFull = document.querySelector("#unity-progress-bar-full");
 
-        // 환경 변수 저장용
-        window.adminEmail = "";
-        window.adminPassword = "";
-
         // React 부모로부터 설정 수신
         window.addEventListener('message', (event) => {
             if (!event.data) return;
@@ -236,9 +232,7 @@
                 // 설정 수신 알림
                 window.parent.postMessage({ type: 'CONFIG_RECEIVED' }, '*');
 
-                const { supabaseUrl, supabaseKey, mapboxToken, adminEmail, adminPassword } = event.data.data;
-                window.adminEmail = (adminEmail || "").trim();
-                window.adminPassword = (adminPassword || "").trim();
+                const { supabaseUrl, supabaseKey, mapboxToken } = event.data.data;
 
                 if (mapboxToken && !map) {
                     isInitialized = true;
@@ -257,9 +251,8 @@
                 }
 
                 if (!supabaseClient && supabaseUrl && supabaseKey) {
-                    console.log("🔐 [Iframe] Initializing Supabase client...");
+                    console.log("🔐 [Iframe] Initializing Supabase client for potential use...");
                     supabaseClient = window.supabase.createClient(supabaseUrl.trim(), supabaseKey.trim());
-                    if (map && map.isStyleLoaded()) loadRealDataFromDB();
                 }
             }
 
@@ -328,8 +321,6 @@
                         'fill-extrusion-opacity': 0.8
                     }
                 }, labelLayerId);
-
-                if (supabaseClient) loadRealDataFromDB();
             });
 
             map.on('render', updateMarkersRealtime);
@@ -348,36 +339,6 @@
                     captureAndSendBackground();
                 }
             }
-        }
-
-        async function loadRealDataFromDB() {
-            if (!supabaseClient) return;
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (!session) {
-                    console.log("🔐 [Iframe] Admin login attempt...");
-                    const { error } = await supabaseClient.auth.signInWithPassword({
-                        email: window.adminEmail || 'admin11@gmail.com',
-                        password: window.adminPassword || 'adminadmin'
-                    });
-                    if (error) { console.error("❌ Auth failed:", error.message); return; }
-                }
-                console.log("✅ [Iframe] Fetching data...");
-                const { data, error } = await supabaseClient
-                    .from('location')
-                    .select('location_id, lat, lon, created_time, media ( file_url, thumbnail_url, take_time, created_time )');
-
-                if (error) throw error;
-                // Note: Even when loading from DB directly, we should map to Photo structure
-                rawDBData = data.map(loc => ({
-                    id: String(loc.location_id),
-                    url: (loc.media && loc.media.length > 0) ? (loc.media[0].thumbnail_url || loc.media[0].file_url) : '',
-                    allUrls: (loc.media || []).map(m => m.file_url).join('|'),
-                    lat: loc.lat,
-                    lng: loc.lon
-                }));
-                applyMapMode();
-            } catch (e) { console.error("❌ DB failure:", e); }
         }
 
         function updateMarkersRealtime() {
