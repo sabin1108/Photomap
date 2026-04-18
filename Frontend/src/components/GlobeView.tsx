@@ -32,25 +32,19 @@ export function GlobeView() {
     window.addEventListener('resize', onResize);
     onResize();
 
-    // 한국 중심에 맞춤 (약 127.8도 동경)
-    // Cobe phi는 라디안 단위. 0은 대략 서아프리카/그리니치. 
-    // 동아시아를 중심으로 하려면 회전해야 함.
-    // 동경 127도는 약 2.2 라디안. 
-    // 그에 맞춰 초기 phi를 설정.
-
     const globe = createGlobe(canvasRef.current!, {
       devicePixelRatio: 2,
       width: width * 2,
       height: width * 2,
-      phi: 4.5, // 동아시아가 보이도록 회전
-      theta: 0.35, // 북반구가 더 잘 보이도록 약간 기울임
+      phi: 4.5,
+      theta: 0.35,
       dark: 0,
-      diffuse: 2, // 밝고 화창한 느낌
-      mapSamples: 20000, // 더 높은 디테일
-      mapBrightness: 8, // 매트하지만 선명하게
-      baseColor: [0.98, 0.96, 0.91], // #FAF5E8 - 따뜻한 오후 햇살 느낌의 종이 질감
-      markerColor: [1, 0.55, 0.45], // #FF8C73 - 부드럽게 빛나는 조약돌 색 (산호색)
-      glowColor: [1, 0.95, 0.8], // #FFF2CC - 따뜻한 햇살 광채
+      diffuse: 2,
+      mapSamples: 12000, // 최적화: 20000 -> 12000
+      mapBrightness: 8,
+      baseColor: [0.98, 0.96, 0.91],
+      markerColor: [1, 0.55, 0.45],
+      glowColor: [1, 0.95, 0.8],
       markers: markers,
       onRender: (state) => {
         state.phi = 4.5 + r.get();
@@ -62,11 +56,12 @@ export function GlobeView() {
     setTimeout(() => {
       if (canvasRef.current) canvasRef.current.style.opacity = '1';
     });
+    
     return () => {
       globe.destroy();
       window.removeEventListener('resize', onResize);
     };
-  }, []);
+  }, [markers, r]);
 
   return (
     <div className="w-full h-full flex items-center justify-center relative z-0">

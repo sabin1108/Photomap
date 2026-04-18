@@ -8,9 +8,10 @@ interface SidebarProps {
   activeCategory: string;
   onSelectCategory: (category: string) => void;
   onSignOut: () => void;
+  isAdmin?: boolean;
 }
 
-export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut }: SidebarProps) {
+export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut, isAdmin }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSelect = (category: string) => {
@@ -58,12 +59,14 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
         </SidebarUI.Nav>
 
         <SidebarUI.Footer>
-          <SidebarUI.Item
-            icon={Database}
-            label="Data Admin"
-            isActive={activeCategory === 'admin'}
-            onClick={() => handleSelect('admin')}
-          />
+          {isAdmin && (
+            <SidebarUI.Item
+              icon={Database}
+              label="Data Admin"
+              isActive={activeCategory === 'admin'}
+              onClick={() => handleSelect('admin')}
+            />
+          )}
           <SidebarUI.Item
             icon={LogOut}
             label="Log Out"

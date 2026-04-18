@@ -7,9 +7,10 @@ import { usePhotoStore } from '../store/usePhotoStore';
 import { PhotoModal } from './ui/photo-modal';
 import { Button } from './ui/button';
 import type { Photo } from '../type';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useGridBreakpoints } from '../hooks/useGridBreakpoints';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface PhotoFeedProps {
   className?: string;
@@ -28,6 +29,9 @@ export function PhotoFeed({
   onSelectModeChange
 }: PhotoFeedProps) {
   const photos = usePhotoStore(state => state.photos);
+  const isLoading = usePhotoStore(state => state.isLoading);
+  const hasMore = usePhotoStore(state => state.hasMore);
+  const fetchMorePhotos = usePhotoStore(state => state.fetchMorePhotos);
   const toggleFavorite = usePhotoStore(state => state.toggleFavorite);
   const deletePhoto = usePhotoStore(state => state.deletePhoto);
   const batchDeletePhotos = usePhotoStore(state => state.batchDeletePhotos);
@@ -68,9 +72,31 @@ export function PhotoFeed({
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 150, // rough estimate of row height, auto-adjusts
-    overscan: 3,
+    estimateSize: () => 200, 
+    overscan: 5,
   });
+
+  const { user } = useAuthStore();
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hasMore || !user?.id) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoading) {
+          fetchMorePhotos(user.id);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, user?.id, fetchMorePhotos]);
 
   const toggleSelectMode = () => {
     setIsSelectMode(!isSelectMode);
@@ -138,12 +164,20 @@ export function PhotoFeed({
         </motion.div>
       )}
 
-      {/* 아무 사진도 없을 때의 빈 상태 표출 */}
+      {/* 아무 사진도 없을 때의 빈 상태 또는 로딩 상태 */}
       {displayPhotos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 text-stone-400">
-          <p className="font-medium text-lg">No photos found here.</p>
-          <p className="text-sm">Try uploading some photos to this album!</p>
-        </div>
+        isLoading ? (
+          <div className="grid w-full" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
+            {Array.from({ length: columns * 3 }).map((_, i) => (
+              <div key={i} className="aspect-square bg-stone-200 animate-pulse rounded-lg" />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-64 text-stone-400">
+            <p className="font-medium text-lg">No photos found here.</p>
+            <p className="text-sm">Try uploading some photos to this album!</p>
+          </div>
+        )
       ) : (
         <div
           className="relative w-full pb-24"
@@ -223,6 +257,17 @@ export function PhotoFeed({
               </div>
             );
           })}
+          
+          {/* 무한 스크롤 트리거 & 추가 로딩 표시 */}
+          <div ref={observerTarget} className="h-20 w-full flex items-center justify-center">
+            {isLoading && hasMore && (
+              <div className="flex gap-1.5">
+                <div className="w-1.5 h-1.5 bg-[#E09F87] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-1.5 h-1.5 bg-[#E09F87] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-1.5 h-1.5 bg-[#E09F87] rounded-full animate-bounce"></div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

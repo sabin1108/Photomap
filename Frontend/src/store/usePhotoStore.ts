@@ -7,36 +7,39 @@ interface PhotoStore {
     // [State] 전역적으로 사용되는 데이터
     photos: Photo[];           // PhotoFeed, Map, Timeline, Globe 등 대부분의 뷰에서 사용
     categories: string[];    // Sidebar, UploadScreen, AlbumsView에서 사용
-    isInitialized: boolean;   // 초기화 로딩 상태 제어
-    
+    isInitialized: boolean;   // 초기화 완료 여부
+    isLoading: boolean;       // 데이터 로딩 중 여부
+    hasMore: boolean;         // 더 불러올 데이터가 있는지 여부
+
     // [Actions] 데이터 초기화 및 조회
     initialize: (userId: string) => Promise<void>;      // App.tsx 진입 시 호출
     fetchCategories: (userId: string) => Promise<void>; // 카테고리 목록 동기화
-    fetchPhotos: (userId: string) => Promise<void>;     // 사진 데이터 동기화
-    
+    fetchPhotos: (userId: string, limit?: number) => Promise<void>;     // 첫 페이지 사진 데이터 동기화
+    fetchMorePhotos: (userId: string, limit?: number) => Promise<void>; // 추가 페이지 사진 데이터 동기화
+
     // [Actions] 사진 업로드 및 관리
     addPhoto: (photo: Photo, file: File | null, meta: { title?: string, folder: string, description: string, tags: string, lat?: number, lng?: number, address?: string }) => Promise<void>; // UploadScreen
     addPhotos: (items: { photo: Photo, meta: { title?: string, folder: string, description: string, tags: string, lat?: number, lng?: number, address?: string } }[]) => Promise<void>;    // UploadScreen (일괄 업로드)
     deletePhoto: (id: string) => Promise<void>;         // PhotoFeed (상세보기/삭제)
-    
+
     // [Actions] 즐겨찾기 관리
     toggleFavorite: (id: string) => Promise<void>;      // PhotoFeed (하트 버튼)
     toggleFavoriteDB: (userId: string, media_id: number, isCurrentlyFavorite: boolean) => Promise<void>;
-    
+
     // [Actions] 카테고리(앨범) 관리
     addCategory: (name: string) => void;                // UploadScreen, Sidebar
     updateCategory: (oldName: string, newName: string) => Promise<boolean>;   // AlbumsView (앨범명 수정)
     deleteCategory: (categoryName: string) => Promise<boolean>;               // AlbumsView (앨범 삭제)
-    
+
     // [Actions] 사진 속성 수정
     updatePhotoCategory: (id: string, newCategoryName: string) => Promise<boolean>;       // PhotoFeed (앨범 이동)
     updatePhotoDescription: (id: string, newDescription: string, newTitle?: string) => Promise<boolean>; // PhotoFeed (설명 수정)
-    
+
     // [Actions] 일괄 작업 (선택 모드)
     batchDeletePhotos: (ids: string[]) => Promise<boolean>;     // PhotoFeed (일괄 삭제)
     batchMovePhotos: (ids: string[], categoryName: string) => Promise<boolean>; // PhotoFeed (일괄 이동)
     batchDeleteCategories: (names: string[]) => Promise<boolean>;
-    
+
     checkIsFavorite: (userId: string, mediaId: number) => Promise<boolean>;
 }
 
@@ -55,7 +58,7 @@ const mapMediaToPhoto = (media: DBMedia): Photo => {
     }
 
     let extractTitle = '제목 없음';
-    
+
     if (fullDesc) {
         const separatorIdx = fullDesc.indexOf('\n---\n');
         if (separatorIdx !== -1) {
@@ -95,14 +98,17 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     photos: [],
     categories: [],
     isInitialized: false,
+    isLoading: false,
+    hasMore: true,
 
     initialize: async (userId: string) => {
         if (get().isInitialized) return;
-        set({ isInitialized: true });
+        set({ isInitialized: true, isLoading: true });
         await Promise.all([
             get().fetchCategories(userId),
             get().fetchPhotos(userId)
         ]);
+        set({ isLoading: false });
     },
 
     fetchCategories: async (userId: string) => {
@@ -125,7 +131,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         }
     },
 
-    fetchPhotos: async (userId: string) => {
+    fetchPhotos: async (userId: string, limit = 50) => {
         try {
             const mediaPromise = supabase
                 .from('media')
@@ -136,7 +142,8 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                     media_description (*)
                 `)
                 .eq('user_id', userId)
-                .order('created_time', { ascending: false });
+                .order('created_time', { ascending: false })
+                .limit(limit);
 
             const favPromise = supabase
                 .from('favorites')
@@ -160,11 +167,65 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                         isFavorite: favoriteIds.has(photo.id)
                     };
                 });
-                set({ photos: loadedPhotos });
+                set({
+                    photos: loadedPhotos,
+                    hasMore: loadedPhotos.length === limit
+                });
             }
         } catch (err) {
             console.error('사진 불러오기 중 예기치 못한 오류 발생:', err);
-            toast.error('사진을 불러오는 중 오류가 발생했습니다. 잠시 후 새로고침 해주세요.');
+            toast.error('사진을 불러오는 중 오류가 발생했습니다.');
+        }
+    },
+
+    fetchMorePhotos: async (userId: string, limit = 50) => {
+        if (get().isLoading || !get().hasMore) return;
+
+        try {
+            set({ isLoading: true });
+            const currentOffset = get().photos.length;
+
+            const mediaPromise = supabase
+                .from('media')
+                .select(`
+                    *,
+                    location (*),
+                    category (*),
+                    media_description (*)
+                `)
+                .eq('user_id', userId)
+                .order('created_time', { ascending: false })
+                .range(currentOffset, currentOffset + limit - 1);
+
+            const favPromise = supabase
+                .from('favorites')
+                .select('media_id')
+                .eq('user_id', userId);
+
+            const [mediaResponse, favResponse] = await Promise.all([mediaPromise, favPromise]);
+
+            if (mediaResponse.error) throw mediaResponse.error;
+
+            const favoriteIds = new Set(favResponse.data?.map(f => String(f.media_id)) || []);
+
+            if (mediaResponse.data) {
+                const newPhotos: Photo[] = (mediaResponse.data as unknown as DBMedia[]).map(media => {
+                    const photo = mapMediaToPhoto(media);
+                    return {
+                        ...photo,
+                        isFavorite: favoriteIds.has(photo.id)
+                    };
+                });
+
+                set(state => ({
+                    photos: [...state.photos, ...newPhotos],
+                    hasMore: newPhotos.length === limit,
+                    isLoading: false
+                }));
+            }
+        } catch (err) {
+            console.error('추가 사진 불러오기 실패:', err);
+            set({ isLoading: false });
         }
     },
 
@@ -226,7 +287,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         const toastId = toast.loading("데이터베이스에 저장 중...");
         try {
             const userId = await getUserId();
-            
+
             const roundedLat = meta.lat ? Number(meta.lat.toFixed(7)) : 0;
             const roundedLng = meta.lng ? Number(meta.lng.toFixed(7)) : 0;
 
@@ -308,7 +369,6 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         try {
             const userId = await getUserId();
             for (const item of items) {
-                // Internal inline add logic to avoid repeated toasts and fetches
                 const roundedLat = item.meta.lat ? Number(item.meta.lat.toFixed(7)) : 0;
                 const roundedLng = item.meta.lng ? Number(item.meta.lng.toFixed(7)) : 0;
 
@@ -335,7 +395,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                 }
                 successCount++;
             }
-            
+
             await Promise.all([get().fetchPhotos(userId), get().fetchCategories(userId)]);
             toast.success(`${successCount}개의 사진 업로드 완료!`, { id: toastId });
         } catch (error: any) {
@@ -427,7 +487,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                 .update({ category_id: categoryId })
                 .eq('media_id', id);
             if (error) throw error;
-            
+
             set(state => ({
                 photos: state.photos.map(p => p.id === id ? { ...p, category: newCategoryName || 'Uncategorized', tags: newCategoryName ? [newCategoryName] : [] } : p)
             }));
@@ -456,10 +516,10 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             if (error) throw error;
 
             set(state => ({
-                photos: state.photos.map(p => p.id === id ? { 
-                    ...p, 
-                    description: newDescription, 
-                    title: newTitle || (newDescription.length > 20 ? newDescription.substring(0, 20) + '...' : newDescription) 
+                photos: state.photos.map(p => p.id === id ? {
+                    ...p,
+                    description: newDescription,
+                    title: newTitle || (newDescription.length > 20 ? newDescription.substring(0, 20) + '...' : newDescription)
                 } : p)
             }));
             toast.success("설명이 수정되었습니다.");
@@ -478,7 +538,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                 .from('media')
                 .delete()
                 .in('media_id', ids.map(id => Number(id)));
-            
+
             if (error) throw error;
 
             set(state => ({ photos: state.photos.filter(p => !ids.includes(p.id)) }));
@@ -502,7 +562,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                     .eq('name', categoryName)
                     .eq('user_id', userId)
                     .maybeSingle();
-                
+
                 if (catData) {
                     categoryId = catData.category_id;
                 } else {
@@ -513,7 +573,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                         .single();
                     if (catError) throw catError;
                     if (newCat) categoryId = newCat.category_id;
-                    
+
                     set(state => ({ categories: state.categories.includes(categoryName) ? state.categories : [...state.categories, categoryName] }));
                 }
             }
@@ -545,7 +605,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                 .delete()
                 .in('name', names)
                 .eq('user_id', userId);
-            
+
             if (error) throw error;
 
             set(state => ({

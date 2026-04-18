@@ -25,9 +25,16 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
-  const { user, loading, signOut } = useAuthStore();
+  const { user, loading, signOut, isAdmin } = useAuthStore();
   const photos = usePhotoStore(state => state.photos);
   const initialize = usePhotoStore(state => state.initialize);
+
+  useEffect(() => {
+    // 만약 관리자가 아닌데 관리자 페이지에 머물러 있다면 메인으로 튕겨냄
+    if (!loading && activeCategory === 'admin' && !isAdmin) {
+      setActiveCategory('all');
+    }
+  }, [activeCategory, isAdmin, loading]);
 
   useEffect(() => {
     if (user?.id) {
@@ -46,9 +53,21 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#F5F2EB] gap-3">
-        <div className="w-8 h-8 border-2 border-[#E09F87]/30 border-t-[#E09F87] rounded-full animate-spin" />
-        <p className="text-stone-400 text-sm">불러오는 중...</p>
+      <div className="flex h-screen bg-[#F5F2EB] text-stone-800 font-sans overflow-hidden">
+        <div className="w-20 md:w-64 border-r border-stone-200 bg-white/50 animate-pulse" />
+        <main className="flex-1 p-10 space-y-8">
+          <div className="flex justify-between items-end">
+            <div className="space-y-3">
+              <div className="w-48 h-10 bg-stone-200 rounded-lg animate-pulse" />
+              <div className="w-20 h-1.5 bg-[#E09F87]/20 rounded-full" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-square bg-stone-200 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        </main>
       </div>
     );
   }
@@ -84,6 +103,7 @@ export default function App() {
         activeCategory={activeCategory}
         onSelectCategory={setActiveCategory}
         onSignOut={handleSignOut}
+        isAdmin={isAdmin}
         className="flex-shrink-0 md:z-20 z-50"
       />
 
