@@ -39,10 +39,9 @@ export function PhotoFeed({
   const categories = usePhotoStore(state => state.categories);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
-  // 모달 동기화 로직: 선택된 사진이 정보가 수정되어도 최신 상태를 유지하도록 스토어와 연결합니다.
+  // 모달 동기화 로직
   const currentPhoto = useMemo(() => {
     if (!selectedPhoto) return null;
-    // 전역 스토어의 사진 데이터에서 현재 선택한 ID와 일치하는 최신 객체를 찾아 반환합니다.
     return photos.find(p => p.id === selectedPhoto.id) || selectedPhoto;
   }, [photos, selectedPhoto]);
 
@@ -79,7 +78,7 @@ export function PhotoFeed({
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 200, 
+    estimateSize: () => 200,
     overscan: 5,
   });
 
@@ -264,7 +263,7 @@ export function PhotoFeed({
               </div>
             );
           })}
-          
+
           {/* 무한 스크롤 트리거 & 추가 로딩 표시 */}
           <div ref={observerTarget} className="h-20 w-full flex items-center justify-center">
             {isLoading && hasMore && (
@@ -387,9 +386,7 @@ export function PhotoFeed({
               )}
               onClick={() => {
                 if (currentPhoto) {
-                  // 스토어의 좋아요 상태를 토글합니다.
                   toggleFavorite(currentPhoto.id);
-                  // 위에서 useMemo를 통해 currentPhoto를 최신화하므로 별도의 setSelectedPhoto 업데이트가 필요 없습니다.
                 }
               }}
             >
