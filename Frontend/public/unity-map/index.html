@@ -1,60 +1,205 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="utf-8">
     <title>Mapbox + Unity (Session & Optimization)</title>
-    
+
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #fff; }
-        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
 
         #unity-container {
-            position: absolute; top: 0; left: 0; width: 500px; height: 400px;
-            z-index: 10; visibility: hidden; opacity: 0; pointer-events: none; 
-            transition: opacity 0.2s ease-in-out; transform: translate(-50%, calc(-100% - 40px));
-            overflow: hidden; background: transparent; 
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 500px;
+            height: 400px;
+            z-index: 10;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+            transform: translate(-50%, calc(-100% - 40px));
+            overflow: hidden;
+            background: transparent;
         }
-        #unity-container.active { visibility: visible; opacity: 1; pointer-events: auto; }
+
+        #unity-container.active {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
         #unity-canvas {
-            width: 100% !important; height: 100% !important; pointer-events: auto !important;
-            outline: none !important; border: none !important; box-shadow: none !important; 
+            width: 100% !important;
+            height: 100% !important;
+            pointer-events: auto !important;
+            outline: none !important;
+            border: none !important;
+            box-shadow: none !important;
         }
+
         #close-btn {
-            position: absolute; top: 10px; right: 10px; width: 30px; height: 30px;
-            background: rgba(255,255,255,0.9); border: none; border-radius: 50%;
-            cursor: pointer; z-index: 200; font-size: 16px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 200;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
-        #close-btn:hover { background: #fff; transform: scale(1.1); }
+
+        #close-btn:hover {
+            background: #fff;
+            transform: scale(1.1);
+        }
+
         #unity-loading-bar {
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: block; z-index: 100; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            display: block;
+            z-index: 100;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
-        #unity-progress-bar-empty { width: 140px; height: 18px; background: #ccc; margin-top: 10px; }
-        #unity-progress-bar-full { width: 0%; height: 100%; background: #4CAF50; }
 
-        .marker-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; transition: z-index 0.3s; pointer-events: auto; }
-        .marker-wrapper:hover { z-index: 100; }
-        
-        .custom-marker { width: 60px; height: 60px; position: relative; cursor: pointer; }
-        .custom-marker img { position: absolute; width: 45px; height: 45px; object-fit: cover; border: 2px solid white; border-radius: 4px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: #eee; }
-        .custom-marker img:nth-child(1) { top: 8px; left: 8px; transform: rotate(-12deg); z-index: 1; }
-        .custom-marker img:nth-child(2) { top: 8px; left: 8px; transform: rotate(3deg); z-index: 2; }
-        .custom-marker img:nth-child(3) { top: 8px; left: 8px; transform: rotate(15deg); z-index: 3; }
-        .marker-wrapper:hover .custom-marker img:nth-child(1) { transform: translate(-30px, -10px) rotate(-25deg) scale(1.5); z-index: 4; }
-        .marker-wrapper:hover .custom-marker img:nth-child(2) { transform: translate(0px, -25px) rotate(0deg) scale(1.5); z-index: 5; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        .marker-wrapper:hover .custom-marker img:nth-child(3) { transform: translate(30px, -10px) rotate(25deg) scale(1.5); z-index: 6; }
+        #unity-progress-bar-empty {
+            width: 140px;
+            height: 18px;
+            background: #ccc;
+            margin-top: 10px;
+        }
 
-        .date-label { background: rgba(0,0,0,0.8); color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-top: 5px; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.3); pointer-events: none; }
+        #unity-progress-bar-full {
+            width: 0%;
+            height: 100%;
+            background: #4CAF50;
+        }
+
+        .marker-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            transition: z-index 0.3s;
+            pointer-events: auto;
+        }
+
+        .marker-wrapper:hover {
+            z-index: 100;
+        }
+
+        .custom-marker {
+            width: 60px;
+            height: 60px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .custom-marker img {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+            border: 2px solid white;
+            border-radius: 4px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background: #eee;
+        }
+
+        .custom-marker img:nth-child(1) {
+            top: 8px;
+            left: 8px;
+            transform: rotate(-12deg);
+            z-index: 1;
+        }
+
+        .custom-marker img:nth-child(2) {
+            top: 8px;
+            left: 8px;
+            transform: rotate(3deg);
+            z-index: 2;
+        }
+
+        .custom-marker img:nth-child(3) {
+            top: 8px;
+            left: 8px;
+            transform: rotate(15deg);
+            z-index: 3;
+        }
+
+        .marker-wrapper:hover .custom-marker img:nth-child(1) {
+            transform: translate(-30px, -10px) rotate(-25deg) scale(1.5);
+            z-index: 4;
+        }
+
+        .marker-wrapper:hover .custom-marker img:nth-child(2) {
+            transform: translate(0px, -25px) rotate(0deg) scale(1.5);
+            z-index: 5;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .marker-wrapper:hover .custom-marker img:nth-child(3) {
+            transform: translate(30px, -10px) rotate(25deg) scale(1.5);
+            z-index: 6;
+        }
+
+        .date-label {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+        }
     </style>
 </head>
+
 <body>
     <div id="map"></div>
-    
+
 
     <div id="unity-container">
         <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
@@ -62,271 +207,352 @@
     </div>
     <div id="unity-loading-bar">
         <div>Unity Loading...</div>
-        <div id="unity-progress-bar-empty"><div id="unity-progress-bar-full"></div></div>
+        <div id="unity-progress-bar-empty">
+            <div id="unity-progress-bar-full"></div>
+        </div>
     </div>
 
     <script>
-      let supabaseClient = null;
-      try {
-          const SUPABASE_URL = '***SCRUBBED_SUPABASE_URL***'; 
-          const SUPABASE_ANON_KEY = '***SCRUBBED_SUPABASE_ANON_KEY***';
-          supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      } catch (e) { console.error("❌ 수파베이스 세팅 중 에러 발생:", e); }
+        // 수파베이스 클라이언트
+        let supabaseClient = null;
 
-      var myUnityInstance = null;
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var activeMarkerLngLat = null;
-      var map = null;
-      
-      let rawDBData = []; 
-      let htmlMarkers = {}; 
-      let activeSourceIds = []; 
-      let sourceDateMap = {};   
-      let currentMode = "MAP";  
+        // 설정 수신 및 초기화
+        window.addEventListener('message', (event) => {
+            if (!event.data) return;
 
-      var buildUrl = "/unity-map/Build";
-      var config = {
-        dataUrl: buildUrl + "/webgl.data", frameworkUrl: buildUrl + "/webgl.framework.js",
-        codeUrl: buildUrl + "/webgl.wasm", streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany", productName: "MapBoxweb", productVersion: "0.1.0",
-        matchWebGLToCanvasSize: false, devicePixelRatio: 1,
-      };
+            // 보안 설정 수신
+            if (event.data.type === 'INIT_CONFIG') {
+                console.log("📥 [Iframe] Config received:", event.data.data);
+                const { supabaseUrl, supabaseKey, mapboxToken, adminEmail } = event.data.data;
 
-      var script = document.createElement("script");
-      script.src = buildUrl + "/webgl.loader.js";
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => { progressBarFull.style.width = 100 * progress + "%"; })
-        .then((unityInstance) => { myUnityInstance = unityInstance; loadingBar.style.display = "none"; })
-        .catch((message) => { console.error("Unity 로딩 실패:", message); });
-      };
-      document.body.appendChild(script);
+                if (!mapboxToken) {
+                    console.error("❌ [Iframe] Mapbox token is missing in config!");
+                    document.body.style.background = "#fee"; // 에러 시 배경색 변경
+                }
 
-      mapboxgl.accessToken = "***SCRUBBED_MAPBOX_TOKEN***";
-      map = new mapboxgl.Map({ container: "map", style: "mapbox://styles/mapbox/streets-v12", center: [127.7669, 35.9078], zoom: 2.0, pitch: 0, projection: 'globe', preserveDrawingBuffer: true });
-      
-      map.on('style.load', () => { 
-          map.setFog({ 'color': 'rgb(186, 210, 235)', 'high-color': 'rgb(36, 92, 223)', 'horizon-blend': 0.02, 'space-color': 'rgb(11, 11, 25)', 'star-intensity': 0.6 }); 
-          const layers = map.getStyle().layers;
-          const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field'])?.id;
-          
-          map.addLayer({
-              'id': 'add-3d-buildings', 'source': 'composite', 'source-layer': 'building',
-              'filter': ['==', 'extrude', 'true'], 'type': 'fill-extrusion', 'minzoom': 15,
-              'paint': {
-                  'fill-extrusion-color': '#e0e0e0', 
-                  'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']],
-                  'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'min_height']],
-                  'fill-extrusion-opacity': 0.8 
-              }
-          }, labelLayerId);
-      });
+                // 맵박스 초기화
+                if (mapboxToken) {
+                    console.log("🗺️ [Iframe] Initializing Mapbox...");
+                    initializeMap(mapboxToken);
+                }
 
-      function updateMarkersRealtime() {
-          const activeLayers = activeSourceIds.map(sid => `inv-cluster-${sid}`).concat(activeSourceIds.map(sid => `inv-uncluster-${sid}`));
-          if (activeLayers.length === 0) return;
+                // 수파베이스 초기화
+                if (!supabaseClient && supabaseUrl && supabaseKey) {
+                    console.log("🔐 [Iframe] Initializing Supabase...");
+                    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                    if (map && map.isStyleLoaded()) loadRealDataFromDB(adminEmail);
+                }
+            }
 
-          let allLoaded = true;
-          activeSourceIds.forEach(sid => { if (!map.getSource(sid) || !map.isSourceLoaded(sid)) allLoaded = false; });
-          if (!allLoaded) return;
-          
-          const features = map.queryRenderedFeatures({ layers: activeLayers });
-          const keepMarkers = new Set(); 
+            // 마커 데이터 수신
+            if (event.data.type === 'UPDATE_MARKERS') {
+                const photos = event.data.data;
+                if (map && map.isStyleLoaded()) applyExternalPhotos(photos);
+                else if (map) map.once('load', () => applyExternalPhotos(photos));
+            }
+        });
 
-          for (let i = 0; i < features.length; i++) {
-              const feature = features[i];
-              const coords = feature.geometry.coordinates;
-              const sourceId = feature.layer.source; 
-              const dateStr = sourceDateMap[sourceId]; 
+        var myUnityInstance = null;
+        var container = document.querySelector("#unity-container");
+        var canvas = document.querySelector("#unity-canvas");
+        var loadingBar = document.querySelector("#unity-loading-bar");
+        var progressBarFull = document.querySelector("#unity-progress-bar-full");
+        var activeMarkerLngLat = null;
+        var map = null;
 
-              let markerKey = feature.properties.cluster ? `cluster_${sourceId}_${feature.properties.cluster_id}` : `unclustered_${sourceId}_${feature.properties.id}`;
-              keepMarkers.add(markerKey);
+        let rawDBData = [];
+        let htmlMarkers = {};
+        let activeSourceIds = [];
+        let sourceDateMap = {};
+        let currentMode = "MAP";
 
-              if (!htmlMarkers[markerKey]) {
-                  const wrapper = document.createElement('div');
-                  wrapper.className = 'marker-wrapper';
-                  wrapper.addEventListener('mousedown', (e) => e.stopPropagation());
-                  wrapper.addEventListener('touchstart', (e) => e.stopPropagation());
-                  
-                  const innerEl = document.createElement('div');
-                  innerEl.className = 'custom-marker'; 
+        // 경로를 상대 경로로 수정 (Build 폴더가 index.html과 같은 위치에 있음)
+        var buildUrl = "Build";
+        var config = {
+            dataUrl: buildUrl + "/webgl.data", frameworkUrl: buildUrl + "/webgl.framework.js",
+            codeUrl: buildUrl + "/webgl.wasm", streamingAssetsUrl: "StreamingAssets",
+            companyName: "DefaultCompany", productName: "MapBoxweb", productVersion: "0.1.0",
+            matchWebGLToCanvasSize: false, devicePixelRatio: 1,
+        };
 
-                  if (feature.properties.cluster) {
-                      // ★ 썸네일(thumbnails) 데이터를 사용해서 지도 마커를 가볍게 렌더링!
-                      map.getSource(sourceId).getClusterLeaves(feature.properties.cluster_id, 3, 0, (err, leaves) => {
-                          if (err || !leaves) return;
-                          let displayThumbnails = [];
-                          leaves.forEach(leaf => { displayThumbnails = displayThumbnails.concat(leaf.properties.thumbnails.split('|')); });
-                          
-                          displayThumbnails.slice(0, 3).forEach((url) => {
-                              const img = document.createElement('img'); img.src = url; innerEl.appendChild(img);
-                          });
-                      });
+        var script = document.createElement("script");
+        script.src = buildUrl + "/webgl.loader.js";
+        script.onload = () => {
+            createUnityInstance(canvas, config, (progress) => { progressBarFull.style.width = 100 * progress + "%"; })
+                .then((unityInstance) => { myUnityInstance = unityInstance; loadingBar.style.display = "none"; })
+                .catch((message) => { console.error("Unity 로딩 실패:", message); });
+        };
+        document.body.appendChild(script);
 
-                      wrapper.addEventListener('click', (e) => {
-                          e.stopPropagation();
-                          // ★ 유니티를 켤 때는 고화질 원본(urls) 데이터를 넘깁니다!
-                          map.getSource(sourceId).getClusterLeaves(feature.properties.cluster_id, 999, 0, (err, leaves) => {
-                              if (err || !leaves) return;
-                              let allUrls = [];
-                              leaves.forEach(leaf => { allUrls = allUrls.concat(leaf.properties.urls.split('|')); });
-                              showUnity('cluster_' + feature.properties.cluster_id, coords[0], coords[1], allUrls);
-                          });
-                      });
-                  } 
-                  else {
-                      // ★ 낱개일 때도 지도에는 썸네일 표시, 유니티에는 원본 전송
-                      const thumbUrls = feature.properties.thumbnails.split('|');
-                      const origUrls = feature.properties.urls.split('|');
-                      
-                      thumbUrls.slice(0, 3).forEach((url) => {
-                          const img = document.createElement('img'); img.src = url; innerEl.appendChild(img);
-                      });
-                      
-                      wrapper.addEventListener('click', (e) => {
-                          e.stopPropagation(); showUnity(feature.properties.id, coords[0], coords[1], origUrls); 
-                      });
-                  }
-                  
-                  wrapper.appendChild(innerEl);
+        // 지도 및 이벤트 초기화
+        function initializeMap(token) {
+            if (!token || map) return;
+            mapboxgl.accessToken = token;
+            map = new mapboxgl.Map({
+                container: "map", style: "mapbox://styles/mapbox/streets-v12",
+                center: [127.7669, 35.9078], zoom: 2.0, pitch: 0, projection: 'globe', preserveDrawingBuffer: true
+            });
 
-                  if (currentMode === "DATE" && dateStr) {
-                      const dateLabel = document.createElement('div');
-                      dateLabel.className = 'date-label';
-                      dateLabel.innerText = dateStr;
-                      wrapper.appendChild(dateLabel);
-                  }
+            map.on('style.load', () => {
+                map.setFog({ 'color': 'rgb(186, 210, 235)', 'high-color': 'rgb(36, 92, 223)', 'horizon-blend': 0.02, 'space-color': 'rgb(11, 11, 25)', 'star-intensity': 0.6 });
+                const layers = map.getStyle().layers;
+                const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field'])?.id;
 
-                  htmlMarkers[markerKey] = new mapboxgl.Marker(wrapper).setLngLat(coords).addTo(map);
-              } else {
-                  htmlMarkers[markerKey].setLngLat(coords); 
-              }
-          }
+                map.addLayer({
+                    'id': 'add-3d-buildings', 'source': 'composite', 'source-layer': 'building',
+                    'filter': ['==', 'extrude', 'true'], 'type': 'fill-extrusion', 'minzoom': 15,
+                    'paint': {
+                        'fill-extrusion-color': '#e0e0e0',
+                        'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']],
+                        'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'min_height']],
+                        'fill-extrusion-opacity': 0.8
+                    }
+                }, labelLayerId);
+            });
 
-          for (const key in htmlMarkers) {
-              if (!keepMarkers.has(key)) { htmlMarkers[key].remove(); delete htmlMarkers[key]; }
-          }
-      }
+            // 지도 인터랙션 이벤트
+            map.on('load', () => {
+                console.log("✅ [Iframe] Mapbox style loaded");
+                if (supabaseClient) loadRealDataFromDB();
+            });
 
-      map.on('render', updateMarkersRealtime);
+            map.on('error', (e) => {
+                console.error("❌ [Iframe] Mapbox error:", e);
+            });
 
-      function clearMapData() {
-          Object.values(htmlMarkers).forEach(m => m.remove());
-          htmlMarkers = {};
-          activeSourceIds.forEach(sid => {
-              if (map.getLayer(`inv-cluster-${sid}`)) map.removeLayer(`inv-cluster-${sid}`);
-              if (map.getLayer(`inv-uncluster-${sid}`)) map.removeLayer(`inv-uncluster-${sid}`);
-              if (map.getSource(sid)) map.removeSource(sid);
-          });
-          activeSourceIds = [];
-          sourceDateMap = {};
-      }
+            map.on('move', () => { updateUnityPosition(); handleMapInteraction(); });
+            map.on('zoom', () => { updateUnityPosition(); handleMapInteraction(); });
+            map.on('moveend', () => { if (container.classList.contains('active')) captureAndSendBackground(); });
+            map.on('mousedown', closeUnityOnInteract);
+            map.on('wheel', closeUnityOnInteract);
+            map.on('touchstart', closeUnityOnInteract);
+            
+            // 렌더링 시마다 마커 업데이트 (map이 초기화된 후 등록)
+            map.on('render', updateMarkersRealtime);
+        }
 
-      function applyMapMode() {
-          clearMapData(); currentMode = "MAP";
-          const features = [];
-          rawDBData.forEach(loc => {
-              if (!loc.media || loc.media.length === 0) return;
-              features.push({
-                  type: 'Feature', geometry: { type: 'Point', coordinates: [loc.lon, loc.lat] },
-                  properties: { 
-                      id: loc.location_id.toString(), 
-                      urls: loc.media.map(m => m.file_url).join('|'), // 유니티용 원본
-                      thumbnails: loc.media.map(m => m.thumbnail_url || m.file_url).join('|') // 지도 렌더링용 썸네일
-                  }
-              });
-          });
-          const sourceId = 'photos_map'; activeSourceIds.push(sourceId);
-          map.addSource(sourceId, { type: 'geojson', data: { type: 'FeatureCollection', features: features }, cluster: true, clusterMaxZoom: 20, clusterRadius: 60 });
-          map.addLayer({ id: `inv-cluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['has', 'point_count'], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
-          map.addLayer({ id: `inv-uncluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
-      }
+        // 부모 창에서 전달받은 마커 데이터를 적용하는 함수
+        function applyExternalPhotos(photos) {
+            console.log("📸 [Iframe] Applying external photos:", photos.length);
+            rawDBData = photos;
+            if (map && map.isStyleLoaded()) applyMapMode();
+        }
+
+        function handleMapInteraction() {
+            if (container.classList.contains('active')) {
+                const now = Date.now();
+                if (now - lastCaptureTime > captureInterval) {
+                    lastCaptureTime = now;
+                    captureAndSendBackground();
+                }
+            }
+        }
+
+        function closeUnityOnInteract() { if (container.classList.contains('active')) closeUnity(); }
+
+        function updateMarkersRealtime() {
+            const activeLayers = activeSourceIds.map(sid => `inv-cluster-${sid}`).concat(activeSourceIds.map(sid => `inv-uncluster-${sid}`));
+            if (activeLayers.length === 0) return;
+
+            let allLoaded = true;
+            activeSourceIds.forEach(sid => { if (!map.getSource(sid) || !map.isSourceLoaded(sid)) allLoaded = false; });
+            if (!allLoaded) return;
+
+            const features = map.queryRenderedFeatures({ layers: activeLayers });
+            const keepMarkers = new Set();
+
+            for (let i = 0; i < features.length; i++) {
+                const feature = features[i];
+                const coords = feature.geometry.coordinates;
+                const sourceId = feature.layer.source;
+                const dateStr = sourceDateMap[sourceId];
+
+                let markerKey = feature.properties.cluster ? `cluster_${sourceId}_${feature.properties.cluster_id}` : `unclustered_${sourceId}_${feature.properties.id}`;
+                keepMarkers.add(markerKey);
+
+                if (!htmlMarkers[markerKey]) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'marker-wrapper';
+                    wrapper.addEventListener('mousedown', (e) => e.stopPropagation());
+                    wrapper.addEventListener('touchstart', (e) => e.stopPropagation());
+
+                    const innerEl = document.createElement('div');
+                    innerEl.className = 'custom-marker';
+
+                    if (feature.properties.cluster) {
+                        // ★ 썸네일(thumbnails) 데이터를 사용해서 지도 마커를 가볍게 렌더링!
+                        map.getSource(sourceId).getClusterLeaves(feature.properties.cluster_id, 3, 0, (err, leaves) => {
+                            if (err || !leaves) return;
+                            let displayThumbnails = [];
+                            leaves.forEach(leaf => { displayThumbnails = displayThumbnails.concat(leaf.properties.thumbnails.split('|')); });
+
+                            displayThumbnails.slice(0, 3).forEach((url) => {
+                                const img = document.createElement('img'); img.src = url; innerEl.appendChild(img);
+                            });
+                        });
+
+                        wrapper.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            // ★ 유니티를 켤 때는 고화질 원본(urls) 데이터를 넘깁니다!
+                            map.getSource(sourceId).getClusterLeaves(feature.properties.cluster_id, 999, 0, (err, leaves) => {
+                                if (err || !leaves) return;
+                                let allUrls = [];
+                                leaves.forEach(leaf => { allUrls = allUrls.concat(leaf.properties.urls.split('|')); });
+                                showUnity('cluster_' + feature.properties.cluster_id, coords[0], coords[1], allUrls);
+                            });
+                        });
+                    }
+                    else {
+                        // ★ 낱개일 때도 지도에는 썸네일 표시, 유니티에는 원본 전송
+                        const thumbUrls = feature.properties.thumbnails.split('|');
+                        const origUrls = feature.properties.urls.split('|');
+
+                        thumbUrls.slice(0, 3).forEach((url) => {
+                            const img = document.createElement('img'); img.src = url; innerEl.appendChild(img);
+                        });
+
+                        wrapper.addEventListener('click', (e) => {
+                            e.stopPropagation(); showUnity(feature.properties.id, coords[0], coords[1], origUrls);
+                        });
+                    }
+
+                    wrapper.appendChild(innerEl);
+
+                    if (currentMode === "DATE" && dateStr) {
+                        const dateLabel = document.createElement('div');
+                        dateLabel.className = 'date-label';
+                        dateLabel.innerText = dateStr;
+                        wrapper.appendChild(dateLabel);
+                    }
+
+                    htmlMarkers[markerKey] = new mapboxgl.Marker(wrapper).setLngLat(coords).addTo(map);
+                } else {
+                    htmlMarkers[markerKey].setLngLat(coords);
+                }
+            }
+
+            for (const key in htmlMarkers) {
+                if (!keepMarkers.has(key)) { htmlMarkers[key].remove(); delete htmlMarkers[key]; }
+            }
+        }
+
+
+        function clearMapData() {
+            Object.values(htmlMarkers).forEach(m => m.remove());
+            htmlMarkers = {};
+            activeSourceIds.forEach(sid => {
+                if (map.getLayer(`inv-cluster-${sid}`)) map.removeLayer(`inv-cluster-${sid}`);
+                if (map.getLayer(`inv-uncluster-${sid}`)) map.removeLayer(`inv-uncluster-${sid}`);
+                if (map.getSource(sid)) map.removeSource(sid);
+            });
+            activeSourceIds = [];
+            sourceDateMap = {};
+        }
+
+        function applyMapMode() {
+            clearMapData(); currentMode = "MAP";
+            const features = [];
+            rawDBData.forEach(loc => {
+                if (!loc.media || loc.media.length === 0) return;
+                features.push({
+                    type: 'Feature', geometry: { type: 'Point', coordinates: [loc.lon, loc.lat] },
+                    properties: {
+                        id: loc.location_id.toString(),
+                        urls: loc.media.map(m => m.file_url).join('|'), // 유니티용 원본
+                        thumbnails: loc.media.map(m => m.thumbnail_url || m.file_url).join('|') // 지도 렌더링용 썸네일
+                    }
+                });
+            });
+            const sourceId = 'photos_map'; activeSourceIds.push(sourceId);
+            map.addSource(sourceId, { type: 'geojson', data: { type: 'FeatureCollection', features: features }, cluster: true, clusterMaxZoom: 20, clusterRadius: 60 });
+            map.addLayer({ id: `inv-cluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['has', 'point_count'], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
+            map.addLayer({ id: `inv-uncluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
+        }
 
 
 
-      // ==========================================
-      // ★ 실제 유저 세션 연동 데이터 로드 ★
-      // ==========================================
-      async function loadRealDataFromDB() {
-          if (!supabaseClient) return;
-          try {
-              // 1. 현재 브라우저에 저장된 로그인 세션을 확인합니다.
-              const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-              
-              if (!session) {
-                  // 세션이 없으면 콘솔에 띄우고 테스트용 계정으로 임시 강제 로그인 시도 (원치 않으시면 이 부분을 지우고 alert 창을 띄우세요)
-                  console.log("⚠️ 현재 로그인된 세션이 없습니다. (테스트 환경이므로 admin으로 자동 로그인 시도)");
-                  const { data, error } = await supabaseClient.auth.signInWithPassword({ email: '***SCRUBBED_ADMIN_EMAIL***', password: '***SCRUBBED_ADMIN_PASSWORD***' });
-                  if (error) { console.error("❌ 로그인 실패:", error.message); return; }
-              } else {
-                  console.log("✅ 정상적으로 유저 인증이 완료되었습니다! ID:", session.user.id);
-              }
+        // ==========================================
+        // ★ 실제 유저 세션 연동 데이터 로드 ★
+        // ==========================================
+        async function loadRealDataFromDB(adminEmail) {
+            if (!supabaseClient) return;
+            try {
+                // 1. 현재 브라우저에 저장된 로그인 세션을 확인합니다.
+                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
 
-              // 2. RLS 정책에 의해 로그인한 유저의 사진만 수파베이스가 자동으로 필터링해서 줍니다! (thumbnail_url 포함)
-              const { data, error } = await supabaseClient
-                  .from('location')
-                  .select('location_id, lat, lon, created_time, media ( file_url, thumbnail_url, take_time, created_time )');
-              
-              if (error) throw error;
-              rawDBData = data;
-              console.log("📦 내 데이터 로드 완료:", rawDBData);
+                if (!session) {
+                    const targetEmail = adminEmail || '***SCRUBBED_ADMIN_EMAIL***';
+                    console.log(`⚠️ 현재 로그인된 세션이 없습니다. (${targetEmail}으로 자동 로그인 시도)`);
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: targetEmail,
+                        password: '***SCRUBBED_ADMIN_PASSWORD***'
+                    });
+                    if (error) { console.error("❌ 로그인 실패:", error.message); return; }
+                } else {
+                    console.log("✅ 정상적으로 유저 인증이 완료되었습니다! ID:", session.user.id);
+                }
 
-              applyMapMode();
+                // 2. RLS 정책에 의해 로그인한 유저의 사진만 수파베이스가 자동으로 필터링해서 줍니다! (thumbnail_url 포함)
+                const { data, error } = await supabaseClient
+                    .from('location')
+                    .select('location_id, lat, lon, created_time, media ( file_url, thumbnail_url, take_time, created_time )');
 
-          } catch (e) { console.error("❌ DB 데이터 로드 에러:", e); }
-      }
+                if (error) throw error;
+                rawDBData = data;
+                console.log("📦 내 데이터 로드 완료:", rawDBData);
 
-      map.on('load', () => { loadRealDataFromDB(); });
+                applyMapMode();
 
-      let lastCaptureTime = 0; const captureInterval = 50; 
-      map.on('move', () => { updateUnityPosition(); if (container.classList.contains('active')) { const now = Date.now(); if (now - lastCaptureTime > captureInterval) { lastCaptureTime = now; captureAndSendBackground(); } } });
-      map.on('zoom', () => { updateUnityPosition(); if (container.classList.contains('active')) { const now = Date.now(); if (now - lastCaptureTime > captureInterval) { lastCaptureTime = now; captureAndSendBackground(); } } });
-      map.on('moveend', () => { if (container.classList.contains('active')) captureAndSendBackground(); });
-      
-      const closePopupWhenInteracting = () => { if (container.classList.contains('active')) closeUnity(); };
-      map.on('mousedown', closePopupWhenInteracting); 
-      map.on('wheel', closePopupWhenInteracting);       
-      map.on('touchstart', closePopupWhenInteracting);  
+            } catch (e) { console.error("❌ DB 데이터 로드 에러:", e); }
+        }
 
-      function updateUnityPosition() {
-          if (!activeMarkerLngLat || !map) return;
-          var pos = map.project(activeMarkerLngLat);
-          container.style.left = pos.x + "px"; container.style.top = pos.y + "px";
-      }
+        // 초기 데이터 로드 (설정 수신 후 실행됨)
+        // map.on('load', () => { loadRealDataFromDB(); });
 
-      function showUnity(id, lng, lat, photoUrls) {
-          if (!myUnityInstance) return;
-          activeMarkerLngLat = [lng, lat]; updateUnityPosition();
-          const urlString = photoUrls.join('|');
-          setTimeout(() => {
-              captureAndSendBackground();
-              container.classList.add('active'); 
-              setTimeout(() => { myUnityInstance.SendMessage('MapManager', 'OpenCarouselWithUrls', urlString); }, 150); 
-          }, 50);
-      }
+        let lastCaptureTime = 0; const captureInterval = 50;
+        // 이벤트 리스너는 initializeMap 내부로 이동됨
 
-      function closeUnity() {
-          container.classList.remove('active'); activeMarkerLngLat = null;
-          if(myUnityInstance) myUnityInstance.SendMessage('MapManager', 'CloseCarousel'); 
-      }
+        function updateUnityPosition() {
+            if (!activeMarkerLngLat || !map) return;
+            var pos = map.project(activeMarkerLngLat);
+            container.style.left = pos.x + "px"; container.style.top = pos.y + "px";
+        }
 
-      function captureAndSendBackground() {
-          try {
-              const mapCanvas = map.getCanvas(); const containerRect = container.getBoundingClientRect(); const mapRect = mapCanvas.getBoundingClientRect();       
-              const dpr = window.devicePixelRatio || 1;
-              const cropX = (containerRect.left - mapRect.left) * dpr; const cropY = (containerRect.top - mapRect.top) * dpr;
-              const cropWidth = containerRect.width * dpr; const cropHeight = containerRect.height * dpr;
-              const tempCanvas = document.createElement('canvas'); tempCanvas.width = cropWidth; tempCanvas.height = cropHeight; 
-              const ctx = tempCanvas.getContext('2d');
-              ctx.drawImage(mapCanvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-              tempCanvas.toBlob((blob) => {
-                  const blobUrl = URL.createObjectURL(blob);
-                  myUnityInstance.SendMessage('BackgroundReceiver', 'ReceiveBackgroundUrl', blobUrl);
-              }, 'image/png'); 
-          } catch(e) { console.error("배경 캡처 실패:", e); }
-      }
+        function showUnity(id, lng, lat, photoUrls) {
+            if (!myUnityInstance) return;
+            activeMarkerLngLat = [lng, lat]; updateUnityPosition();
+            const urlString = photoUrls.join('|');
+            setTimeout(() => {
+                captureAndSendBackground();
+                container.classList.add('active');
+                setTimeout(() => { myUnityInstance.SendMessage('MapManager', 'OpenCarouselWithUrls', urlString); }, 150);
+            }, 50);
+        }
+
+        function closeUnity() {
+            container.classList.remove('active'); activeMarkerLngLat = null;
+            if (myUnityInstance) myUnityInstance.SendMessage('MapManager', 'CloseCarousel');
+        }
+
+        function captureAndSendBackground() {
+            try {
+                const mapCanvas = map.getCanvas(); const containerRect = container.getBoundingClientRect(); const mapRect = mapCanvas.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                const cropX = (containerRect.left - mapRect.left) * dpr; const cropY = (containerRect.top - mapRect.top) * dpr;
+                const cropWidth = containerRect.width * dpr; const cropHeight = containerRect.height * dpr;
+                const tempCanvas = document.createElement('canvas'); tempCanvas.width = cropWidth; tempCanvas.height = cropHeight;
+                const ctx = tempCanvas.getContext('2d');
+                ctx.drawImage(mapCanvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+                tempCanvas.toBlob((blob) => {
+                    const blobUrl = URL.createObjectURL(blob);
+                    myUnityInstance.SendMessage('BackgroundReceiver', 'ReceiveBackgroundUrl', blobUrl);
+                }, 'image/png');
+            } catch (e) { console.error("배경 캡처 실패:", e); }
+        }
+
+        // 부모 창에 준비 완료 알림
+        window.parent.postMessage({ type: 'IFRAME_READY' }, '*');
     </script>
 </body>
+
 </html>

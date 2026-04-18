@@ -84,12 +84,35 @@
     </div>
 
     <script>
-      let supabaseClient = null;
-      try {
-          const SUPABASE_URL = '***SCRUBBED_SUPABASE_URL***'; 
-          const SUPABASE_ANON_KEY = '***SCRUBBED_SUPABASE_ANON_KEY***';
-          supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      } catch (e) { console.error("❌ 수파베이스 세팅 중 에러 발생:", e); }
+        // 수파베이스 클라이언트
+        let supabaseClient = null;
+
+        // 설정 수신 및 초기화
+        window.addEventListener('message', (event) => {
+            if (!event.data) return;
+
+            // 보안 설정 수신
+            if (event.data.type === 'INIT_CONFIG') {
+                const { supabaseUrl, supabaseKey, mapboxToken } = event.data.data;
+                
+                // 맵박스 초기화
+                if (mapboxToken) initializeMap(mapboxToken);
+
+                // 수파베이스 초기화
+                if (!supabaseClient && supabaseUrl && supabaseKey) {
+                    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                    console.log("🔐 보안 설정 로드 완료");
+                    if (map && map.isStyleLoaded()) loadRealDataFromDB();
+                }
+            }
+
+            // 마커 데이터 수신
+            if (event.data.type === 'UPDATE_MARKERS') {
+                const photos = event.data.data;
+                if (map && map.isStyleLoaded()) applyExternalPhotos(photos);
+                else if (map) map.once('load', () => applyExternalPhotos(photos));
+            }
+        });
 
       var myUnityInstance = null;
       var container = document.querySelector("#unity-container");
@@ -122,25 +145,41 @@
       };
       document.body.appendChild(script);
 
-      mapboxgl.accessToken = "***SCRUBBED_MAPBOX_TOKEN***";
-      map = new mapboxgl.Map({ container: "map", style: "mapbox://styles/mapbox/streets-v12", center: [127.7669, 35.9078], zoom: 2.0, pitch: 0, projection: 'globe', preserveDrawingBuffer: true });
-      
-      map.on('style.load', () => { 
-          map.setFog({ 'color': 'rgb(186, 210, 235)', 'high-color': 'rgb(36, 92, 223)', 'horizon-blend': 0.02, 'space-color': 'rgb(11, 11, 25)', 'star-intensity': 0.6 }); 
-          const layers = map.getStyle().layers;
-          const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field'])?.id;
-          
-          map.addLayer({
-              'id': 'add-3d-buildings', 'source': 'composite', 'source-layer': 'building',
-              'filter': ['==', 'extrude', 'true'], 'type': 'fill-extrusion', 'minzoom': 15,
-              'paint': {
-                  'fill-extrusion-color': '#e0e0e0', 
-                  'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']],
-                  'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'min_height']],
-                  'fill-extrusion-opacity': 0.8 
-              }
-          }, labelLayerId);
-      });
+      // 지도 및 이벤트 초기화
+      function initializeMap(token) {
+          if (!token || map) return;
+          mapboxgl.accessToken = token;
+          map = new mapboxgl.Map({ 
+              container: "map", style: "mapbox://styles/mapbox/streets-v12", 
+              center: [127.7669, 35.9078], zoom: 2.0, pitch: 0, projection: 'globe', preserveDrawingBuffer: true 
+          });
+
+          map.on('style.load', () => { 
+              map.setFog({ 'color': 'rgb(186, 210, 235)', 'high-color': 'rgb(36, 92, 223)', 'horizon-blend': 0.02, 'space-color': 'rgb(11, 11, 25)', 'star-intensity': 0.6 }); 
+              const layers = map.getStyle().layers;
+              const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field'])?.id;
+              
+              map.addLayer({
+                  'id': 'add-3d-buildings', 'source': 'composite', 'source-layer': 'building',
+                  'filter': ['==', 'extrude', 'true'], 'type': 'fill-extrusion', 'minzoom': 15,
+                  'paint': {
+                      'fill-extrusion-color': '#e0e0e0', 
+                      'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']],
+                      'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'min_height']],
+                      'fill-extrusion-opacity': 0.8 
+                  }
+              }, labelLayerId);
+
+              if (supabaseClient) loadRealDataFromDB();
+          });
+
+          map.on('move', () => { if (container.classList.contains('active')) { const now = Date.now(); if (now - lastCaptureTime > captureInterval) { lastCaptureTime = now; captureAndSendBackground(); } } });
+          map.on('zoom', () => { if (container.classList.contains('active')) { const now = Date.now(); if (now - lastCaptureTime > captureInterval) { lastCaptureTime = now; captureAndSendBackground(); } } });
+          map.on('moveend', () => { if (container.classList.contains('active')) captureAndSendBackground(); });
+          map.on('mousedown', () => { if (container.classList.contains('active')) closeUnity(); }); 
+          map.on('wheel', () => { if (container.classList.contains('active')) closeUnity(); });       
+          map.on('touchstart', () => { if (container.classList.contains('active')) closeUnity(); });
+      }
 
       function updateMarkersRealtime() {
           const activeLayers = activeSourceIds.map(sid => `inv-cluster-${sid}`).concat(activeSourceIds.map(sid => `inv-uncluster-${sid}`));
@@ -363,7 +402,8 @@
           } catch (e) { console.error("❌ DB 데이터 로드 에러:", e); }
       }
 
-      map.on('load', () => { loadRealDataFromDB(); });
+      // 초기 데이터 로드 (설정 수신 후 실행됨)
+      // map.on('load', () => { loadRealDataFromDB(); });
 
       let lastCaptureTime = 0; const captureInterval = 50; 
       map.on('move', () => { updateUnityPosition(); if (container.classList.contains('active')) { const now = Date.now(); if (now - lastCaptureTime > captureInterval) { lastCaptureTime = now; captureAndSendBackground(); } } });
