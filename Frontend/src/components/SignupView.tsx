@@ -44,7 +44,6 @@ export function SignupView({ onNavigate }: SignupViewProps) {
       if (authError) {
         console.error('❌ [Signup] Auth Error details:', authError);
 
-        // Supabase 에러 메시지 한글화
         const msg = (authError.message || '').toLowerCase();
 
         if (msg.includes('already registered') || msg.includes('user already exists')) {
@@ -54,13 +53,13 @@ export function SignupView({ onNavigate }: SignupViewProps) {
         } else if (msg.includes('email') && msg.includes('valid')) {
           toast.error('올바른 이메일 주소를 입력해 주세요.');
         } else {
-          // 어떤 매핑에도 걸리지 않으면 원문 에러를 표시
+
           toast.error(authError.message || '회원가입 중 알 수 없는 오류가 발생했습니다.');
         }
         return;
       }
 
-      // 가입 성공 (이메일 인증이 활성화된 경우)
+      // 가입 성공 (
       if (data.user && !data.session) {
         toast.info('인증 메일이 발송되었습니다! 이메일 함을 확인하여 가입을 완료해 주세요.', {
           duration: 6000,

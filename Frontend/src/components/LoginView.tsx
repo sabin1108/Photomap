@@ -14,6 +14,7 @@ export function LoginView({ onNavigate }: LoginViewProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,11 +49,38 @@ export function LoginView({ onNavigate }: LoginViewProps) {
         toast.success('환영합니다!');
         onNavigate('all');
       }
-    } catch (err) {
-      console.error('Login error:', err);
-      toast.error('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    const demoEmail = import.meta.env.VITE_DEMO_EMAIL;
+    const demoPassword = import.meta.env.VITE_DEMO_PASSWORD;
+
+    if (!demoEmail || !demoPassword) {
+      toast.error('데모 계정 정보가 설정되지 않았습니다.');
+      return;
+    }
+
+    setDemoLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ 
+        email: demoEmail, 
+        password: demoPassword 
+      });
+
+      if (error) {
+        toast.error('데모 로그인 실패: ' + error.message);
+      } else {
+        toast.success('데모 모드로 입장합니다. 환영합니다!');
+        onNavigate('all');
+      }
+    } catch (err) {
+      console.error('Demo Login error:', err);
+      toast.error('로그인 중 오류가 발생했습니다.');
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -119,7 +147,7 @@ export function LoginView({ onNavigate }: LoginViewProps) {
             <Button
               type="submit"
               className="w-full h-12 bg-[#E09F87] hover:bg-[#D08E76] text-white rounded-xl shadow-lg shadow-[#E09F87]/20 text-base font-medium transition-all mt-4"
-              disabled={loading}
+              disabled={loading || demoLoading}
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -130,6 +158,31 @@ export function LoginView({ onNavigate }: LoginViewProps) {
                 <span className="flex items-center justify-center gap-2">
                   Sign In <ArrowRight size={18} />
                 </span>
+              )}
+            </Button>
+
+            <div className="relative py-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-stone-200/50"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-[#F5F2EB] px-2 text-stone-400">Or experience without signup</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              onClick={handleDemoLogin}
+              className="w-full h-12 bg-white border border-stone-200 hover:bg-stone-50 text-stone-600 rounded-xl transition-all shadow-sm"
+              disabled={loading || demoLoading}
+            >
+              {demoLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" />
+                  Entering Demo...
+                </span>
+              ) : (
+                "데모 계정으로 체험하기"
               )}
             </Button>
           </form>
