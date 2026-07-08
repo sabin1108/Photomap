@@ -21,7 +21,7 @@ export interface Album {
   isLocation?: boolean;
 }
 
-export function AlbumsView() {
+export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean }) {
   // 상태 관리
   const categories = usePhotoStore(state => state.categories);
   const photos = usePhotoStore(state => state.photos);
@@ -43,6 +43,8 @@ export function AlbumsView() {
   const [selectedAlbumNames, setSelectedAlbumNames] = useState<string[]>([]);
   const [isPhotoSelectMode, setIsPhotoSelectMode] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+
+  const canWrite = !isReadOnlyDemo;
 
   // 그리드 설정
   const parentRef = useRef<HTMLDivElement>(null);
@@ -111,14 +113,14 @@ export function AlbumsView() {
   }, [activeTab, categorizedAlbums]);
 
   // 핸들러 모음
-  const handleOpenCreate = () => { setFormData({ title: '' }); setIsDialogOpen(true); };
-  const handleSave = () => { if (formData.title.trim()) { addCategory(formData.title.trim()); setIsDialogOpen(false); } };
-  const handleUpdateAlbum = async () => { if (editingAlbumName && editFormData.title.trim()) { await updateCategory(editingAlbumName, editFormData.title.trim()); setEditingAlbumName(null); } };
-  const handleDeleteAlbum = async () => { if (editingAlbumName) { if (window.confirm('이 컬렉션을 삭제하시겠습니까?')) { await deleteCategory(editingAlbumName); setEditingAlbumName(null); } } };
+  const handleOpenCreate = () => { if (!canWrite) return; setFormData({ title: '' }); setIsDialogOpen(true); };
+  const handleSave = () => { if (!canWrite) return; if (formData.title.trim()) { addCategory(formData.title.trim()); setIsDialogOpen(false); } };
+  const handleUpdateAlbum = async () => { if (!canWrite) return; if (editingAlbumName && editFormData.title.trim()) { await updateCategory(editingAlbumName, editFormData.title.trim()); setEditingAlbumName(null); } };
+  const handleDeleteAlbum = async () => { if (!canWrite) return; if (editingAlbumName) { if (window.confirm('이 컬렉션을 삭제하시겠습니까?')) { await deleteCategory(editingAlbumName); setEditingAlbumName(null); } } };
 
   // 클릭 이벤트
   const handleAlbumClick = (albumId: string) => {
-    if (isSelectMode) {
+    if (isSelectMode && canWrite) {
       if (albumId.startsWith('system_') || albumId.startsWith('loc_')) return;
       setSelectedAlbumNames(prev => prev.includes(albumId) ? prev.filter(n => n !== albumId) : [...prev, albumId]);
     } else {
@@ -127,7 +129,7 @@ export function AlbumsView() {
   };
 
   // 일괄 삭제
-  const handleBatchDeleteAlbums = async () => { if (selectedAlbumNames.length > 0 && window.confirm('선택한 항목들을 삭제하시겠습니까?')) { await batchDeleteCategories(selectedAlbumNames); setIsSelectMode(false); setSelectedAlbumNames([]); } };
+  const handleBatchDeleteAlbums = async () => { if (!canWrite) return; if (selectedAlbumNames.length > 0 && window.confirm('선택한 항목들을 삭제하시겠습니까?')) { await batchDeleteCategories(selectedAlbumNames); setIsSelectMode(false); setSelectedAlbumNames([]); } };
 
   // 활성화 앨범 렌더링
   if (activeAlbum) {
@@ -144,23 +146,23 @@ export function AlbumsView() {
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            {!isPhotoSelectMode && (
+            {canWrite && !isPhotoSelectMode && (
               <Button className="bg-[#E09F87] hover:bg-[#D08E76] text-white rounded-full shadow-md gap-2 h-9 px-3 md:h-10 md:px-4" onClick={() => setIsUploadOpen(true)}>
                 <Plus className="w-4 h-4" /> <span className="hidden md:inline">Upload Here</span>
               </Button>
             )}
-            <Button variant={isPhotoSelectMode ? "secondary" : "outline"} size="sm" onClick={() => setIsPhotoSelectMode(!isPhotoSelectMode)} className="rounded-full gap-2 border-stone-200 h-9 px-3 md:h-10 md:px-4">
+            {canWrite && <Button variant={isPhotoSelectMode ? "secondary" : "outline"} size="sm" onClick={() => setIsPhotoSelectMode(!isPhotoSelectMode)} className="rounded-full gap-2 border-stone-200 h-9 px-3 md:h-10 md:px-4">
               {isPhotoSelectMode ? <X className="w-4 h-4" /> : <MousePointer2 className="w-4 h-4" />}
               <span className="hidden md:inline">{isPhotoSelectMode ? "Cancel" : "Select"}</span>
-            </Button>
+            </Button>}
           </div>
         </div>
 
         <div className="flex-1 overflow-hidden">
-          <PhotoFeed className="h-full p-2 md:p-6" filterCategory={activeAlbum} hideHeader={true} isExternalSelectMode={isPhotoSelectMode} onSelectModeChange={setIsPhotoSelectMode} />
+          <PhotoFeed className="h-full p-2 md:p-6" filterCategory={activeAlbum} hideHeader={true} isExternalSelectMode={isPhotoSelectMode} onSelectModeChange={setIsPhotoSelectMode} isReadOnlyDemo={isReadOnlyDemo} />
         </div>
 
-        {isUploadOpen && (
+        {canWrite && isUploadOpen && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center md:p-10 bg-black/20 backdrop-blur-sm">
             <div className="w-full h-full md:w-[480px] md:h-[800px] md:rounded-[40px] overflow-hidden shadow-2xl relative">
               <UploadScreen onClose={() => setIsUploadOpen(false)} initialLocation={activeAlbum.startsWith('loc_') ? activeAlbum.replace('loc_', '') : undefined} initialCategory={!activeAlbum.startsWith('loc_') && !activeAlbum.startsWith('system_') ? activeAlbum : undefined} />
@@ -182,9 +184,9 @@ export function AlbumsView() {
             <h1 className="text-3xl font-bold text-stone-900 tracking-tight">
               Albums
             </h1>
-            <Button variant="outline" onClick={handleOpenCreate} className="rounded-full shadow-sm border-stone-200 h-9 px-3 text-stone-600 gap-1.5 md:hidden">
+            {canWrite && <Button variant="outline" onClick={handleOpenCreate} className="rounded-full shadow-sm border-stone-200 h-9 px-3 text-stone-600 gap-1.5 md:hidden">
               <FolderPlus className="w-4 h-4" /> New
-            </Button>
+            </Button>}
           </div>
 
           <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-center">
@@ -201,14 +203,14 @@ export function AlbumsView() {
               />
             </div>
 
-            <div className="hidden md:flex gap-2">
+            {canWrite && <div className="hidden md:flex gap-2">
               <Button onClick={handleOpenCreate} className="bg-stone-900 hover:bg-stone-800 text-white rounded-2xl shadow-sm gap-1.5 font-medium h-10">
                 <FolderPlus className="w-4 h-4" /> New
               </Button>
               <Button variant="outline" onClick={() => { setIsSelectMode(!isSelectMode); setSelectedAlbumNames([]); }} className={cn("rounded-2xl gap-2 border-stone-200 bg-white h-10", isSelectMode && "bg-[#E09F87] border-[#E09F87] text-white")}>
                 {isSelectMode ? <X className="w-4 h-4" /> : <MousePointer2 className="w-4 h-4" />} Select
               </Button>
-            </div>
+            </div>}
           </div>
         </div>
 
@@ -242,7 +244,7 @@ export function AlbumsView() {
                 </h2>
                 <div className="grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
                   {categorizedAlbums.places.map(album => (
-                    <AlbumItem key={album.id} album={album} isSelectMode={isSelectMode} isSelected={selectedAlbumNames.includes(album.id)} onClick={() => handleAlbumClick(album.id)} onEdit={() => { setEditingAlbumName(album.id); setEditFormData({ title: album.title }); }} />
+                    <AlbumItem key={album.id} album={album} isSelectMode={isSelectMode} isSelected={selectedAlbumNames.includes(album.id)} onClick={() => handleAlbumClick(album.id)} onEdit={() => { setEditingAlbumName(album.id); setEditFormData({ title: album.title }); }} isReadOnlyDemo={isReadOnlyDemo} />
                   ))}
                 </div>
               </section>
@@ -263,7 +265,7 @@ export function AlbumsView() {
                 </h2>
                 <div className="grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
                   {categorizedAlbums.collections.map(album => (
-                    <AlbumItem key={album.id} album={album} isSelectMode={isSelectMode} isSelected={selectedAlbumNames.includes(album.id)} onClick={() => handleAlbumClick(album.id)} onEdit={() => { setEditingAlbumName(album.id); setEditFormData({ title: album.title }); }} />
+                    <AlbumItem key={album.id} album={album} isSelectMode={isSelectMode} isSelected={selectedAlbumNames.includes(album.id)} onClick={() => handleAlbumClick(album.id)} onEdit={() => { setEditingAlbumName(album.id); setEditFormData({ title: album.title }); }} isReadOnlyDemo={isReadOnlyDemo} />
                   ))}
                 </div>
               </section>
@@ -279,7 +281,7 @@ export function AlbumsView() {
             ) : (
               <div className="grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
                 {filteredAlbums.map(album => (
-                  <AlbumItem key={album.id} album={album} isSelectMode={isSelectMode} isSelected={selectedAlbumNames.includes(album.id)} onClick={() => handleAlbumClick(album.id)} onEdit={() => { setEditingAlbumName(album.id); setEditFormData({ title: album.title }); }} />
+                  <AlbumItem key={album.id} album={album} isSelectMode={isSelectMode} isSelected={selectedAlbumNames.includes(album.id)} onClick={() => handleAlbumClick(album.id)} onEdit={() => { setEditingAlbumName(album.id); setEditFormData({ title: album.title }); }} isReadOnlyDemo={isReadOnlyDemo} />
                 ))}
               </div>
             )}
@@ -292,7 +294,7 @@ export function AlbumsView() {
 
       {/* 배치 작업 컨트롤 */}
       <AnimatePresence>
-        {isSelectMode && selectedAlbumNames.length > 0 && (
+        {canWrite && isSelectMode && selectedAlbumNames.length > 0 && (
           <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-stone-900/95 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-full shadow-2xl text-white">
             <span className="font-medium text-sm">{selectedAlbumNames.length} selected</span>
             <Button variant="destructive" className="rounded-full gap-2 px-6 shadow-sm" onClick={handleBatchDeleteAlbums}>
@@ -303,35 +305,40 @@ export function AlbumsView() {
       </AnimatePresence>
 
       {/* 모달 영역 */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-sm rounded-[2rem] border-stone-200 bg-[#F5F2EB]">
-          <DialogTitle>New Collection</DialogTitle>
-          <Input placeholder="Album Title" value={formData.title} onChange={(e) => setFormData({ title: e.target.value })} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleSave()} className="bg-white border-stone-200 focus:border-[#E09F87] rounded-xl py-6 text-lg shadow-sm" />
-          <Button onClick={handleSave} className="w-full rounded-xl bg-[#E09F87] hover:bg-[#D08E76] text-white text-lg h-12 mt-2 shadow-sm">Create</Button>
-        </DialogContent>
-      </Dialog>
+      {canWrite && (
+        <>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-sm rounded-[2rem] border-stone-200 bg-[#F5F2EB]">
+              <DialogTitle>New Collection</DialogTitle>
+              <Input placeholder="Album Title" value={formData.title} onChange={(e) => setFormData({ title: e.target.value })} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleSave()} className="bg-white border-stone-200 focus:border-[#E09F87] rounded-xl py-6 text-lg shadow-sm" />
+              <Button onClick={handleSave} className="w-full rounded-xl bg-[#E09F87] hover:bg-[#D08E76] text-white text-lg h-12 mt-2 shadow-sm">Create</Button>
+            </DialogContent>
+          </Dialog>
 
-      <Dialog open={!!editingAlbumName} onOpenChange={(open: boolean) => !open && setEditingAlbumName(null)}>
-        <DialogContent className="sm:max-w-sm rounded-[2rem] border-stone-200 bg-[#F5F2EB]">
-          <DialogTitle>Rename Collection</DialogTitle>
-          <Input value={editFormData.title} onChange={(e) => setEditFormData({ title: e.target.value })} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleUpdateAlbum()} className="bg-white border-stone-200 focus:border-[#E09F87] rounded-xl py-6 text-lg shadow-sm" />
-          <div className="flex gap-3 w-full mt-2">
-            <Button onClick={handleUpdateAlbum} className="flex-1 bg-[#E09F87] text-white hover:bg-[#D08E76] rounded-xl text-lg h-12 shadow-sm">Save</Button>
-            <Button variant="outline" onClick={handleDeleteAlbum} className="flex-1 border-rose-200 text-rose-500 bg-white hover:bg-rose-50 rounded-xl text-lg h-12">Delete</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={!!editingAlbumName} onOpenChange={(open: boolean) => !open && setEditingAlbumName(null)}>
+            <DialogContent className="sm:max-w-sm rounded-[2rem] border-stone-200 bg-[#F5F2EB]">
+              <DialogTitle>Rename Collection</DialogTitle>
+              <Input value={editFormData.title} onChange={(e) => setEditFormData({ title: e.target.value })} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleUpdateAlbum()} className="bg-white border-stone-200 focus:border-[#E09F87] rounded-xl py-6 text-lg shadow-sm" />
+              <div className="flex gap-3 w-full mt-2">
+                <Button onClick={handleUpdateAlbum} className="flex-1 bg-[#E09F87] text-white hover:bg-[#D08E76] rounded-xl text-lg h-12 shadow-sm">Save</Button>
+                <Button variant="outline" onClick={handleDeleteAlbum} className="flex-1 border-rose-200 text-rose-500 bg-white hover:bg-rose-50 rounded-xl text-lg h-12">Delete</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </div>
   );
 }
 
 // 아이템 컴포넌트
-function AlbumItem({ album, isSelectMode, isSelected, onClick, onEdit }: { 
-  album: Album, 
-  isSelectMode: boolean, 
-  isSelected: boolean, 
-  onClick: () => void, 
-  onEdit: () => void 
+function AlbumItem({ album, isSelectMode, isSelected, onClick, onEdit, isReadOnlyDemo }: {
+  album: Album,
+  isSelectMode: boolean,
+  isSelected: boolean,
+  onClick: () => void,
+  onEdit: () => void;
+  isReadOnlyDemo?: boolean;
 }) {
   const isSystem = album.id.startsWith('system_');
   const isLocation = album.id.startsWith('loc_');
@@ -377,7 +384,7 @@ function AlbumItem({ album, isSelectMode, isSelected, onClick, onEdit }: {
         </div>
       )}
 
-      {!isSelectMode && !isSystem && !isLocation && (
+      {!isReadOnlyDemo && !isSelectMode && !isSystem && !isLocation && (
         <Button
           size="icon"
           variant="ghost"

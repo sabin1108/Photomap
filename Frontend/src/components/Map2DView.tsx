@@ -9,7 +9,7 @@ interface Map2DViewProps {
   onNavigate?: (view: string) => void;
 }
 
-export function Map2DView({ }: Map2DViewProps) {
+export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -237,5 +237,3 @@ export function Map2DView({ }: Map2DViewProps) {
     </div>
   );
 }
-
-

@@ -9,7 +9,7 @@ import { Heart, Trash2 } from 'lucide-react';
 import { cn } from './ui/utils';
 import { useForceSimulation, GraphNode } from '../hooks/useForceSimulation';
 
-export function NodeView() {
+export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean }) {
     const photos = usePhotoStore(state => state.photos);
     const toggleFavorite = usePhotoStore(state => state.toggleFavorite);
     const deletePhoto = usePhotoStore(state => state.deletePhoto);

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Photo, DBMedia } from '../type';
 import { supabase } from '../lib/supabaseClient';
+import { isPublicDemo, localFavoriteStorageKey } from '../lib/demoConfig';
 import { toast } from 'sonner';
 
 interface PhotoStore {
@@ -96,6 +97,27 @@ const getUserId = async () => {
     return session.user.id;
 };
 
+const readLocalFavoriteIds = () => {
+    if (!isPublicDemo || typeof window === 'undefined') return new Set<string>();
+    try {
+        const raw = window.localStorage.getItem(localFavoriteStorageKey);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return new Set<string>(Array.isArray(parsed) ? parsed.map(String) : []);
+    } catch {
+        return new Set<string>();
+    }
+};
+
+const writeLocalFavoriteIds = (favoriteIds: Set<string>) => {
+    if (!isPublicDemo || typeof window === 'undefined') return;
+    window.localStorage.setItem(localFavoriteStorageKey, JSON.stringify(Array.from(favoriteIds)));
+};
+
+const mergeLocalFavoriteIds = (favoriteIds: Set<string>) => {
+    if (!isPublicDemo) return favoriteIds;
+    return new Set<string>([...favoriteIds, ...readLocalFavoriteIds()]);
+};
+
 export const usePhotoStore = create<PhotoStore>((set, get) => ({
     photos: [],
     categories: [],
@@ -110,7 +132,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
         console.log(`🔄 [PhotoStore] Initializing for user: ${userId}`);
         set({ isInitialized: true, isLoading: true, currentUserId: userId, photos: [], categories: [] });
-        
+
         await Promise.all([
             get().fetchCategories(userId),
             get().fetchPhotos(userId)
@@ -164,7 +186,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                 return;
             }
 
-            const favoriteIds = new Set(favResponse.data?.map(f => String(f.media_id)) || []);
+            const favoriteIds = mergeLocalFavoriteIds(new Set(favResponse.data?.map(f => String(f.media_id)) || []));
 
             if (mediaResponse.data) {
                 const loadedPhotos: Photo[] = (mediaResponse.data as unknown as DBMedia[]).map(media => {
@@ -213,7 +235,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
             if (mediaResponse.error) throw mediaResponse.error;
 
-            const favoriteIds = new Set(favResponse.data?.map(f => String(f.media_id)) || []);
+            const favoriteIds = mergeLocalFavoriteIds(new Set(favResponse.data?.map(f => String(f.media_id)) || []));
 
             if (mediaResponse.data) {
                 const newPhotos: Photo[] = (mediaResponse.data as unknown as DBMedia[]).map(media => {
@@ -412,6 +434,11 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     },
 
     deletePhoto: async (id: string) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (isPublicDemo || !session) {
+            toast.info('공개 데모에서는 삭제 기능이 비활성화되어 있습니다.');
+            return;
+        }
         const { error } = await supabase.from('media').delete().eq('media_id', id);
         if (!error) {
             set(state => ({ photos: state.photos.filter(p => p.id !== id) }));
@@ -456,11 +483,15 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                // 세션 없으면 롤백
-                set(state => ({
-                    photos: state.photos.map(p => p.id === id ? { ...p, isFavorite: wasAlreadyFavorite } : p)
-                }));
+
+            if (isPublicDemo || !session) {
+                const favoriteIds = readLocalFavoriteIds();
+                if (wasAlreadyFavorite) {
+                    favoriteIds.delete(id);
+                } else {
+                    favoriteIds.add(id);
+                }
+                writeLocalFavoriteIds(favoriteIds);
                 return;
             }
 

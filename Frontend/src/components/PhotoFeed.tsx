@@ -11,6 +11,7 @@ import { useRef, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useGridBreakpoints } from '../hooks/useGridBreakpoints';
 import { useAuthStore } from '../store/useAuthStore';
+import { demoUserId, isPublicDemo } from '../lib/demoConfig';
 
 interface PhotoFeedProps {
   className?: string;
@@ -19,6 +20,7 @@ interface PhotoFeedProps {
   // 외부에서 선택 모드를 제어하기 위한 props
   isExternalSelectMode?: boolean;
   onSelectModeChange?: (isSelect: boolean) => void;
+  isReadOnlyDemo?: boolean;
 }
 
 export function PhotoFeed({
@@ -26,7 +28,8 @@ export function PhotoFeed({
   filterCategory,
   hideHeader,
   isExternalSelectMode,
-  onSelectModeChange
+  onSelectModeChange,
+  isReadOnlyDemo
 }: PhotoFeedProps) {
   const photos = usePhotoStore(state => state.photos);
   const isLoading = usePhotoStore(state => state.isLoading);
@@ -83,15 +86,16 @@ export function PhotoFeed({
   });
 
   const { user } = useAuthStore();
+  const feedUserId = isPublicDemo ? demoUserId : user?.id;
   const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!hasMore || !user?.id) return;
+    if (!hasMore || !feedUserId) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !isLoading) {
-          fetchMorePhotos(user.id);
+          fetchMorePhotos(feedUserId);
         }
       },
       { threshold: 0.1 }
@@ -102,9 +106,10 @@ export function PhotoFeed({
     }
 
     return () => observer.disconnect();
-  }, [hasMore, isLoading, user?.id, fetchMorePhotos]);
+  }, [hasMore, isLoading, feedUserId, fetchMorePhotos]);
 
   const toggleSelectMode = () => {
+    if (isReadOnlyDemo) return;
     setIsSelectMode(!isSelectMode);
     setSelectedIds([]);
   };
@@ -279,7 +284,7 @@ export function PhotoFeed({
 
       {/* 플로팅 액션 바 */}
       <AnimatePresence>
-        {isSelectMode && selectedIds.length > 0 && (
+        {!isReadOnlyDemo && isSelectMode && selectedIds.length > 0 && (
           <motion.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -412,4 +417,3 @@ export function PhotoFeed({
     </div>
   );
 }
-

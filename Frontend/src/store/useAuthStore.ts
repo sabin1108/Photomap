@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase } from '../lib/supabaseClient';
+import { missingSupabaseEnv, supabase } from '../lib/supabaseClient';
 import { Session, User } from '@supabase/supabase-js';
 
 interface AuthStore {
@@ -20,11 +20,19 @@ export const useAuthStore = create<AuthStore>((set) => ({
     isAdmin: false,
 
     signOut: async () => {
+        if (missingSupabaseEnv) {
+            set({ session: null, user: null, isAdmin: false });
+            return;
+        }
         await supabase.auth.signOut();
         set({ session: null, user: null, isAdmin: false });
     },
 
     _init: () => {
+        if (missingSupabaseEnv) {
+            set({ loading: false });
+            return () => {};
+        }
         // 초기 세션 로드
         supabase.auth.getSession().then(({ data: { session } }) => {
             const user = session?.user ?? null;

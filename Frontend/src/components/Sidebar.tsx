@@ -9,9 +9,10 @@ interface SidebarProps {
   onSelectCategory: (category: string) => void;
   onSignOut: () => void;
   isAdmin?: boolean;
+  isReadOnlyDemo?: boolean;
 }
 
-export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut, isAdmin }: SidebarProps) {
+export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut, isAdmin, isReadOnlyDemo }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSelect = (category: string) => {
@@ -21,7 +22,6 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
 
   return (
     <>
-      {/* 모바일 토글 버튼 */}
       <div className="md:hidden fixed top-4 left-4 z-50">
         <Button variant="ghost" size="icon" aria-label="Toggle Menu" onClick={() => setIsOpen(!isOpen)} className="bg-white/50 backdrop-blur-md hover:bg-white/70 shadow-sm border border-stone-200">
           <Menu className="w-5 h-5 text-stone-700" />
@@ -59,6 +59,11 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
         </SidebarUI.Nav>
 
         <SidebarUI.Footer>
+          {isReadOnlyDemo && (
+            <div className="px-3 py-2 text-[11px] font-medium text-stone-400">
+              Read-only demo
+            </div>
+          )}
           {isAdmin && (
             <SidebarUI.Item
               icon={Database}
@@ -67,12 +72,14 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
               onClick={() => handleSelect('admin')}
             />
           )}
-          <SidebarUI.Item
-            icon={LogOut}
-            label="Log Out"
-            onClick={onSignOut}
-            className="text-red-500 hover:text-red-700 hover:bg-red-50 mt-2"
-          />
+          {!isReadOnlyDemo && (
+            <SidebarUI.Item
+              icon={LogOut}
+              label="Log Out"
+              onClick={onSignOut}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50 mt-2"
+            />
+          )}
         </SidebarUI.Footer>
       </SidebarUI.Root>
     </>
