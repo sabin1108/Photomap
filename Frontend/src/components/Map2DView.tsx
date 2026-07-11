@@ -7,6 +7,7 @@ import { Drawer } from 'vaul';
 
 interface Map2DViewProps {
   onNavigate?: (view: string) => void;
+  isReadOnlyDemo?: boolean;
 }
 
 export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
@@ -136,7 +137,9 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
                           <button className="p-2 rounded-full hover:bg-stone-100"><X className="w-5 h-5" /></button>
                         </Drawer.Close>
                       </Drawer.Title>
-                      <p className="text-sm text-stone-500 mb-6 font-medium">지도에 표시할 태그를 선택하거나 관리하세요.</p>
+                      <p className="text-sm text-stone-500 mb-6 font-medium">
+                        {isReadOnlyDemo ? '지도에 표시할 태그를 선택하세요.' : '지도에 표시할 태그를 선택하거나 관리하세요.'}
+                      </p>
 
                       {/* 드로어 내 검색 */}
                       <div className="bg-stone-100/80 p-3 rounded-2xl flex items-center gap-2 mb-6 border border-stone-200/50">
@@ -182,27 +185,31 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
                             >
                               <span className={cn("text-sm font-medium", activeFilter === cat ? "text-[#E09F87] font-bold" : "text-stone-700")}>{cat}</span>
                               <div className="flex items-center gap-1">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const newName = prompt("새로운 태그 이름을 입력하세요:", cat);
-                                    if (newName && newName !== cat) updateCategory?.(cat, newName);
-                                  }}
-                                  className="action-btn p-2 text-stone-400 hover:text-blue-500 transition-colors opacity-0 group-hover/item:opacity-100"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (confirm(`'${cat}' 태그를 정말 삭제하시겠습니까? 연결된 사진 속 태그도 사라집니다.`)) {
-                                      deleteCategory?.(cat);
-                                    }
-                                  }}
-                                  className="action-btn p-2 text-stone-400 hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                {!isReadOnlyDemo && (
+                                  <>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const newName = prompt("새로운 태그 이름을 입력하세요:", cat);
+                                        if (newName && newName !== cat) updateCategory?.(cat, newName);
+                                      }}
+                                      className="action-btn p-2 text-stone-400 hover:text-blue-500 transition-colors opacity-0 group-hover/item:opacity-100"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (confirm(`'${cat}' 태그를 정말 삭제하시겠습니까? 연결된 사진 속 태그도 사라집니다.`)) {
+                                          deleteCategory?.(cat);
+                                        }
+                                      }}
+                                      className="action-btn p-2 text-stone-400 hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </>
+                                )}
                                 {activeFilter === cat && <div className="w-2 h-2 rounded-full bg-[#E09F87] ml-2" />}
                               </div>
                             </div>

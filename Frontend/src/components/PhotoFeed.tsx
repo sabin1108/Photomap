@@ -399,18 +399,20 @@ export function PhotoFeed({
               {currentPhoto?.isFavorite ? "좋아요 취소" : "좋아요"}
             </Button>
 
-            <Button
-              variant="outline"
-              className="w-12 h-12 p-0 rounded-xl border-stone-200 text-stone-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors"
-              onClick={() => {
-                if (currentPhoto && window.confirm("이 사진을 정말로 삭제하시겠습니까?")) {
-                  deletePhoto(currentPhoto.id);
-                  setSelectedPhoto(null);
-                }
-              }}
-            >
-              <Trash2 size={18} />
-            </Button>
+            {!isReadOnlyDemo && (
+              <Button
+                variant="outline"
+                className="w-12 h-12 p-0 rounded-xl border-stone-200 text-stone-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors"
+                onClick={() => {
+                  if (currentPhoto && window.confirm("이 사진을 정말로 삭제하시겠습니까?")) {
+                    deletePhoto(currentPhoto.id);
+                    setSelectedPhoto(null);
+                  }
+                }}
+              >
+                <Trash2 size={18} />
+              </Button>
+            )}
           </PhotoModal.Actions>
         </PhotoModal.Panel>
       </PhotoModal.Root>

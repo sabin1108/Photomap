@@ -273,10 +273,12 @@ export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean 
                             onClick={() => { if (selectedPhotoDetail) { toggleFavorite(selectedPhotoDetail.id); setSelectedPhotoDetail(prev => prev ? { ...prev, isFavorite: !prev.isFavorite } : null); } }}>
                             <Heart size={18} className={selectedPhotoDetail?.isFavorite ? "fill-rose-500" : ""} /> {selectedPhotoDetail?.isFavorite ? "Favorited" : "Favorite"}
                         </Button>
-                        <Button variant="outline" className="w-12 h-12 p-0 text-red-500 hover:bg-red-50"
-                            onClick={() => { if (selectedPhotoDetail && window.confirm("Delete?")) { deletePhoto(selectedPhotoDetail.id); setSelectedPhotoDetail(null); } }}>
-                            <Trash2 size={18} />
-                        </Button>
+                        {!isReadOnlyDemo && (
+                            <Button variant="outline" className="w-12 h-12 p-0 text-red-500 hover:bg-red-50"
+                                onClick={() => { if (selectedPhotoDetail && window.confirm("Delete?")) { deletePhoto(selectedPhotoDetail.id); setSelectedPhotoDetail(null); } }}>
+                                <Trash2 size={18} />
+                            </Button>
+                        )}
                     </PhotoModal.Actions>
                 </PhotoModal.Panel>
             </PhotoModal.Root>

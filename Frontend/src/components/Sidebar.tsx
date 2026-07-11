@@ -60,8 +60,9 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
 
         <SidebarUI.Footer>
           {isReadOnlyDemo && (
-            <div className="px-3 py-2 text-[11px] font-medium text-stone-400">
-              Read-only demo
+            <div className="px-3 py-2">
+              <p className="text-[11px] font-semibold text-stone-500">Read-only demo</p>
+              <p className="mt-0.5 text-[10px] leading-4 text-stone-400">Browse archive only. Uploads and admin tools are hidden.</p>
             </div>
           )}
           {isAdmin && (

@@ -157,7 +157,7 @@ export default function App() {
           <div className="w-full h-full relative z-20">
             <ErrorBoundary><Suspense fallback={<Spinner />}><AlbumsView isReadOnlyDemo={isPublicDemo} /></Suspense></ErrorBoundary>
           </div>
-        ) : activeCategory === 'admin' ? (
+        ) : !isPublicDemo && activeCategory === 'admin' ? (
           <div className="w-full h-full relative z-20">
             <ErrorBoundary><Suspense fallback={<Spinner />}><AdminView onNavigate={setActiveCategory} /></Suspense></ErrorBoundary>
           </div>
@@ -169,10 +169,20 @@ export default function App() {
                   <GlobeView />
                 </Suspense>
               </div>
-              <div className="absolute top-4 right-4 bg-white/60 backdrop-blur-md p-3 rounded-xl shadow-sm border border-white/40 max-w-[200px] md:max-w-xs md:top-8 md:right-8">
-                <h3 className="font-medium text-stone-800 text-sm md:text-base text-balance">Global Archive</h3>
-                <p className="text-[10px] md:text-xs text-stone-500 mt-0.5 tabular-nums w-full truncate">
-                  {uniqueCountries} Countries visited. {photos.length} Memories stored.
+              <div className="absolute top-4 right-4 left-4 md:left-auto bg-white/75 backdrop-blur-md p-4 rounded-xl shadow-sm border border-white/50 max-w-none md:max-w-sm md:top-8 md:right-8">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-medium text-stone-800 text-sm md:text-base">Photomap Public Archive</h3>
+                  {isPublicDemo && (
+                    <span className="rounded-full border border-stone-200 bg-white/80 px-2 py-0.5 text-[10px] font-medium text-stone-500">
+                      Read-only
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-[11px] md:text-xs leading-5 text-stone-600">
+                  여행 사진을 위치, 시간, 관계로 탐색하는 공개 데모입니다.
+                </p>
+                <p className="mt-2 text-[10px] md:text-xs text-stone-500 tabular-nums">
+                  {uniqueCountries} countries · {photos.length} memories
                 </p>
               </div>
               {isPublicDemo && (
