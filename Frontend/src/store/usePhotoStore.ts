@@ -482,9 +482,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         }));
 
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-
-            if (isPublicDemo || !session) {
+            if (isPublicDemo) {
                 const favoriteIds = readLocalFavoriteIds();
                 if (wasAlreadyFavorite) {
                     favoriteIds.delete(id);
@@ -492,6 +490,16 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                     favoriteIds.add(id);
                 }
                 writeLocalFavoriteIds(favoriteIds);
+                return;
+            }
+
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session) {
+                set(state => ({
+                    photos: state.photos.map(p => p.id === id ? { ...p, isFavorite: wasAlreadyFavorite } : p)
+                }));
+                toast.error('로그인 후 좋아요를 사용할 수 있습니다.');
                 return;
             }
 

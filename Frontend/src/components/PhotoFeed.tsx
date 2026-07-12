@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, CheckCircle2, Trash, Trash2, Move, X, MousePointer2, Heart } from 'lucide-react';
+import { MapPin, Calendar, Folder, CheckCircle2, Trash, Trash2, Move, X, MousePointer2, Heart } from 'lucide-react';
 import { cn } from './ui/utils';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { usePhotoStore } from '../store/usePhotoStore';
@@ -178,15 +178,18 @@ export function PhotoFeed({
       {/* 아무 사진도 없을 때의 빈 상태 또는 로딩 상태 */}
       {displayPhotos.length === 0 ? (
         isLoading ? (
-          <div className="grid w-full" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
-            {Array.from({ length: columns * 3 }).map((_, i) => (
-              <div key={i} className="aspect-square bg-stone-200 animate-pulse rounded-lg" />
-            ))}
+          <div className="space-y-4">
+            <p className="text-sm text-stone-500">사진을 불러오는 중입니다.</p>
+            <div className="grid w-full" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
+              {Array.from({ length: columns * 3 }).map((_, i) => (
+                <div key={i} className="aspect-square bg-stone-200 animate-pulse rounded-lg" />
+              ))}
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-64 text-stone-400">
-            <p className="font-medium text-lg">여기에는 아직 사진이 없습니다.</p>
-            <p className="text-sm">이 보관함에 첫 번째 사진을 업로드해 보세요!</p>
+          <div className="flex flex-col items-center justify-center h-64 text-center text-stone-500 px-6">
+            <p className="font-medium text-lg text-stone-700">이 보기에는 아직 사진이 없습니다.</p>
+            <p className="text-sm mt-2">다른 앨범이나 위치를 선택해 여행 사진을 계속 둘러보세요.</p>
           </div>
         )
       ) : (
@@ -255,10 +258,22 @@ export function PhotoFeed({
 
                       {!isSelectMode && (
                         <div className="absolute bottom-0 left-0 right-0 p-2 md:p-3 transition-opacity duration-300 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 pointer-events-none">
-                          <p className="text-white font-semibold text-[10px] md:text-xs tracking-wide truncate drop-shadow-md">{photo.title}</p>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <MapPin className="w-2 h-2 md:w-3 md:h-3 text-[#E09F87]" />
-                            <span className="text-white/90 text-[8px] md:text-[9px] uppercase tracking-wider truncate drop-shadow-sm">{photo.location}</span>
+                          <p className="text-white font-semibold text-[10px] md:text-xs tracking-wide truncate drop-shadow-md">{photo.title || '제목 없는 사진'}</p>
+                          <div className="mt-1 space-y-0.5">
+                            <div className="flex items-center gap-1 min-w-0">
+                              <MapPin className="w-2 h-2 md:w-3 md:h-3 text-[#E09F87] flex-shrink-0" />
+                              <span className="text-white/90 text-[8px] md:text-[9px] uppercase tracking-wider truncate drop-shadow-sm">{photo.location || '위치 정보 없음'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 min-w-0 text-white/85 text-[8px] md:text-[9px] uppercase tracking-wider drop-shadow-sm">
+                              <span className="inline-flex items-center gap-1 min-w-0">
+                                <Calendar className="w-2 h-2 md:w-3 md:h-3 text-white/70 flex-shrink-0" />
+                                <span className="truncate">{photo.date || '날짜 없음'}</span>
+                              </span>
+                              <span className="inline-flex items-center gap-1 min-w-0">
+                                <Folder className="w-2 h-2 md:w-3 md:h-3 text-white/70 flex-shrink-0" />
+                                <span className="truncate">{photo.category || photo.tags[0] || '미분류'}</span>
+                              </span>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -379,7 +394,7 @@ export function PhotoFeed({
         <PhotoModal.Image />
         <PhotoModal.Panel>
           <PhotoModal.Header />
-          <PhotoModal.Metadata />
+          <PhotoModal.Metadata isReadOnly={isReadOnlyDemo} />
           <PhotoModal.Actions>
             <Button
               variant="outline"

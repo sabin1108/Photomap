@@ -4,6 +4,7 @@ import { Photo } from "../../type";
 import { X, MapPin, Calendar, Folder, AlignLeft } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { usePhotoStore } from "../../store/usePhotoStore";
+import { isPublicDemo } from "../../lib/demoConfig";
 
 interface PhotoModalContextValue {
     photo: Photo | null;
@@ -113,7 +114,7 @@ function Header() {
 }
 
 //Metadata: 날짜, 카테고리, 위치, 설명 렌더링 및 수정 로직
-function Metadata() {
+function Metadata({ isReadOnly = isPublicDemo }: { isReadOnly?: boolean }) {
     const { photo } = usePhotoModalContext();
     const categories = usePhotoStore(state => state.categories);
     const updatePhotoCategory = usePhotoStore(state => state.updatePhotoCategory);
@@ -182,12 +183,14 @@ function Metadata() {
                         ) : (
                             <>
                                 <p className="text-stone-700 font-medium">{photo.category || "미분류"}</p>
-                                <button
-                                    onClick={() => setIsEditingCategory(true)}
-                                    className="text-xs text-[#E09F87] font-medium hover:underline"
-                                >
-                                    이동
-                                </button>
+                                {!isReadOnly && (
+                                    <button
+                                        onClick={() => setIsEditingCategory(true)}
+                                        className="text-xs text-[#E09F87] font-medium hover:underline"
+                                    >
+                                        이동
+                                    </button>
+                                )}
                             </>
                         )}
                     </div>
@@ -222,7 +225,7 @@ function Metadata() {
                 <div className="flex-1 w-full min-w-0">
                     <div className="flex justify-between items-center mb-1">
                         <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">상세 설명</p>
-                        {!isEditingDesc && (
+                        {!isReadOnly && !isEditingDesc && (
                             <button
                                 onClick={() => setIsEditingDesc(true)}
                                 className="text-xs text-[#E09F87] font-medium hover:underline shrink-0 ml-2"

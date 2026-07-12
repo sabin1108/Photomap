@@ -267,7 +267,7 @@ export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean 
                 <PhotoModal.Image />
                 <PhotoModal.Panel>
                     <PhotoModal.Header />
-                    <PhotoModal.Metadata />
+                    <PhotoModal.Metadata isReadOnly={isReadOnlyDemo} />
                     <PhotoModal.Actions>
                         <Button variant="outline" className={cn("flex-1 h-12 rounded-xl gap-2", selectedPhotoDetail?.isFavorite ? "bg-rose-50 border-rose-200 text-rose-500" : "")}
                             onClick={() => { if (selectedPhotoDetail) { toggleFavorite(selectedPhotoDetail.id); setSelectedPhotoDetail(prev => prev ? { ...prev, isFavorite: !prev.isFavorite } : null); } }}>
