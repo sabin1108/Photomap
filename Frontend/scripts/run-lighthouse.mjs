@@ -19,11 +19,11 @@ for (let i = 2; i < process.argv.length; i += 1) {
 const issue = args.get("issue") ?? "manual";
 const view = args.get("view") ?? "home";
 const url = args.get("url") ?? "http://127.0.0.1:4173/";
-const rootDir = path.resolve(process.cwd(), "..");
-const artifactsDir = path.join(rootDir, "docs", "performance", "artifacts");
-const outputPath = path.join(artifactsDir, `issue-${issue}-${view}`);
+const memoryRoot = args.get("memory-root") ?? "E:\\memory\\photomap";
+const lighthouseDir = path.join(memoryRoot, "lightHouse");
+const outputPath = path.join(lighthouseDir, `issue-${issue}-${view}.report`);
 
-mkdirSync(artifactsDir, { recursive: true });
+mkdirSync(lighthouseDir, { recursive: true });
 
 const result = spawnSync(
   "npx",

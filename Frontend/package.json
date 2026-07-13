@@ -84,6 +84,7 @@
             "preview": "vite preview --host 127.0.0.1 --port 4173",
             "preview:perf": "vite preview --mode performance --host 127.0.0.1 --port 4173",
             "perf:init": "node scripts/create-performance-record.mjs",
-            "perf:lighthouse": "node scripts/run-lighthouse.mjs"
+            "perf:lighthouse": "node scripts/run-lighthouse.mjs",
+            "perf:summary": "node scripts/summarize-performance.mjs"
       }
 }

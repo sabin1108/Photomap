@@ -19,13 +19,17 @@ for (let i = 2; i < process.argv.length; i += 1) {
 const issue = args.get("issue") ?? "manual";
 const baseUrl = args.get("url") ?? "http://127.0.0.1:4173/";
 const date = args.get("date") ?? new Date().toISOString().slice(0, 10);
+const memoryRoot = args.get("memory-root") ?? "E:\\memory\\photomap";
+const lighthouseDir = path.join(memoryRoot, "lightHouse");
+const reactProfileDir = path.join(memoryRoot, "reactProfile");
+const characteristicDir = path.join(memoryRoot, "characteristic");
 const rootDir = path.resolve(process.cwd(), "..");
-const performanceDir = path.join(rootDir, "docs", "performance");
-const artifactsDir = path.join(performanceDir, "artifacts");
 const fileName = `${date}-issue-${issue}.md`;
-const filePath = path.join(performanceDir, fileName);
+const filePath = path.join(characteristicDir, fileName);
 
-mkdirSync(artifactsDir, { recursive: true });
+mkdirSync(lighthouseDir, { recursive: true });
+mkdirSync(reactProfileDir, { recursive: true });
+mkdirSync(characteristicDir, { recursive: true });
 
 const commit = (() => {
   try {
@@ -40,30 +44,37 @@ if (existsSync(filePath)) {
   process.exit(1);
 }
 
-const content = `# Performance Record - Issue #${issue}
+const content = `# Photomap Performance Characteristic - Issue #${issue}
 
 Date: ${date}
 Commit: ${commit}
 Target: ${baseUrl}
 Mode: local production preview with \`VITE_ENABLE_PROFILER=true\`
 
-## Lighthouse
+## Raw Records
 
-| View | URL | Performance | Accessibility | Best Practices | SEO | Artifact |
-|---|---|---:|---:|---:|---:|---|
-| Home | ${baseUrl} | TBD | TBD | TBD | TBD | \`docs/performance/artifacts/issue-${issue}-home.*\` |
+- Lighthouse: \`${path.join(lighthouseDir, `issue-${issue}-home.report.json`)}\`
+- Lighthouse HTML: \`${path.join(lighthouseDir, `issue-${issue}-home.report.html`)}\`
+- React Profiler: \`${path.join(reactProfileDir, `issue-${issue}-profile.json`)}\`
 
-## React Profiler
+## Lighthouse Summary
 
-Use performance preview, run the target flow, then export in browser console:
+| View | Performance | Accessibility | Best Practices | SEO | LCP | CLS | TBT |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Home | TBD | TBD | TBD | TBD | TBD | TBD | TBD |
 
-\`\`\`js
-copy(JSON.stringify(window.__PHOTOMAP_EXPORT_PROFILER__(), null, 2))
-\`\`\`
+## React Profiler Summary
 
 | Flow | Component/View | Commits | Max actualDuration | Avg actualDuration | Max baseDuration | Avg baseDuration | Notes |
 |---|---|---:|---:|---:|---:|---:|---|
 | Initial render | PhotomapApp | TBD | TBD | TBD | TBD | TBD | |
+
+## Improvement Notes
+
+- Before:
+- After:
+- What improved:
+- Evidence:
 
 ## Commands
 
@@ -72,14 +83,17 @@ cd Frontend
 npm run build:perf
 npm run preview:perf
 npm run perf:lighthouse -- --issue ${issue} --view home --url ${baseUrl}
+# Save browser export to ${path.join(reactProfileDir, `issue-${issue}-profile.json`)}
+npm run perf:summary -- --issue ${issue}
 \`\`\`
 
-## Notes
+## React Profiler Export
 
-- Build:
-- Lighthouse warnings:
-- Profiler flow notes:
-- Known limitations:
+Run target flow in performance preview, then browser console:
+
+\`\`\`js
+copy(JSON.stringify(window.__PHOTOMAP_EXPORT_PROFILER__(), null, 2))
+\`\`\`
 `;
 
 writeFileSync(filePath, content, "utf8");
