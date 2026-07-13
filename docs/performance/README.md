@@ -41,8 +41,8 @@ Then generate a summary:
 npm run perf:summary -- --issue 5
 ```
 
-That summary is written to `E:\memory\photomap\characteristic`.
+요약은 `E:\memory\photomap\characteristic`에 저장한다. 이 폴더의 최종 정리 문서는 사용자가 학습할 수 있도록 반드시 한글로 작성한다.
 
 ## Handoff Rule
 
-Every handoff must mention these folders and tell the next agent to record Lighthouse, React Profiler, and characteristic summary after each completed issue.
+모든 handoff는 이 폴더들을 언급하고, 다음 에이전트에게 이슈 완료마다 Lighthouse, React Profiler, characteristic 한글 요약을 기록하라고 알려야 한다.
