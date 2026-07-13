@@ -79,6 +79,11 @@
       },
       "scripts": {
             "dev": "vite --port 3000",
-            "build": "vite build"
+            "build": "vite build",
+            "build:perf": "vite build --mode performance",
+            "preview": "vite preview --host 127.0.0.1 --port 4173",
+            "preview:perf": "vite preview --mode performance --host 127.0.0.1 --port 4173",
+            "perf:init": "node scripts/create-performance-record.mjs",
+            "perf:lighthouse": "node scripts/run-lighthouse.mjs"
       }
 }
