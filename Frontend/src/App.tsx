@@ -17,6 +17,7 @@ const AdminView = lazy(() => import('./components/AdminView').then(m => ({ defau
 import { Plus } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { usePhotoStore } from './store/usePhotoStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useAuthStore } from './store/useAuthStore';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -37,13 +38,24 @@ function MissingConfigScreen({ message }: { message: string }) {
 export default function App() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [shouldRenderGlobe, setShouldRenderGlobe] = useState(false);
 
   const { user, loading, signOut, isAdmin } = useAuthStore();
-  const photos = usePhotoStore(state => state.photos);
-  const initialize = usePhotoStore(state => state.initialize);
-  const clearPhotos = usePhotoStore(state => state.clear);
+  const { photos, initialize, clearPhotos } = usePhotoStore(
+    useShallow(state => ({
+      photos: state.photos,
+      initialize: state.initialize,
+      clearPhotos: state.clear,
+    }))
+  );
   const showPerformanceMonitor = import.meta.env.VITE_SHOW_PERFORMANCE_MONITOR === 'true';
 
+  useEffect(() => {
+    const requestIdle = window.requestIdleCallback ?? ((callback: IdleRequestCallback) => window.setTimeout(callback, 1200));
+    const cancelIdle = window.cancelIdleCallback ?? window.clearTimeout;
+    const idleId = requestIdle(() => setShouldRenderGlobe(true), { timeout: 1800 });
+    return () => cancelIdle(idleId);
+  }, []);
   useEffect(() => {
     if (!isPublicDemo && !loading && activeCategory === 'admin' && !isAdmin) {
       setActiveCategory('all');

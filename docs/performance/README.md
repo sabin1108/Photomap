@@ -43,6 +43,16 @@ npm run perf:summary -- --issue 5
 
 요약은 `E:\memory\photomap\characteristic`에 저장한다. 이 폴더의 최종 정리 문서는 사용자가 학습할 수 있도록 반드시 한글로 작성한다.
 
+## Frame Budget Export
+
+Run a WebGL/canvas flow in performance preview, leave the target view, then browser console:
+
+```js
+copy(JSON.stringify(window.__PHOTOMAP_EXPORT_FRAME_BUDGET__(), null, 2))
+```
+
+Save the copied JSON or paste the summary into the issue characteristic note under `E:\memory\photomap\characteristic`.
+
 ## Handoff Rule
 
 모든 handoff는 이 폴더들을 언급하고, 다음 에이전트에게 이슈 완료마다 Lighthouse, React Profiler, characteristic 한글 요약을 기록하라고 알려야 한다.

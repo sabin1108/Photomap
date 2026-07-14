@@ -50,7 +50,7 @@ Backend / BaaS
 - Frontend: React, TypeScript, Vite, Zustand, Tailwind CSS, Radix UI
 - Visualization: D3.js, Cobe, Mapbox, Unity WebGL
 - Data: Supabase PostgreSQL, Supabase Storage
-- Performance: React Profiler, Lighthouse, `@tanstack/react-virtual`
+- Performance: React Profiler, Lighthouse, frame budget probe, `@tanstack/react-virtual`
 - Deploy: Vercel
 
 ## 성능 개선 요약
@@ -62,6 +62,7 @@ Backend / BaaS
 - D3 tick 좌표 업데이트를 React state 밖으로 분리하여 리렌더링 횟수 `370회 -> 25회` 수준으로 감소
 - 10,000건 이상 사진 탐색 시 DOM 노드를 약 200개 수준으로 유지하도록 가상화 적용
 - Globe/Map/Timeline/Node 등 무거운 화면은 route-level lazy loading 적용
+- Unity WebGL iframe의 loading lifecycle과 ready queue를 정리하고, cobe canvas frame budget export로 WebGL/canvas 지표 분리 측정
 
 ## 실행 방법
 

@@ -2,6 +2,7 @@ import createGlobe from 'cobe';
 import { useEffect, useRef, useMemo } from 'react';
 import { useSpring } from 'motion/react';
 import { usePhotoStore } from '../store/usePhotoStore';
+import { useFrameBudgetProbe } from '../lib/frameBudgetProfiler';
 
 
 
@@ -9,6 +10,7 @@ export function GlobeView() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointerInteracting = useRef<number | null>(null);
   const photos = usePhotoStore(state => state.photos);
+  useFrameBudgetProbe('GlobeView:cobe-canvas');
 
   // Motion/react spring 엔진 사용
   const r = useSpring(0, {

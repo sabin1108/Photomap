@@ -72,6 +72,11 @@ PhotoMap은 수많은 사진 데이터를 단순히 저장하는 것을 넘어, 
 - **해결 방안**: `Promise.all`을 이용한 병렬 데이터 페칭 및 D3 시뮬레이션의 **Direct DOM Manipulation** 적용.
 - **성과**: 데이터 로딩 속도 **50% 단축** 및 리렌더링 부하 없는 실시간 물리 애니메이션 구현.
 
+### [Optimization 4] WebGL/canvas 뷰의 로딩 수명주기 및 측정 루프 개선
+- **문제 지점**: Unity WebGL iframe과 cobe canvas 지구본은 초기 로딩, iframe 준비 타이밍, renderer 수명주기 차이로 인해 일반 React 렌더링 병목과 분리해 관찰하기 어려움.
+- **해결 방안**: Unity iframe의 `src`를 mount 이후 부여하고 `loading="lazy"`를 적용했으며, iframe ready 전 마지막 marker/config payload만 queue에 보관해 초기화 race를 줄임.
+- **성과**: `VITE_ENABLE_FRAME_PROBE=true` 성능 모드에서 cobe canvas frame budget을 기록하고 `window.__PHOTOMAP_EXPORT_FRAME_BUDGET__()`로 export할 수 있게 해 Lighthouse/React Profiler/WebGL frame 지표를 분리 추적 가능하게 함.
+
 ---
 
 ## 기술 스택

@@ -76,6 +76,7 @@ const mapMediaToPhoto = (media: DBMedia): Photo => {
     return {
         id: String(media.media_id),
         url: media.file_url || '',
+        thumbnail_url: media.thumbnail_url,
         title: extractTitle,
         description: descText,
         location: loc?.address_text || 'Unknown',

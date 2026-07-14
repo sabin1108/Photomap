@@ -11,7 +11,9 @@ import { useRef, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useGridBreakpoints } from '../hooks/useGridBreakpoints';
 import { useAuthStore } from '../store/useAuthStore';
+import { useShallow } from 'zustand/react/shallow';
 import { demoUserId, isPublicDemo } from '../lib/demoConfig';
+import { getPhotoImageUrl } from '../lib/imageUrl';
 
 interface PhotoFeedProps {
   className?: string;
@@ -31,15 +33,29 @@ export function PhotoFeed({
   onSelectModeChange,
   isReadOnlyDemo
 }: PhotoFeedProps) {
-  const photos = usePhotoStore(state => state.photos);
-  const isLoading = usePhotoStore(state => state.isLoading);
-  const hasMore = usePhotoStore(state => state.hasMore);
-  const fetchMorePhotos = usePhotoStore(state => state.fetchMorePhotos);
-  const toggleFavorite = usePhotoStore(state => state.toggleFavorite);
-  const deletePhoto = usePhotoStore(state => state.deletePhoto);
-  const batchDeletePhotos = usePhotoStore(state => state.batchDeletePhotos);
-  const batchMovePhotos = usePhotoStore(state => state.batchMovePhotos);
-  const categories = usePhotoStore(state => state.categories);
+  const {
+    photos,
+    isLoading,
+    hasMore,
+    fetchMorePhotos,
+    toggleFavorite,
+    deletePhoto,
+    batchDeletePhotos,
+    batchMovePhotos,
+    categories,
+  } = usePhotoStore(
+    useShallow(state => ({
+      photos: state.photos,
+      isLoading: state.isLoading,
+      hasMore: state.hasMore,
+      fetchMorePhotos: state.fetchMorePhotos,
+      toggleFavorite: state.toggleFavorite,
+      deletePhoto: state.deletePhoto,
+      batchDeletePhotos: state.batchDeletePhotos,
+      batchMovePhotos: state.batchMovePhotos,
+      categories: state.categories,
+    }))
+  );
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
   // 모달 동기화 로직
@@ -217,6 +233,7 @@ export function PhotoFeed({
                   if (!photo) return <div key={`empty-${colIndex}`} />;
 
                   const isSelected = selectedIds.includes(photo.id);
+                  const isAboveTheFold = photoIndex < columns * 2;
                   return (
                     <div
                       key={photo.id}
@@ -228,9 +245,14 @@ export function PhotoFeed({
                     >
                       <div className={cn("w-full h-full transition-transform duration-700", !isSelectMode && "group-hover:scale-105")}>
                         <ImageWithFallback
-                          src={photo.url}
+                          src={getPhotoImageUrl(photo, "thumb")}
                           alt={photo.title}
                           className="w-full h-full object-cover"
+                          loading={isAboveTheFold ? "eager" : "lazy"}
+                          decoding="async"
+                          fetchPriority={isAboveTheFold ? "high" : "auto"}
+                          width={320}
+                          height={320}
                         />
                       </div>
 

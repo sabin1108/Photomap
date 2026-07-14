@@ -1,6 +1,7 @@
 export interface Photo {
     id: string;
     url: string;
+    thumbnail_url?: string | null;
     title: string;
     description?: string;
     location: string;

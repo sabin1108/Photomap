@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { useShallow } from 'zustand/react/shallow';
 import { Search, Settings2, Edit2, Trash2, X } from 'lucide-react';
 import { cn } from './ui/utils';
 import { Drawer } from 'vaul';
+import type { Photo } from '../type';
 
 interface Map2DViewProps {
   onNavigate?: (view: string) => void;
@@ -16,6 +17,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [categorySearch, setCategorySearch] = useState('');
   const [isIframeReady, setIsIframeReady] = useState(false);
+  const [shouldLoadIframe, setShouldLoadIframe] = useState(false);
 
   const { photos, categories } = usePhotoStore(
     useShallow(state => ({ photos: state.photos, categories: state.categories }))
@@ -23,8 +25,12 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   const updateCategory = usePhotoStore(state => state.updateCategory);
   const deleteCategory = usePhotoStore(state => state.deleteCategory);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const pendingPayloadRef = useRef<{
+    markers: Photo[];
+    config: Record<string, string | undefined>;
+  } | null>(null);
 
-  const filteredPhotos = photos.filter(photo => {
+  const filteredPhotos = useMemo(() => photos.filter(photo => {
     const matchesSearch = searchKeyword === '' ||
       (photo.title || '').toLowerCase().includes(searchKeyword.toLowerCase()) ||
       (photo.location || '').toLowerCase().includes(searchKeyword.toLowerCase()) ||
@@ -35,13 +41,48 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
       (photo.tags && photo.tags.includes(activeFilter));
 
     return matchesSearch && matchesCategory;
-  });
+  }), [activeFilter, photos, searchKeyword]);
+
+  const buildIframePayload = useCallback(() => ({
+    markers: filteredPhotos,
+    config: {
+      supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+      supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN,
+      adminEmail: import.meta.env.VITE_ADMIN_EMAIL,
+      adminPassword: import.meta.env.VITE_ADMIN_PASSWORD
+    }
+  }), [filteredPhotos]);
+
+  const postIframePayload = useCallback((payload: ReturnType<typeof buildIframePayload>) => {
+    const target = iframeRef.current?.contentWindow;
+    if (!target) {
+      pendingPayloadRef.current = payload;
+      return false;
+    }
+
+    target.postMessage(
+      { type: 'INIT_CONFIG', data: payload.config },
+      '*'
+    );
+
+    target.postMessage(
+      { type: 'UPDATE_MARKERS', data: payload.markers },
+      '*'
+    );
+
+    return true;
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShouldLoadIframe(true), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   // iframe 메시지 수신
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'IFRAME_READY') {
-        console.log("📡 Unity Iframe Ready");
         setIsIframeReady(true);
       }
     };
@@ -51,44 +92,24 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
 
   // 데이터 및 설정 전송
   useEffect(() => {
+    const payload = buildIframePayload();
+    pendingPayloadRef.current = payload;
+
     if (!isIframeReady) return;
 
     const sendUpdate = () => {
-      if (iframeRef.current && iframeRef.current.contentWindow) {
-        const config = {
-          supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-          supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-          mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN,
-          adminEmail: import.meta.env.VITE_ADMIN_EMAIL,
-          adminPassword: import.meta.env.VITE_ADMIN_PASSWORD
-        };
-
-        console.log("📤 [Parent] Sending config to iframe:", {
-          ...config,
-          supabaseKey: config.supabaseKey ? '***' : 'missing',
-          mapboxToken: config.mapboxToken ? '***' : 'missing'
-        });
-
-        // 마커 데이터 전송
-        iframeRef.current.contentWindow.postMessage(
-          { type: 'UPDATE_MARKERS', data: filteredPhotos },
-          '*'
-        );
-
-        // 환경 변수 전송
-        iframeRef.current.contentWindow.postMessage(
-          { type: 'INIT_CONFIG', data: config },
-          '*'
-        );
+      const pendingPayload = pendingPayloadRef.current;
+      if (pendingPayload && postIframePayload(pendingPayload)) {
+        pendingPayloadRef.current = null;
       }
     };
 
     sendUpdate();
 
-    // 만약 초기화가 안 될 경우를 위해 짧은 간격으로 1회 더 시도
+    // iframe 초기화 타이밍 차이를 흡수하기 위해 마지막 payload만 1회 재전송
     const timer = setTimeout(sendUpdate, 1000);
     return () => clearTimeout(timer);
-  }, [filteredPhotos, isIframeReady]);
+  }, [buildIframePayload, isIframeReady, postIframePayload]);
 
   return (
     <div className="w-full h-full relative bg-[#F5F2EB] overflow-hidden flex flex-col">
@@ -234,11 +255,12 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
       <div className="flex-1 relative w-full h-full bg-[#EBE6DA]">
         <iframe
           ref={iframeRef}
-          src="/unity-map/index.html"
+          src={shouldLoadIframe ? "/unity-map/index.html" : "about:blank"}
           title="Unity Mapbox View"
           className="w-full h-full border-none outline-none"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
+          loading="lazy"
         />
       </div>
     </div>
