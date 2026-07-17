@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { useShallow } from 'zustand/react/shallow';
-import { Search, Settings2, Edit2, Trash2, X } from 'lucide-react';
+import { Search, Settings2, Edit2, Trash2, X, MapPin } from 'lucide-react';
 import { cn } from './ui/utils';
 import { Drawer } from 'vaul';
 import type { Photo } from '../type';
@@ -10,6 +10,13 @@ interface Map2DViewProps {
   onNavigate?: (view: string) => void;
   isReadOnlyDemo?: boolean;
 }
+
+const hasValidCoordinates = (photo: Photo) =>
+  typeof photo.lat === 'number' &&
+  typeof photo.lng === 'number' &&
+  Number.isFinite(photo.lat) &&
+  Number.isFinite(photo.lng) &&
+  !(photo.lat === 0 && photo.lng === 0);
 
 export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   const [activeFilter, setActiveFilter] = useState('all');
@@ -43,8 +50,11 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
     return matchesSearch && matchesCategory;
   }), [activeFilter, photos, searchKeyword]);
 
+  const mapPhotos = useMemo(() => filteredPhotos.filter(hasValidCoordinates), [filteredPhotos]);
+  const photosWithoutCoordinates = filteredPhotos.length - mapPhotos.length;
+
   const buildIframePayload = useCallback(() => ({
-    markers: filteredPhotos,
+    markers: mapPhotos,
     config: {
       supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
       supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -52,7 +62,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
       adminEmail: import.meta.env.VITE_ADMIN_EMAIL,
       adminPassword: import.meta.env.VITE_ADMIN_PASSWORD
     }
-  }), [filteredPhotos]);
+  }), [mapPhotos]);
 
   const postIframePayload = useCallback((payload: ReturnType<typeof buildIframePayload>) => {
     const target = iframeRef.current?.contentWindow;
@@ -115,6 +125,26 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
     <div className="w-full h-full relative bg-[#F5F2EB] overflow-hidden flex flex-col">
       {/* 지도 컨트롤 및 헤더 (Iframe 위에 오버레이) */}
       <div className="absolute top-0 left-0 right-0 z-[40] p-4 pt-16 md:p-6 md:pt-6 pointer-events-auto">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/90 px-3 py-2 text-xs font-medium text-stone-600 shadow-sm backdrop-blur-md">
+            <MapPin className="h-3.5 w-3.5 text-[#E09F87]" />
+            <span>{mapPhotos.length} mapped</span>
+            {photosWithoutCoordinates > 0 && (
+              <span className="text-stone-400">/ {photosWithoutCoordinates} without coordinates</span>
+            )}
+          </div>
+          {isReadOnlyDemo && (
+            <span className="rounded-full border border-stone-200 bg-white/85 px-3 py-2 text-xs font-medium text-stone-500 shadow-sm backdrop-blur-md">
+              Read-only map browsing
+            </span>
+          )}
+        </div>
+
+        {filteredPhotos.length > 0 && mapPhotos.length === 0 && (
+          <div className="mb-3 max-w-md rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-sm text-amber-900 shadow-sm backdrop-blur-md">
+            No mapped photos in this filter. Try all photos or another tag.
+          </div>
+        )}
         <div className="flex flex-row items-center gap-2 max-w-full">
           <div className="flex-1 flex items-center gap-2 max-w-[85%] lg:max-w-md">
             {/* 검색바 */}

@@ -84,13 +84,9 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
 
   // 카테고리별 필터 적용
   const categorizedAlbums = useMemo(() => {
-    const filterFn = (a: Album) => {
-      const isNotEmpty = a.count > 0;
-      const matchesSearch = searchQuery.trim()
-        ? a.title.toLowerCase().includes(searchQuery.toLowerCase())
-        : true;
-      return isNotEmpty && matchesSearch;
-    };
+    const filterFn = (a: Album) => searchQuery.trim()
+      ? a.title.toLowerCase().includes(searchQuery.toLowerCase())
+      : true;
 
     return {
       system: systemAlbums.filter(filterFn),
@@ -141,9 +137,15 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
             <button onClick={() => setActiveAlbum(null)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-stone-600 shadow-sm border border-stone-200">
               <ArrowLeft className="w-4 h-4" />
             </button>
-            <h2 className="text-xl md:text-2xl font-semibold text-stone-800 flex items-center gap-2 truncate max-w-[150px] md:max-w-none">
-              {albumInfo?.title || activeAlbum}
-            </h2>
+            <div className="min-w-0">
+              <h2 className="text-xl md:text-2xl font-semibold text-stone-800 flex items-center gap-2 truncate max-w-[150px] md:max-w-none">
+                {albumInfo?.title || activeAlbum}
+              </h2>
+              <p className="mt-1 text-xs text-stone-500 truncate">
+                {albumInfo?.count ?? 0} photos - {albumInfo?.isLocation ? 'Place filter' : albumInfo?.id.startsWith('system_') ? 'System view' : 'Category filter'}
+                {isReadOnlyDemo ? ' - Read-only' : ''}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {canWrite && !isPhotoSelectMode && (
@@ -181,9 +183,21 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
 
           <div className="flex items-center justify-between md:justify-start gap-4">
-            <h1 className="text-3xl font-bold text-stone-900 tracking-tight">
-              Albums
-            </h1>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-3xl font-bold text-stone-900 tracking-tight">
+                  Albums
+                </h1>
+                {isReadOnlyDemo && (
+                  <span className="rounded-full border border-stone-200 bg-white/70 px-2 py-1 text-[11px] font-medium text-stone-500">
+                    Read-only
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-stone-500">
+                Browse by place or category. Albums work as filters in the public demo.
+              </p>
+            </div>
             {canWrite && <Button variant="outline" onClick={handleOpenCreate} className="rounded-full shadow-sm border-stone-200 h-9 px-3 text-stone-600 gap-1.5 md:hidden">
               <FolderPlus className="w-4 h-4" /> New
             </Button>}

@@ -56,3 +56,22 @@ Save the copied JSON or paste the summary into the issue characteristic note und
 ## Handoff Rule
 
 모든 handoff는 이 폴더들을 언급하고, 다음 에이전트에게 이슈 완료마다 Lighthouse, React Profiler, characteristic 한글 요약을 기록하라고 알려야 한다.
+
+## Required Component Change Flow
+
+When a component function, render path, route loading behavior, iframe/WebGL lifecycle, image delivery path, or store selector changes, run before/after performance evidence in the same environment.
+
+Minimum flow:
+
+```powershell
+cd Frontend
+npm run build:perf
+npm run preview:perf
+npm run perf:lighthouse -- --issue <issue>-before --view home --url http://127.0.0.1:4173/
+# make the code change
+npm run build:perf
+npm run perf:lighthouse -- --issue <issue>-after --view home --url http://127.0.0.1:4173/
+npm run perf:analyze -- --label issue-<issue> --before E:\memory\photomap\lightHouse\issue-<issue>-before-home.report.report.json --after E:\memory\photomap\lightHouse\issue-<issue>-after-home.report.report.json
+```
+
+The analysis note must explain the direction of change and the likely reason, even when the score gets worse or stays flat. For UI-only changes that do not affect the home route, still run `npm run build:perf` and record why Lighthouse is not representative.
