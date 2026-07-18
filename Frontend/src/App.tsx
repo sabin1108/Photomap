@@ -183,7 +183,7 @@ export default function App() {
               </div>
               <div className="absolute top-4 right-4 left-4 md:left-auto bg-white/75 backdrop-blur-md p-4 rounded-xl shadow-sm border border-white/50 max-w-none md:max-w-sm md:top-8 md:right-8">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-medium text-stone-800 text-sm md:text-base">Photomap Public Archive</h3>
+                  <h2 className="font-medium text-stone-800 text-sm md:text-base">Photomap Public Archive</h2>
                   {isPublicDemo && (
                     <span className="rounded-full border border-stone-200 bg-white/80 px-2 py-0.5 text-[10px] font-medium text-stone-500">
                       Read-only
