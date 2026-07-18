@@ -167,7 +167,8 @@ export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean 
             {/* 상단 컨트롤 영역 */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4 z-50 px-2 md:px-0 flex-none">
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-3xl font-serif italic text-stone-800 tracking-tight leading-none mb-2">Spatial Connections</h1>
+                    <h1 className="text-2xl md:text-3xl font-serif italic text-stone-800 tracking-tight leading-none mb-2">공간 관계 보기</h1>
+                    <p className="text-xs md:text-sm text-stone-500">태그와 사진을 연결해 아카이브의 관계를 탐색합니다.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 pb-1 justify-start md:justify-end">
                     {isTagMode && (
@@ -175,7 +176,7 @@ export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean 
                             className="text-xs px-3 py-2 rounded-full border border-stone-200 bg-white"
                             value={maxTags} onChange={(e) => setMaxTags(Number(e.target.value))}
                         >
-                            {[3, 5, 7, 10, 15].map(n => <option key={n} value={n}>Top {n} Tags</option>)}
+                            {[3, 5, 7, 10, 15].map(n => <option key={n} value={n}>상위 {n}개 태그</option>)}
                         </select>
                     )}
                     <select
@@ -183,14 +184,20 @@ export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean 
                         value={selectedTag || ''} disabled={isExiting}
                         onChange={(e) => handleTransition(e.target.value || null, selectedLocation)}
                     >
-                        <option value="">All Tags</option>
+                        <option value="">전체 태그</option>
                         {tagsList.map(tag => <option key={tag} value={tag}>{tag}</option>)}
                     </select>
                 </div>
             </div>
 
             {/* D3 시뮬레이션 및 렌더링 맵 영역 */}
-            <div ref={containerRef} className="relative flex-1 w-full bg-gradient-to-br from-[#f8f6f0] via-white to-[#fdfbf7] rounded-3xl overflow-hidden border border-[#E09F87]/20 shadow-sm min-h-0" style={{ touchAction: "none" }}>
+            <div ref={containerRef} className="relative flex-1 w-full bg-gradient-to-br from-[#f8f6f0] via-white to-[#fdfbf7] rounded-2xl md:rounded-3xl overflow-hidden border border-[#E09F87]/20 shadow-sm min-h-0" style={{ touchAction: "none" }}>
+                {photos.length === 0 && (
+                    <div className="absolute inset-0 z-40 flex flex-col items-center justify-center text-center text-stone-500 px-6 bg-white/70 backdrop-blur-sm">
+                        <p className="text-lg font-semibold text-stone-800">관계로 볼 사진이 없습니다</p>
+                        <p className="mt-2 text-sm leading-6">사진과 태그가 로드되면 이 화면에서 서로의 연결을 보여줍니다.</p>
+                    </div>
+                )}
                 <div ref={zoomGroupRef} className="absolute inset-0 w-full h-full origin-top-left" style={{ transform: `translate(0px, 0px) scale(1)` }}>
                     <div className="absolute top-[10%] left-[20%] w-72 h-72 bg-[#E09F87]/10 rounded-full blur-[60px]" />
                     <div className="absolute bottom-[10%] right-[10%] w-96 h-96 bg-stone-200/40 rounded-full blur-[80px]" />
@@ -271,11 +278,11 @@ export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean 
                     <PhotoModal.Actions>
                         <Button variant="outline" className={cn("flex-1 h-12 rounded-xl gap-2", selectedPhotoDetail?.isFavorite ? "bg-rose-50 border-rose-200 text-rose-500" : "")}
                             onClick={() => { if (selectedPhotoDetail) { toggleFavorite(selectedPhotoDetail.id); setSelectedPhotoDetail(prev => prev ? { ...prev, isFavorite: !prev.isFavorite } : null); } }}>
-                            <Heart size={18} className={selectedPhotoDetail?.isFavorite ? "fill-rose-500" : ""} /> {selectedPhotoDetail?.isFavorite ? "Favorited" : "Favorite"}
+                            <Heart size={18} className={selectedPhotoDetail?.isFavorite ? "fill-rose-500" : ""} /> {selectedPhotoDetail?.isFavorite ? "좋아요됨" : "좋아요"}
                         </Button>
                         {!isReadOnlyDemo && (
                             <Button variant="outline" className="w-12 h-12 p-0 text-red-500 hover:bg-red-50"
-                                onClick={() => { if (selectedPhotoDetail && window.confirm("Delete?")) { deletePhoto(selectedPhotoDetail.id); setSelectedPhotoDetail(null); } }}>
+                                onClick={() => { if (selectedPhotoDetail && window.confirm("이 사진을 삭제하시겠습니까?")) { deletePhoto(selectedPhotoDetail.id); setSelectedPhotoDetail(null); } }}>
                                 <Trash2 size={18} />
                             </Button>
                         )}

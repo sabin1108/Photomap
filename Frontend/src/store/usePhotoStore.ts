@@ -10,6 +10,7 @@ interface PhotoStore {
     categories: string[];    // Sidebar, UploadScreen, AlbumsView에서 사용
     isInitialized: boolean;   // 초기화 완료 여부
     isLoading: boolean;       // 데이터 로딩 중 여부
+    loadError: string | null;  // 공개 데모에서 사용자에게 보여줄 데이터 로딩 오류
     hasMore: boolean;         // 더 불러올 데이터가 있는지 여부
     currentUserId: string | null; // 현재 로드된 사용자 ID
 
@@ -124,6 +125,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     categories: [],
     isInitialized: false,
     isLoading: false,
+    loadError: null,
     hasMore: true,
     currentUserId: null,
 
@@ -132,7 +134,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         if (get().isInitialized && get().currentUserId === userId) return;
 
         console.log(`🔄 [PhotoStore] Initializing for user: ${userId}`);
-        set({ isInitialized: true, isLoading: true, currentUserId: userId, photos: [], categories: [] });
+        set({ isInitialized: true, isLoading: true, loadError: null, currentUserId: userId, photos: [], categories: [] });
 
         await Promise.all([
             get().fetchCategories(userId),
@@ -184,6 +186,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
             if (mediaResponse.error) {
                 console.error('사진 불러오기 실패:', mediaResponse.error);
+                set({ loadError: 'Supabase에서 사진을 불러오지 못했습니다. 환경변수와 RLS 정책을 확인하세요.', hasMore: false });
                 return;
             }
 
@@ -199,11 +202,13 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                 });
                 set({
                     photos: loadedPhotos,
+                    loadError: null,
                     hasMore: loadedPhotos.length === limit
                 });
             }
         } catch (err) {
             console.error('사진 불러오기 중 예기치 못한 오류 발생:', err);
+            set({ loadError: '사진을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도하세요.', hasMore: false });
             toast.error('사진을 불러오는 중 오류가 발생했습니다.');
         }
     },
@@ -674,6 +679,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             categories: [],
             isInitialized: false,
             isLoading: false,
+            loadError: null,
             hasMore: true,
             currentUserId: null
         });

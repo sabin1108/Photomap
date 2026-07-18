@@ -23,7 +23,7 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
   return (
     <>
       <div className="md:hidden fixed top-4 left-4 z-50">
-        <Button variant="ghost" size="icon" aria-label="Toggle Menu" onClick={() => setIsOpen(!isOpen)} className="bg-white/50 backdrop-blur-md hover:bg-white/70 shadow-sm border border-stone-200">
+        <Button variant="ghost" size="icon" aria-label="메뉴 열기" onClick={() => setIsOpen(!isOpen)} className="bg-white/50 backdrop-blur-md hover:bg-white/70 shadow-sm border border-stone-200">
           <Menu className="w-5 h-5 text-stone-700" />
         </Button>
       </div>
@@ -34,25 +34,25 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
         <SidebarUI.Nav>
           <SidebarUI.Item
             icon={Compass}
-            label="Explore"
+            label="전체 사진"
             isActive={activeCategory === 'all'}
             onClick={() => handleSelect('all')}
           />
           <SidebarUI.Item
             icon={Map}
-            label="Map View"
+            label="지도"
             isActive={activeCategory === 'map'}
             onClick={() => handleSelect('map')}
           />
           <SidebarUI.Item
             icon={Network}
-            label="Spatial Node"
+            label="관계 보기"
             isActive={activeCategory === 'node'}
             onClick={() => handleSelect('node')}
           />
           <SidebarUI.Item
             icon={ImageIcon}
-            label="Albums"
+            label="앨범"
             isActive={activeCategory === 'albums'}
             onClick={() => handleSelect('albums')}
           />
@@ -61,14 +61,14 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
         <SidebarUI.Footer>
           {isReadOnlyDemo && (
             <div className="px-3 py-2">
-              <p className="text-[11px] font-semibold text-stone-500">Read-only demo</p>
-              <p className="mt-0.5 text-[10px] leading-4 text-stone-400">Browse archive only. Uploads and admin tools are hidden.</p>
+              <p className="text-[11px] font-semibold text-stone-500">읽기 전용 데모</p>
+              <p className="mt-0.5 text-[10px] leading-4 text-stone-400">사진 아카이브 탐색만 가능합니다. 업로드와 관리 도구는 숨겨져 있습니다.</p>
             </div>
           )}
           {isAdmin && (
             <SidebarUI.Item
               icon={Database}
-              label="Data Admin"
+              label="데이터 관리"
               isActive={activeCategory === 'admin'}
               onClick={() => handleSelect('admin')}
             />
@@ -76,7 +76,7 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
           {!isReadOnlyDemo && (
             <SidebarUI.Item
               icon={LogOut}
-              label="Log Out"
+              label="로그아웃"
               onClick={onSignOut}
               className="text-red-500 hover:text-red-700 hover:bg-red-50 mt-2"
             />

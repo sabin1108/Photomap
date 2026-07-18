@@ -21,14 +21,14 @@ export interface Album {
   isLocation?: boolean;
 }
 
-export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean }) {
+export function 앨범View({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean }) {
   // 상태 관리
   const categories = usePhotoStore(state => state.categories);
   const photos = usePhotoStore(state => state.photos);
   const addCategory = usePhotoStore(state => state.addCategory);
   const updateCategory = usePhotoStore(state => state.updateCategory);
   const deleteCategory = usePhotoStore(state => state.deleteCategory);
-  const batchDeleteCategories = usePhotoStore(state => state.batchDeleteCategories);
+  const batch삭제Categories = usePhotoStore(state => state.batchDeleteCategories);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ title: '' });
 
@@ -54,8 +54,8 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
   const systemAlbums: Album[] = useMemo(() => {
     const favPhotos = photos.filter(p => p.isFavorite);
     return [
-      { id: 'system_all', title: 'All Photos', cover: photos[0]?.url || '', count: photos.length, date: photos[0]?.date || 'Empty', theme: 'light', icon: ImageIcon },
-      { id: 'system_favorites', title: 'Favorites', cover: favPhotos[0]?.url || '', count: favPhotos.length, date: favPhotos[0]?.date || 'Empty', theme: 'light', icon: Heart }
+      { id: 'system_all', title: '전체 사진', cover: photos[0]?.url || '', count: photos.length, date: photos[0]?.date || '비어 있음', theme: 'light', icon: ImageIcon },
+      { id: 'system_favorites', title: '좋아요', cover: favPhotos[0]?.url || '', count: favPhotos.length, date: favPhotos[0]?.date || '비어 있음', theme: 'light', icon: Heart }
     ];
   }, [photos]);
 
@@ -66,7 +66,7 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
       const locPhotos = photos.filter(p => p.location === loc);
       const sortedPhotos = [...locPhotos].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       return {
-        id: `loc_${loc}`, title: loc as string, cover: sortedPhotos[0]?.url || '', count: locPhotos.length, date: sortedPhotos[0]?.date || 'New', theme: 'light', icon: MapPin, isLocation: true
+        id: `loc_${loc}`, title: loc as string, cover: sortedPhotos[0]?.url || '', count: locPhotos.length, date: sortedPhotos[0]?.date || '새 항목', theme: 'light', icon: MapPin, isLocation: true
       };
     }).sort((a, b) => b.count - a.count);
   }, [photos]);
@@ -77,7 +77,7 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
       const categoryPhotos = photos.filter(p => p.category === category || p.tags.includes(category));
       const sortedPhotos = [...categoryPhotos].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       return {
-        id: category, title: category.charAt(0).toUpperCase() + category.slice(1), cover: sortedPhotos[0]?.url || '', count: categoryPhotos.length, date: sortedPhotos[0]?.date || 'New', theme: 'light'
+        id: category, title: category.charAt(0).toUpperCase() + category.slice(1), cover: sortedPhotos[0]?.url || '', count: categoryPhotos.length, date: sortedPhotos[0]?.date || '새 항목', theme: 'light'
       };
     });
   }, [categories, photos]);
@@ -109,8 +109,8 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
   }, [activeTab, categorizedAlbums]);
 
   // 핸들러 모음
-  const handleOpenCreate = () => { if (!canWrite) return; setFormData({ title: '' }); setIsDialogOpen(true); };
-  const handleSave = () => { if (!canWrite) return; if (formData.title.trim()) { addCategory(formData.title.trim()); setIsDialogOpen(false); } };
+  const handleOpen만들기 = () => { if (!canWrite) return; setFormData({ title: '' }); setIsDialogOpen(true); };
+  const handle저장 = () => { if (!canWrite) return; if (formData.title.trim()) { addCategory(formData.title.trim()); setIsDialogOpen(false); } };
   const handleUpdateAlbum = async () => { if (!canWrite) return; if (editingAlbumName && editFormData.title.trim()) { await updateCategory(editingAlbumName, editFormData.title.trim()); setEditingAlbumName(null); } };
   const handleDeleteAlbum = async () => { if (!canWrite) return; if (editingAlbumName) { if (window.confirm('이 컬렉션을 삭제하시겠습니까?')) { await deleteCategory(editingAlbumName); setEditingAlbumName(null); } } };
 
@@ -142,20 +142,20 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
                 {albumInfo?.title || activeAlbum}
               </h2>
               <p className="mt-1 text-xs text-stone-500 truncate">
-                {albumInfo?.count ?? 0} photos - {albumInfo?.isLocation ? 'Place filter' : albumInfo?.id.startsWith('system_') ? 'System view' : 'Category filter'}
-                {isReadOnlyDemo ? ' - Read-only' : ''}
+                {albumInfo?.count ?? 0}장 - {albumInfo?.isLocation ? '위치 필터' : albumInfo?.id.startsWith('system_') ? '기본 보기' : '카테고리 필터'}
+                {isReadOnlyDemo ? ' - 읽기 전용' : ''}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {canWrite && !isPhotoSelectMode && (
               <Button className="bg-[#E09F87] hover:bg-[#D08E76] text-white rounded-full shadow-md gap-2 h-9 px-3 md:h-10 md:px-4" onClick={() => setIsUploadOpen(true)}>
-                <Plus className="w-4 h-4" /> <span className="hidden md:inline">Upload Here</span>
+                <Plus className="w-4 h-4" /> <span className="hidden md:inline">여기에 업로드</span>
               </Button>
             )}
             {canWrite && <Button variant={isPhotoSelectMode ? "secondary" : "outline"} size="sm" onClick={() => setIsPhotoSelectMode(!isPhotoSelectMode)} className="rounded-full gap-2 border-stone-200 h-9 px-3 md:h-10 md:px-4">
               {isPhotoSelectMode ? <X className="w-4 h-4" /> : <MousePointer2 className="w-4 h-4" />}
-              <span className="hidden md:inline">{isPhotoSelectMode ? "Cancel" : "Select"}</span>
+              <span className="hidden md:inline">{isPhotoSelectMode ? "취소" : "선택"}</span>
             </Button>}
           </div>
         </div>
@@ -190,16 +190,16 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
                 </h1>
                 {isReadOnlyDemo && (
                   <span className="rounded-full border border-stone-200 bg-white/70 px-2 py-1 text-[11px] font-medium text-stone-500">
-                    Read-only
+                    읽기 전용
                   </span>
                 )}
               </div>
               <p className="mt-1 text-sm text-stone-500">
-                Browse by place or category. Albums work as filters in the public demo.
+                위치와 카테고리별로 사진을 탐색합니다. 공개 데모에서는 앨범이 필터처럼 동작합니다.
               </p>
             </div>
             {canWrite && <Button variant="outline" onClick={handleOpenCreate} className="rounded-full shadow-sm border-stone-200 h-9 px-3 text-stone-600 gap-1.5 md:hidden">
-              <FolderPlus className="w-4 h-4" /> New
+              <FolderPlus className="w-4 h-4" /> 새 앨범
             </Button>}
           </div>
 
@@ -210,7 +210,7 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
                 <Search className="h-4 w-4 text-stone-400" />
               </div>
               <Input
-                placeholder="Search albums..."
+                placeholder="앨범 검색"
                 className="block w-full pl-10 bg-white/50 border-white/50 shadow-sm rounded-2xl h-10 text-stone-800 placeholder:text-stone-400 focus-visible:ring-1 focus-visible:ring-[#E09F87]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -219,10 +219,10 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
 
             {canWrite && <div className="hidden md:flex gap-2">
               <Button onClick={handleOpenCreate} className="bg-stone-900 hover:bg-stone-800 text-white rounded-2xl shadow-sm gap-1.5 font-medium h-10">
-                <FolderPlus className="w-4 h-4" /> New
+                <FolderPlus className="w-4 h-4" /> 새 앨범
               </Button>
               <Button variant="outline" onClick={() => { setIsSelectMode(!isSelectMode); setSelectedAlbumNames([]); }} className={cn("rounded-2xl gap-2 border-stone-200 bg-white h-10", isSelectMode && "bg-[#E09F87] border-[#E09F87] text-white")}>
-                {isSelectMode ? <X className="w-4 h-4" /> : <MousePointer2 className="w-4 h-4" />} Select
+                {isSelectMode ? <X className="w-4 h-4" /> : <MousePointer2 className="w-4 h-4" />} 선택
               </Button>
             </div>}
           </div>
@@ -290,7 +290,7 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
             {filteredAlbums.length === 0 ? (
               <div className="w-full h-40 flex flex-col items-center justify-center text-stone-400 gap-2">
                 <Search className="w-8 h-8 opacity-20" />
-                <p>No albums found</p>
+                <p>조건에 맞는 앨범이 없습니다</p>
               </div>
             ) : (
               <div className="grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
@@ -310,9 +310,9 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
       <AnimatePresence>
         {canWrite && isSelectMode && selectedAlbumNames.length > 0 && (
           <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-stone-900/95 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-full shadow-2xl text-white">
-            <span className="font-medium text-sm">{selectedAlbumNames.length} selected</span>
+            <span className="font-medium text-sm">{selectedAlbumNames.length}개 선택됨</span>
             <Button variant="destructive" className="rounded-full gap-2 px-6 shadow-sm" onClick={handleBatchDeleteAlbums}>
-              <Trash className="w-4 h-4" /> Delete
+              <Trash className="w-4 h-4" /> 삭제
             </Button>
           </motion.div>
         )}
@@ -323,15 +323,15 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
         <>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent className="sm:max-w-sm rounded-[2rem] border-stone-200 bg-[#F5F2EB]">
-              <DialogTitle>New Collection</DialogTitle>
-              <Input placeholder="Album Title" value={formData.title} onChange={(e) => setFormData({ title: e.target.value })} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleSave()} className="bg-white border-stone-200 focus:border-[#E09F87] rounded-xl py-6 text-lg shadow-sm" />
+              <DialogTitle>새 컬렉션</DialogTitle>
+              <Input placeholder="앨범 제목" value={formData.title} onChange={(e) => setFormData({ title: e.target.value })} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleSave()} className="bg-white border-stone-200 focus:border-[#E09F87] rounded-xl py-6 text-lg shadow-sm" />
               <Button onClick={handleSave} className="w-full rounded-xl bg-[#E09F87] hover:bg-[#D08E76] text-white text-lg h-12 mt-2 shadow-sm">Create</Button>
             </DialogContent>
           </Dialog>
 
           <Dialog open={!!editingAlbumName} onOpenChange={(open: boolean) => !open && setEditingAlbumName(null)}>
             <DialogContent className="sm:max-w-sm rounded-[2rem] border-stone-200 bg-[#F5F2EB]">
-              <DialogTitle>Rename Collection</DialogTitle>
+              <DialogTitle>컬렉션 이름 변경</DialogTitle>
               <Input value={editFormData.title} onChange={(e) => setEditFormData({ title: e.target.value })} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleUpdateAlbum()} className="bg-white border-stone-200 focus:border-[#E09F87] rounded-xl py-6 text-lg shadow-sm" />
               <div className="flex gap-3 w-full mt-2">
                 <Button onClick={handleUpdateAlbum} className="flex-1 bg-[#E09F87] text-white hover:bg-[#D08E76] rounded-xl text-lg h-12 shadow-sm">Save</Button>
@@ -386,7 +386,7 @@ function AlbumItem({ album, isSelectMode, isSelected, onClick, onEdit, isReadOnl
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex flex-col justify-end p-2 md:p-3">
         <h3 className="text-white text-xs md:text-[13px] font-semibold truncate tracking-tight drop-shadow-md leading-tight">{album.title}</h3>
-        <p className="text-white/80 text-[10px] font-medium hidden md:block mt-0.5">{album.count} items</p>
+        <p className="text-white/80 text-[10px] font-medium hidden md:block mt-0.5">{album.count}장</p>
       </div>
 
       {isSelectMode && !isSystem && !isLocation && (

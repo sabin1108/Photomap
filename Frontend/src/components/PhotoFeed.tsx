@@ -36,6 +36,7 @@ export function PhotoFeed({
   const {
     photos,
     isLoading,
+    loadError,
     hasMore,
     fetchMorePhotos,
     toggleFavorite,
@@ -47,6 +48,7 @@ export function PhotoFeed({
     useShallow(state => ({
       photos: state.photos,
       isLoading: state.isLoading,
+      loadError: state.loadError,
       hasMore: state.hasMore,
       fetchMorePhotos: state.fetchMorePhotos,
       toggleFavorite: state.toggleFavorite,
@@ -193,7 +195,12 @@ export function PhotoFeed({
 
       {/* 아무 사진도 없을 때의 빈 상태 또는 로딩 상태 */}
       {displayPhotos.length === 0 ? (
-        isLoading ? (
+        loadError ? (
+          <div className="flex flex-col items-center justify-center h-64 text-center text-stone-600 px-6">
+            <p className="font-semibold text-lg text-stone-800">사진을 불러오지 못했습니다</p>
+            <p className="text-sm mt-2 max-w-md leading-6">{loadError}</p>
+          </div>
+        ) : isLoading ? (
           <div className="space-y-4">
             <p className="text-sm text-stone-500">사진을 불러오는 중입니다.</p>
             <div className="grid w-full" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>

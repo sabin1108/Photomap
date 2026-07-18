@@ -48,20 +48,20 @@ export function TimelineView() {
       <div className="flex-none px-6 pt-16 pb-6 md:px-10 md:py-8 flex items-end justify-between z-10">
         <div>
           <h1 className="text-3xl md:text-4xl font-light text-stone-800 tracking-tight">
-            Journey <span className="font-serif italic text-[#E09F87]">Timeline</span>
+            여행 <span className="font-serif italic text-[#E09F87]">타임라인</span>
           </h1>
           <p className="text-stone-500 mt-2 max-w-md text-sm md:text-base">
-            Tracing back the footsteps of past adventures, arranged chronologically.
+            사진을 날짜 순서로 묶어 여행의 흐름을 확인합니다.
           </p>
         </div>
 
         <div className="hidden md:flex gap-2">
           <Button variant="outline" size="sm" className="rounded-full border-stone-200 text-stone-600 hover:bg-stone-100">
             <Filter className="w-4 h-4 mr-2" />
-            Filter Date
+            날짜 필터
           </Button>
           <Button variant="outline" size="sm" className="rounded-full border-stone-200 text-stone-600 hover:bg-stone-100">
-            Newest First
+            최신순
           </Button>
         </div>
       </div>
@@ -74,6 +74,12 @@ export function TimelineView() {
           {/* 중앙 구분선 */}
           <div className="absolute left-[20px] md:left-1/2 top-4 bottom-0 w-px bg-gradient-to-b from-[#E09F87] via-stone-300 to-transparent md:-translate-x-1/2" />
 
+          {years.length === 0 ? (
+            <div className="flex h-64 flex-col items-center justify-center text-center text-stone-500">
+              <p className="text-lg font-semibold text-stone-700">타임라인에 표시할 사진이 없습니다</p>
+              <p className="mt-2 text-sm">사진이 로드되면 날짜 순서로 여행 기록을 보여줍니다.</p>
+            </div>
+          ) : (
           <div className="space-y-12 md:space-y-24 py-8">
             {years.map((year) => {
               const yearEvents = timelineData.filter(e => e.year === year);
@@ -173,7 +179,7 @@ export function TimelineView() {
 
                               <div className="mt-2">
                                 <Button variant="ghost" size="sm" className="text-stone-400 hover:text-stone-800 p-0 h-auto font-normal text-xs">
-                                  View Album <ArrowRight className="w-3 h-3 ml-1" />
+                                  앨범 보기 <ArrowRight className="w-3 h-3 ml-1" />
                                 </Button>
                               </div>
                             </div>
@@ -186,6 +192,7 @@ export function TimelineView() {
               );
             })}
           </div>
+          )}
 
           {/* 종료 표시기 */}
           <div className="flex justify-center pb-10">

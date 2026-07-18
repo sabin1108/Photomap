@@ -21,12 +21,14 @@ export function GlobeView() {
 
   const markers = useMemo(() => {
     return photos
-      .filter(photo => photo.lat !== undefined && photo.lng !== undefined)
+      .filter(photo => typeof photo.lat === 'number' && typeof photo.lng === 'number' && Number.isFinite(photo.lat) && Number.isFinite(photo.lng))
       .map(photo => ({
         location: [photo.lat!, photo.lng!] as [number, number],
         size: 0.05
       }));
   }, [photos]);
+
+  const markerCount = markers.length;
 
   useEffect(() => {
     let width = 0;
@@ -103,11 +105,16 @@ export function GlobeView() {
           }}
         />
 
-        <div className="absolute top-0 right-0 p-4 pointer-events-none opacity-50">
-          <div className="text-[10px] uppercase tracking-widest text-[#E09F87]">
-            Lat 35.9° N / Long 127.7° E
+        <div className="absolute top-0 right-0 p-4 pointer-events-none opacity-70">
+          <div className="rounded-full bg-white/70 px-3 py-1 text-[10px] font-medium text-stone-500 shadow-sm">
+            위치 표시 {markerCount}장
           </div>
         </div>
+        {markerCount === 0 && (
+          <div className="absolute inset-x-6 bottom-6 rounded-2xl bg-white/80 px-4 py-3 text-center text-xs text-stone-500 shadow-sm backdrop-blur-md">
+            위치 정보가 있는 사진이 로드되면 글로브에 표시됩니다.
+          </div>
+        )}
       </div>
     </div>
   );

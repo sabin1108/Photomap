@@ -186,7 +186,7 @@ export default function App() {
                   <h2 className="font-medium text-stone-800 text-sm md:text-base">Photomap Public Archive</h2>
                   {isPublicDemo && (
                     <span className="rounded-full border border-stone-200 bg-white/80 px-2 py-0.5 text-[10px] font-medium text-stone-500">
-                      Read-only
+                      읽기 전용
                     </span>
                   )}
                 </div>
@@ -199,7 +199,7 @@ export default function App() {
               </div>
               {isPublicDemo && (
                 <div className="absolute left-4 bottom-4 rounded-full bg-white/80 px-3 py-1 text-[11px] font-medium text-stone-500 border border-stone-200 shadow-sm">
-                  Read-only demo
+                  읽기 전용 데모
                 </div>
               )}
             </div>

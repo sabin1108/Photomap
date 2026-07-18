@@ -56,11 +56,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   const buildIframePayload = useCallback(() => ({
     markers: mapPhotos,
     config: {
-      supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-      supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN,
-      adminEmail: import.meta.env.VITE_ADMIN_EMAIL,
-      adminPassword: import.meta.env.VITE_ADMIN_PASSWORD
+      mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN
     }
   }), [mapPhotos]);
 
@@ -128,21 +124,21 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/90 px-3 py-2 text-xs font-medium text-stone-600 shadow-sm backdrop-blur-md">
             <MapPin className="h-3.5 w-3.5 text-[#E09F87]" />
-            <span>{mapPhotos.length} mapped</span>
+            <span>지도 표시 {mapPhotos.length}장</span>
             {photosWithoutCoordinates > 0 && (
-              <span className="text-stone-400">/ {photosWithoutCoordinates} without coordinates</span>
+              <span className="text-stone-400">/ 위치 없음 {photosWithoutCoordinates}장</span>
             )}
           </div>
           {isReadOnlyDemo && (
             <span className="rounded-full border border-stone-200 bg-white/85 px-3 py-2 text-xs font-medium text-stone-500 shadow-sm backdrop-blur-md">
-              Read-only map browsing
+              읽기 전용 지도 탐색
             </span>
           )}
         </div>
 
         {filteredPhotos.length > 0 && mapPhotos.length === 0 && (
           <div className="mb-3 max-w-md rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-sm text-amber-900 shadow-sm backdrop-blur-md">
-            No mapped photos in this filter. Try all photos or another tag.
+            이 필터에는 지도에 표시할 사진이 없습니다. 전체 사진이나 다른 태그를 선택해 보세요.
           </div>
         )}
         <div className="flex flex-row items-center gap-2 max-w-full">
@@ -152,7 +148,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
               <Search className="w-5 h-5 text-stone-400 ml-2 flex-shrink-0" />
               <input
                 type="text"
-                placeholder="장소 검색..."
+                placeholder="장소, 제목, 설명 검색"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="bg-transparent border-none outline-none text-sm text-stone-700 placeholder:text-stone-400 w-full"
@@ -183,7 +179,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
 
                     <div className="max-w-md mx-auto h-full flex flex-col">
                       <Drawer.Title className="text-xl font-bold text-stone-800 mb-2 flex items-center justify-between">
-                        <span>태그 및 필터</span>
+                        <span>지도 필터</span>
                         <Drawer.Close asChild>
                           <button className="p-2 rounded-full hover:bg-stone-100"><X className="w-5 h-5" /></button>
                         </Drawer.Close>
@@ -197,7 +193,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
                         <Search className="w-4 h-4 text-stone-400" />
                         <input
                           type="text"
-                          placeholder="태그 검색..."
+                          placeholder="태그 검색"
                           value={categorySearch}
                           onChange={(e) => setCategorySearch(e.target.value)}
                           className="bg-transparent border-none outline-none text-sm w-full"
