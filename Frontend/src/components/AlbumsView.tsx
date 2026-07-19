@@ -21,14 +21,14 @@ export interface Album {
   isLocation?: boolean;
 }
 
-export function 앨범View({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean }) {
+export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean }) {
   // 상태 관리
   const categories = usePhotoStore(state => state.categories);
   const photos = usePhotoStore(state => state.photos);
   const addCategory = usePhotoStore(state => state.addCategory);
   const updateCategory = usePhotoStore(state => state.updateCategory);
   const deleteCategory = usePhotoStore(state => state.deleteCategory);
-  const batch삭제Categories = usePhotoStore(state => state.batchDeleteCategories);
+  const batchDeleteCategories = usePhotoStore(state => state.batchDeleteCategories);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ title: '' });
 
@@ -109,8 +109,8 @@ export function 앨범View({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
   }, [activeTab, categorizedAlbums]);
 
   // 핸들러 모음
-  const handleOpen만들기 = () => { if (!canWrite) return; setFormData({ title: '' }); setIsDialogOpen(true); };
-  const handle저장 = () => { if (!canWrite) return; if (formData.title.trim()) { addCategory(formData.title.trim()); setIsDialogOpen(false); } };
+  const handleOpenCreate = () => { if (!canWrite) return; setFormData({ title: '' }); setIsDialogOpen(true); };
+  const handleSave = () => { if (!canWrite) return; if (formData.title.trim()) { addCategory(formData.title.trim()); setIsDialogOpen(false); } };
   const handleUpdateAlbum = async () => { if (!canWrite) return; if (editingAlbumName && editFormData.title.trim()) { await updateCategory(editingAlbumName, editFormData.title.trim()); setEditingAlbumName(null); } };
   const handleDeleteAlbum = async () => { if (!canWrite) return; if (editingAlbumName) { if (window.confirm('이 컬렉션을 삭제하시겠습니까?')) { await deleteCategory(editingAlbumName); setEditingAlbumName(null); } } };
 
