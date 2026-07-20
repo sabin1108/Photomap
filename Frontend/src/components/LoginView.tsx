@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { getSupabase } from '../lib/supabaseClient';
 import { Button } from './ui/button';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -35,6 +35,7 @@ export function LoginView({ onNavigate }: LoginViewProps) {
 
     setLoading(true);
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         // Supabase 에러 메시지를 사용자 친화적으로 변환
@@ -65,6 +66,7 @@ export function LoginView({ onNavigate }: LoginViewProps) {
 
     setDemoLoading(true);
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase.auth.signInWithPassword({ 
         email: demoEmail, 
         password: demoPassword 

@@ -13,7 +13,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 
 import { usePhotoStore } from '../store/usePhotoStore';
 import { Photo } from '../type';
-import { supabase } from '../lib/supabaseClient';
+import { getSupabase } from '../lib/supabaseClient';
 import exifr from 'exifr';
 interface UploadScreenProps {
   onClose: () => void;
@@ -457,6 +457,7 @@ export function UploadScreen({ onClose, initialLocation, initialCategory }: Uplo
 
     const uploadItems: { photo: Photo, meta: any }[] = [];
     let failCount = 0;
+    const supabase = await getSupabase();
 
     for (let i = 0; i < selectedFiles.length; i++) {
       const item = selectedFiles[i];

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { getSupabase } from '../lib/supabaseClient';
 import { Button } from './ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -35,6 +35,7 @@ export function SignupView({ onNavigate }: SignupViewProps) {
 
     setLoading(true);
     try {
+      const supabase = await getSupabase();
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,

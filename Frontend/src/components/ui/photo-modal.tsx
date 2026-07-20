@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Photo } from "../../type";
 import { X, MapPin, Calendar, Folder, AlignLeft } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import { usePhotoStore } from "../../store/usePhotoStore";
 import { isPublicDemo } from "../../lib/demoConfig";
 
@@ -32,32 +31,19 @@ function Root({ photo, onClose, children }: RootProps) {
     if (!photo) return null;
 
     return createPortal(
-        <AnimatePresence mode="wait">
-            {photo && (
-                <motion.div
-                    key="modal-overlay"
-                    className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={onClose}
-                >
-                    <motion.div
-                        key="modal-content"
-                        className="bg-white rounded-3xl overflow-hidden w-full max-w-6xl flex flex-col md:flex-row h-full max-h-[85vh] relative shadow-2xl shadow-black/50"
-                        initial={{ y: 50, scale: 0.95 }}
-                        animate={{ y: 0, scale: 1 }}
-                        exit={{ y: 20, scale: 0.95 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <PhotoModalContext.Provider value={{ photo, onClose }}>
-                            {children}
-                        </PhotoModalContext.Provider>
-                    </motion.div>
-                </motion.div>
-            )}
-        </AnimatePresence>,
+        <div
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
+            onClick={onClose}
+        >
+            <div
+                className="bg-white rounded-3xl overflow-hidden w-full max-w-6xl flex flex-col md:flex-row h-full max-h-[85vh] relative shadow-2xl shadow-black/50"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <PhotoModalContext.Provider value={{ photo, onClose }}>
+                    {children}
+                </PhotoModalContext.Provider>
+            </div>
+        </div>,
         document.body
     );
 }

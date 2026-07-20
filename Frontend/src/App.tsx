@@ -177,9 +177,13 @@ export default function App() {
           <>
             <div className="w-full md:w-1/2 h-[35vh] md:h-full flex-shrink-0 flex items-center justify-center relative order-1 md:order-2 bg-gradient-to-b from-transparent to-[#F5F2EB]/50">
               <div className="absolute inset-0 flex items-center justify-center">
-                <Suspense fallback={<Spinner />}>
-                  <GlobeView />
-                </Suspense>
+                {shouldRenderGlobe ? (
+                  <Suspense fallback={<Spinner />}>
+                    <GlobeView />
+                  </Suspense>
+                ) : (
+                  <Spinner />
+                )}
               </div>
               <div className="absolute top-4 right-4 left-4 md:left-auto bg-white/75 backdrop-blur-md p-4 rounded-xl shadow-sm border border-white/50 max-w-none md:max-w-sm md:top-8 md:right-8">
                 <div className="flex flex-wrap items-center gap-2">

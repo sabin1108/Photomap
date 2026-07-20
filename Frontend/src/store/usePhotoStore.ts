@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Photo, DBMedia } from '../type';
-import { supabase } from '../lib/supabaseClient';
+import { getSupabase } from '../lib/supabaseClient';
 import { isPublicDemo, localFavoriteStorageKey } from '../lib/demoConfig';
 import { toast } from 'sonner';
 
@@ -92,6 +92,7 @@ const mapMediaToPhoto = (media: DBMedia): Photo => {
 };
 
 const getUserId = async () => {
+    const supabase = await getSupabase();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !session.user.id) {
         throw new Error("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
@@ -145,6 +146,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
     fetchCategories: async (userId: string) => {
         try {
+            const supabase = await getSupabase();
             const { data, error } = await supabase
                 .from('category')
                 .select('name')
@@ -165,6 +167,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
     fetchPhotos: async (userId: string, limit = 50) => {
         try {
+            const supabase = await getSupabase();
             const mediaPromise = supabase
                 .from('media')
                 .select(`
@@ -272,6 +275,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
     updateCategory: async (oldName: string, newName: string) => {
         try {
+            const supabase = await getSupabase();
             const userId = await getUserId();
             const { error } = await supabase
                 .from('category')
@@ -296,6 +300,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
     deleteCategory: async (categoryName: string) => {
         try {
+            const supabase = await getSupabase();
             const userId = await getUserId();
             const { error } = await supabase
                 .from('category')
@@ -402,6 +407,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         const toastId = toast.loading(`${items.length}개의 사진을 저장 중...`);
         let successCount = 0;
         try {
+            const supabase = await getSupabase();
             const userId = await getUserId();
             for (const item of items) {
                 const roundedLat = item.meta.lat ? Number(item.meta.lat.toFixed(7)) : 0;
@@ -440,6 +446,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     },
 
     deletePhoto: async (id: string) => {
+        const supabase = await getSupabase();
         const { data: { session } } = await supabase.auth.getSession();
         if (isPublicDemo || !session) {
             toast.info('공개 데모에서는 삭제 기능이 비활성화되어 있습니다.');
@@ -454,6 +461,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     },
 
     checkIsFavorite: async (userId: string, mediaId: number) => {
+        const supabase = await getSupabase();
         const { data } = await supabase
             .from('favorites')
             .select('*')
@@ -464,6 +472,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     },
 
     toggleFavoriteDB: async (userId: string, mediaId: number, isCurrentlyFavorite: boolean) => {
+        const supabase = await getSupabase();
         if (isCurrentlyFavorite) {
             const { error } = await supabase.from('favorites')
                 .delete()
@@ -499,6 +508,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                 return;
             }
 
+            const supabase = await getSupabase();
             const { data: { session } } = await supabase.auth.getSession();
 
             if (!session) {
@@ -522,6 +532,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
     updatePhotoCategory: async (id: string, newCategoryName: string) => {
         try {
+            const supabase = await getSupabase();
             const userId = await getUserId();
             let categoryId: number | null = null;
 
@@ -554,6 +565,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
     updatePhotoDescription: async (id: string, newDescription: string, newTitle?: string) => {
         try {
+            const supabase = await getSupabase();
             await getUserId(); // ensure logged in
             const finalDescription = newTitle ? `${newTitle}\n---\n${newDescription}` : newDescription;
 
@@ -585,6 +597,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
     batchDeletePhotos: async (ids: string[]) => {
         try {
+            const supabase = await getSupabase();
             await getUserId(); // ensure logged in
             const { error } = await supabase
                 .from('media')
@@ -605,6 +618,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
     batchMovePhotos: async (ids: string[], categoryName: string) => {
         try {
+            const supabase = await getSupabase();
             const userId = await getUserId();
             let categoryId: number | null = null;
             if (categoryName !== 'Uncategorized') {
@@ -651,6 +665,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
     batchDeleteCategories: async (names: string[]) => {
         try {
+            const supabase = await getSupabase();
             const userId = await getUserId();
             const { error } = await supabase
                 .from('category')

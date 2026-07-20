@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { missingSupabaseEnv, supabase } from '../lib/supabaseClient';
-import { Session, User } from '@supabase/supabase-js';
+import { getSupabase, missingSupabaseEnv } from '../lib/supabaseClient';
+import type { Session, User } from '@supabase/supabase-js';
 
 interface AuthStore {
     session: Session | null;
@@ -8,7 +8,7 @@ interface AuthStore {
     loading: boolean;
     isAdmin: boolean;
     signOut: () => Promise<void>;
-    _init: () => () => void; // 구독 해제 함수 반환
+    _init: () => () => void;
 }
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || '';
@@ -24,6 +24,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
             set({ session: null, user: null, isAdmin: false });
             return;
         }
+
+        const supabase = await getSupabase();
         await supabase.auth.signOut();
         set({ session: null, user: null, isAdmin: false });
     },
@@ -33,31 +35,38 @@ export const useAuthStore = create<AuthStore>((set) => ({
             set({ loading: false });
             return () => {};
         }
-        // 초기 세션 로드
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            const user = session?.user ?? null;
-            set({
-                session,
-                user,
-                isAdmin: user ? user.email === ADMIN_EMAIL : false,
-                loading: false,
+
+        let unsubscribe: (() => void) | null = null;
+
+        getSupabase().then((supabase) => {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                const user = session?.user ?? null;
+                set({
+                    session,
+                    user,
+                    isAdmin: user ? user.email === ADMIN_EMAIL : false,
+                    loading: false,
+                });
             });
+
+            const {
+                data: { subscription },
+            } = supabase.auth.onAuthStateChange((_event, session) => {
+                const user = session?.user ?? null;
+                set({
+                    session,
+                    user,
+                    isAdmin: user ? user.email === ADMIN_EMAIL : false,
+                    loading: false,
+                });
+            });
+
+            unsubscribe = () => subscription.unsubscribe();
+        }).catch((error) => {
+            console.error('Supabase auth init failed:', error);
+            set({ loading: false });
         });
 
-        // 인증 상태 변경 구독
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-            const user = session?.user ?? null;
-            set({
-                session,
-                user,
-                isAdmin: user ? user.email === ADMIN_EMAIL : false,
-                loading: false,
-            });
-        });
-
-        // cleanup 함수 반환
-        return () => subscription.unsubscribe();
+        return () => unsubscribe?.();
     },
 }));

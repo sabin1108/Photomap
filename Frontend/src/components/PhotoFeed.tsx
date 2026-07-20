@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, Calendar, Folder, CheckCircle2, Trash, Trash2, Move, X, MousePointer2, Heart } from 'lucide-react';
 import { cn } from './ui/utils';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -170,12 +169,7 @@ export function PhotoFeed({
   return (
     <div className={cn("p-4 md:p-10 h-full overflow-y-auto custom-scrollbar relative", className)} ref={parentRef}>
       {!hideHeader && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-8 flex justify-between items-end"
-        >
+        <div className="mb-8 flex justify-between items-end">
           <div>
             <h2 className="text-3xl font-light text-stone-800 mb-2">최근 추억들</h2>
             <div className="h-1 w-20 bg-[#E09F87] rounded-full opacity-60"></div>
@@ -190,7 +184,7 @@ export function PhotoFeed({
             {isSelectMode ? <X className="w-4 h-4" /> : <MousePointer2 className="w-4 h-4" />}
             {isSelectMode ? "취소" : "선택"}
           </Button>
-        </motion.div>
+        </div>
       )}
 
       {/* 아무 사진도 없을 때의 빈 상태 또는 로딩 상태 */}
@@ -327,14 +321,8 @@ export function PhotoFeed({
       )}
 
       {/* 플로팅 액션 바 */}
-      <AnimatePresence>
-        {!isReadOnlyDemo && isSelectMode && selectedIds.length > 0 && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-white/80 backdrop-blur-xl border border-stone-200 px-6 py-4 rounded-3xl shadow-2xl shadow-black/10"
-          >
+      {!isReadOnlyDemo && isSelectMode && selectedIds.length > 0 && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-white/80 backdrop-blur-xl border border-stone-200 px-6 py-4 rounded-3xl shadow-2xl shadow-black/10">
             <div className="flex items-center gap-2 mr-4 border-r border-stone-200 pr-4">
               <span className="w-8 h-8 rounded-full bg-[#E09F87] text-white flex items-center justify-center text-sm font-bold">
                 {selectedIds.length}
@@ -352,14 +340,8 @@ export function PhotoFeed({
                 이동
               </Button>
 
-              <AnimatePresence>
-                {isMoveMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: -80, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute bottom-full left-0 mb-4 bg-white border border-stone-200 rounded-2xl shadow-xl p-2 min-w-[160px] flex flex-col gap-1 z-[60]"
-                  >
+              {isMoveMenuOpen && (
+                  <div className="absolute bottom-full left-0 mb-4 -translate-y-20 bg-white border border-stone-200 rounded-2xl shadow-xl p-2 min-w-[160px] flex flex-col gap-1 z-[60]">
                     <p className="text-[10px] uppercase tracking-widest text-stone-400 px-3 py-1 font-bold">보관함 선택</p>
                     <button
                       onClick={() => handleBatchMove('Uncategorized')}
@@ -394,9 +376,8 @@ export function PhotoFeed({
                         Add
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
 
               <Button
                 variant="outline"
@@ -415,9 +396,8 @@ export function PhotoFeed({
             >
               <X className="w-5 h-5" />
             </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+                )}
 
       <PhotoModal.Root photo={currentPhoto} onClose={() => setSelectedPhoto(null)}>
         <PhotoModal.Image />
