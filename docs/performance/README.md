@@ -75,3 +75,23 @@ npm run perf:analyze -- --label issue-<issue> --before E:\memory\photomap\lightH
 ```
 
 The analysis note must explain the direction of change and the likely reason, even when the score gets worse or stays flat. For UI-only changes that do not affect the home route, still run `npm run build:perf` and record why Lighthouse is not representative.
+
+## Globe Frame Budget Toggles
+
+`GlobeView` supports measurement and quality/performance tuning through Vite environment variables:
+
+```text
+VITE_GLOBE_DEVICE_PIXEL_RATIO=1.5
+VITE_GLOBE_MAP_SAMPLES=8000
+VITE_GLOBE_MARKER_LIMIT=120
+VITE_GLOBE_MARKER_SIZE=0.045
+```
+
+Bounds are enforced in code:
+
+- `VITE_GLOBE_DEVICE_PIXEL_RATIO`: 1 to 2
+- `VITE_GLOBE_MAP_SAMPLES`: 4000 to 12000
+- `VITE_GLOBE_MARKER_LIMIT`: 20 to 300
+- `VITE_GLOBE_MARKER_SIZE`: 0.02 to 0.08
+
+For #13, keep viewport, server mode, and capture duration the same when comparing frame budget JSON.

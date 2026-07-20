@@ -4,7 +4,18 @@ import { useSpring } from 'motion/react';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { useFrameBudgetProbe } from '../lib/frameBudgetProfiler';
 
+const readNumberEnv = (key: string, fallback: number) => {
+  const raw = import.meta.env[key];
+  const value = raw ? Number(raw) : fallback;
+  return Number.isFinite(value) ? value : fallback;
+};
 
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const globeDevicePixelRatio = clamp(readNumberEnv('VITE_GLOBE_DEVICE_PIXEL_RATIO', 1.5), 1, 2);
+const globeMapSamples = Math.round(clamp(readNumberEnv('VITE_GLOBE_MAP_SAMPLES', 8000), 4000, 12000));
+const globeMarkerLimit = Math.round(clamp(readNumberEnv('VITE_GLOBE_MARKER_LIMIT', 120), 20, 300));
+const globeMarkerSize = clamp(readNumberEnv('VITE_GLOBE_MARKER_SIZE', 0.045), 0.02, 0.08);
 
 export function GlobeView() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -12,7 +23,6 @@ export function GlobeView() {
   const photos = usePhotoStore(state => state.photos);
   useFrameBudgetProbe('GlobeView:cobe-canvas');
 
-  // Motion/react spring 엔진 사용
   const r = useSpring(0, {
     mass: 1,
     stiffness: 280,
@@ -22,9 +32,10 @@ export function GlobeView() {
   const markers = useMemo(() => {
     return photos
       .filter(photo => typeof photo.lat === 'number' && typeof photo.lng === 'number' && Number.isFinite(photo.lat) && Number.isFinite(photo.lng))
+      .slice(0, globeMarkerLimit)
       .map(photo => ({
         location: [photo.lat!, photo.lng!] as [number, number],
-        size: 0.05
+        size: globeMarkerSize
       }));
   }, [photos]);
 
@@ -37,30 +48,30 @@ export function GlobeView() {
     onResize();
 
     const globe = createGlobe(canvasRef.current!, {
-      devicePixelRatio: 2,
-      width: width * 2,
-      height: width * 2,
+      devicePixelRatio: globeDevicePixelRatio,
+      width: width * globeDevicePixelRatio,
+      height: width * globeDevicePixelRatio,
       phi: 4.5,
       theta: 0.35,
       dark: 0,
       diffuse: 2,
-      mapSamples: 12000, // 최적화: 20000 -> 12000
+      mapSamples: globeMapSamples,
       mapBrightness: 8,
       baseColor: [0.98, 0.96, 0.91],
       markerColor: [1, 0.55, 0.45],
       glowColor: [1, 0.95, 0.8],
-      markers: markers,
+      markers,
       onRender: (state) => {
         state.phi = 4.5 + r.get();
-        state.width = width * 2;
-        state.height = width * 2;
+        state.width = width * globeDevicePixelRatio;
+        state.height = width * globeDevicePixelRatio;
       },
     });
 
     setTimeout(() => {
       if (canvasRef.current) canvasRef.current.style.opacity = '1';
     });
-    
+
     return () => {
       globe.destroy();
       window.removeEventListener('resize', onResize);
@@ -107,12 +118,12 @@ export function GlobeView() {
 
         <div className="absolute top-0 right-0 p-4 pointer-events-none opacity-70">
           <div className="rounded-full bg-white/70 px-3 py-1 text-[10px] font-medium text-stone-500 shadow-sm">
-            위치 표시 {markerCount}장
+            위치 표시 {markerCount}개
           </div>
         </div>
         {markerCount === 0 && (
           <div className="absolute inset-x-6 bottom-6 rounded-2xl bg-white/80 px-4 py-3 text-center text-xs text-stone-500 shadow-sm backdrop-blur-md">
-            위치 정보가 있는 사진이 로드되면 글로브에 표시됩니다.
+            위치 정보가 있는 사진을 로드하면 글로브에 표시합니다.
           </div>
         )}
       </div>
