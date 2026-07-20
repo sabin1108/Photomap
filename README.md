@@ -1,70 +1,66 @@
 # PhotoMap
 
-사진의 EXIF 위치/시간 데이터를 바탕으로 여행 기록을 지도, 3D 지구본, 타임라인, 앨범, 노드 그래프로 탐색하는 프론트엔드 중심 시각화 프로젝트입니다.
+PhotoMap is a public demo for exploring travel photos by place, time, albums, and relationships. The current demo is a read-only showcase: visitors can browse sample data without logging in, while upload, delete, edit, and admin workflows stay disabled in public mode.
 
-이 저장소는 포트폴리오 데모용으로 정리 중이며, 공개 데모는 안정적인 확인을 위해 **로그인 없는 read-only showcase** 형태로 운영합니다. 업로드, 삭제, 카테고리 수정, 관리자 기능은 구현 범위에는 포함되어 있지만 공개 데모에서는 비활성화합니다.
+## Project Snapshot
 
-## 프로젝트 정보
+- Development period: 2025.12 - 2026.04
+- Role: frontend architecture, Zustand state management, image rendering optimization, D3 visualization, Unity WebGL integration, deployment cleanup
+- Frontend: React, TypeScript, Vite, Zustand, Tailwind CSS, Radix UI
+- Visualization: Cobe 3D globe, D3 force graph, Mapbox/Unity WebGL map view
+- Data: Supabase PostgreSQL, Auth, Storage
+- Deployment target: Vercel
 
-- 개발 기간: 2025.12 ~ 2026.04
-- 팀 구성: Frontend 1명, DB/Supabase 1명, Unity 1명
-- 역할: 프론트엔드 구조 설계, Zustand 상태 관리, 대량 이미지 렌더링 최적화, D3 시각화, Unity WebGL 연동 화면 통합
+## Public Demo Status
 
-## 주요 기능
+As of 2026-07-20 KST, no publicly accessible production URL is verified.
 
-- EXIF 기반 사진 위치/시간 데이터 탐색
-- Supabase에 저장된 사진 메타데이터 조회
-- Cobe 기반 3D Globe View
-- Mapbox + Unity WebGL 기반 지도 시각화
-- D3.js 기반 관계 노드 그래프
-- 앨범/태그/위치 기반 탐색
-- `@tanstack/react-virtual` 기반 대량 사진 피드 가상화
-- 공개 데모용 local-only 좋아요 인터랙션
+- Repository homepage URL `https://photomap-beta.vercel.app` returns Vercel `DEPLOYMENT_NOT_FOUND`.
+- Latest GitHub production deployment target `https://photomap-7o4sqrn8d-sabins-projects-011c6dea.vercel.app` redirects to Vercel SSO instead of the app.
+- Do not use deployment Lighthouse results from these URLs as PhotoMap app performance claims.
 
-## 공개 데모 정책
+Issue #11 should be updated again after Vercel project access protection and alias settings are fixed.
 
-공개 데모는 면접관이나 포트폴리오 방문자가 프로젝트 성격을 빠르게 파악할 수 있도록 구성합니다.
+## Demo Behavior
 
-- 로그인 없이 접근
-- Supabase read 기반 샘플 데이터 사용
-- 업로드/삭제/수정 기능 비활성화
-- 좋아요는 브라우저 localStorage에만 저장
-- 성능 측정용 패널은 `VITE_SHOW_PERFORMANCE_MONITOR=true`일 때만 노출
-
-## 아키텍처
+Public demo mode is controlled by environment variables:
 
 ```text
-Frontend (Vite + React + TypeScript)
-  ├─ Zustand selector 기반 전역 상태 관리
-  ├─ @tanstack/react-virtual 기반 사진 피드 가상화
-  ├─ D3.js force simulation / DOM 직접 갱신
-  ├─ Cobe 3D globe
-  └─ Mapbox + Unity WebGL iframe integration
-
-Backend / BaaS
-  └─ Supabase PostgreSQL / Auth / Storage
+VITE_PUBLIC_DEMO=true
+VITE_DEMO_USER_ID=<read-only demo data owner user id>
 ```
 
-## 기술 스택
+In public demo mode:
 
-- Frontend: React, TypeScript, Vite, Zustand, Tailwind CSS, Radix UI
-- Visualization: D3.js, Cobe, Mapbox, Unity WebGL
-- Data: Supabase PostgreSQL, Supabase Storage
-- Performance: React Profiler, Lighthouse, frame budget probe, `@tanstack/react-virtual`
-- Deploy: Vercel
+- The app uses `VITE_DEMO_USER_ID` for read-only Supabase queries.
+- Login and signup are not required.
+- Upload, delete, category editing, and admin features are hidden or disabled.
+- Favorites are saved only in browser `localStorage`.
+- Performance monitor UI is hidden unless `VITE_SHOW_PERFORMANCE_MONITOR=true`.
 
-## 성능 개선 요약
+## Features
 
-포트폴리오와 이력서에 기재한 성능 수치는 React Profiler와 별도 성능 리포트 기준입니다.
+- EXIF-based photo location and time exploration
+- Supabase-backed photo metadata loading
+- Virtualized photo feed for larger collections
+- Cobe globe view with photo markers
+- Timeline, albums, favorites, map, and node graph views
+- Unity WebGL map integration
+- Read-only public demo guardrails
 
-- Context API 기반 전역 상태를 Zustand selector 구조로 전환하여 리렌더링 범위 축소
-- React Profiler 기준 커밋 시간 `9.7ms -> 6.2ms` 개선
-- D3 tick 좌표 업데이트를 React state 밖으로 분리하여 리렌더링 횟수 `370회 -> 25회` 수준으로 감소
-- 10,000건 이상 사진 탐색 시 DOM 노드를 약 200개 수준으로 유지하도록 가상화 적용
-- Globe/Map/Timeline/Node 등 무거운 화면은 route-level lazy loading 적용
-- Unity WebGL iframe의 loading lifecycle과 ready queue를 정리하고, cobe canvas frame budget export로 WebGL/canvas 지표 분리 측정
+## Performance Evidence
 
-## 실행 방법
+Performance artifacts are stored outside the repository under `E:\memory\photomap`.
+
+Current tracked baseline:
+
+- Issue #10 summary: `docs/performance/issue-10-baseline.md`
+- Full baseline note: `E:\memory\photomap\characteristic\2026-07-19-issue-10-baseline-record.md`
+- Dev/performance React Profiler baseline: `PhotomapApp` 11 commits, max `actualDuration` 28.4ms, average `actualDuration` 9.45ms
+
+The deployment Lighthouse artifacts collected for #10 are access-state evidence only because the URLs did not serve the public app.
+
+## Local Development
 
 ```powershell
 cd Frontend
@@ -72,16 +68,24 @@ npm install
 npm run dev
 ```
 
-프로덕션 빌드:
+Production build:
 
 ```powershell
 cd Frontend
 npm run build
 ```
 
-## 환경변수
+Performance build:
 
-`Frontend/.env` 또는 Vercel 환경변수에 설정합니다.
+```powershell
+cd Frontend
+npm run build:perf
+npm run preview:perf
+```
+
+## Environment Variables
+
+Set these in `Frontend/.env` for local work or in Vercel project settings for deployment. Do not commit actual values.
 
 ```text
 VITE_SUPABASE_URL=<Supabase project URL>
@@ -93,9 +97,13 @@ VITE_KAKAO_MAP_API_KEY=<Kakao REST API key>
 VITE_SHOW_PERFORMANCE_MONITOR=false
 ```
 
-기존 로그인/업로드 흐름을 개발 환경에서 확인하려면 `VITE_PUBLIC_DEMO=false`로 실행합니다.
+For authenticated local development, run with:
 
-## Vercel 배포 설정
+```text
+VITE_PUBLIC_DEMO=false
+```
+
+## Vercel Settings
 
 - Root Directory: `Frontend`
 - Framework Preset: Vite
@@ -103,13 +111,13 @@ VITE_SHOW_PERFORMANCE_MONITOR=false
 - Build Command: `npm run build`
 - Output Directory: `build`
 
-`Frontend/vercel.json`은 Unity WebGL의 Brotli/WASM 응답 헤더를 설정합니다.
+`Frontend/vercel.json` configures response headers for Unity WebGL Brotli and WASM assets.
 
-## Supabase 데모 데이터 조건
+## Supabase Demo Data Requirements
 
-로그인 없는 공개 데모를 위해 Supabase에는 `VITE_DEMO_USER_ID`에 해당하는 샘플 데이터가 있어야 합니다.
+The public demo requires read-only rows owned by `VITE_DEMO_USER_ID`.
 
-필요 테이블:
+Required tables:
 
 - `media`
 - `location`
@@ -117,10 +125,4 @@ VITE_SHOW_PERFORMANCE_MONITOR=false
 - `media_description`
 - `favorites` optional
 
-공개 데모에서는 클라이언트가 `VITE_DEMO_USER_ID` 기준으로 read query를 수행합니다. RLS를 사용하는 경우 anon role이 해당 데모 사용자 row만 select할 수 있도록 정책을 제한해야 합니다.
-
-## 협업 및 업무 분담
-
-- 민사빈: 프론트엔드 아키텍처, Zustand 상태 관리, 렌더링 가상화, D3 시각화, Vercel 배포 정리
-- DB 담당: Supabase schema, RLS 정책, 데이터 연동
-- Unity 담당: Unity WebGL 시각화 모듈 및 에셋 관리
+If Row Level Security is enabled, anon access must be limited to the intended demo rows only.
