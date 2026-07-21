@@ -94,7 +94,12 @@ export function PhotoFeed({
     return photos.filter(p => p.category === filterCategory || p.tags.includes(filterCategory));
   }, [photos, filterCategory]);
 
-  const rowCount = Math.ceil(displayPhotos.length / columns);
+  const effectiveColumns = useMemo(() => {
+    if (displayPhotos.length === 0 || displayPhotos.length > columns * 2) return columns;
+    return Math.max(2, Math.min(columns, Math.ceil(displayPhotos.length / 3)));
+  }, [columns, displayPhotos.length]);
+
+  const rowCount = Math.ceil(displayPhotos.length / effectiveColumns);
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
@@ -197,8 +202,8 @@ export function PhotoFeed({
         ) : isLoading ? (
           <div className="space-y-4">
             <p className="text-sm text-stone-500">사진을 불러오는 중입니다.</p>
-            <div className="grid w-full" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
-              {Array.from({ length: columns * 3 }).map((_, i) => (
+            <div className="grid w-full" style={{ gridTemplateColumns: `repeat(${effectiveColumns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
+              {Array.from({ length: effectiveColumns * 3 }).map((_, i) => (
                 <div key={i} className="aspect-square bg-stone-200 animate-pulse rounded-lg" />
               ))}
             </div>
@@ -223,18 +228,18 @@ export function PhotoFeed({
                 className="absolute top-0 left-0 w-full grid"
                 style={{
                   transform: `translateY(${virtualRow.start}px)`,
-                  gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                  gridTemplateColumns: `repeat(${effectiveColumns}, minmax(0, 1fr))`,
                   gap: `${gap}px`
                 }}
               >
-                {Array.from({ length: columns }).map((_, colIndex) => {
-                  const photoIndex = virtualRow.index * columns + colIndex;
+                {Array.from({ length: effectiveColumns }).map((_, colIndex) => {
+                  const photoIndex = virtualRow.index * effectiveColumns + colIndex;
                   const photo = displayPhotos[photoIndex];
 
                   if (!photo) return <div key={`empty-${colIndex}`} />;
 
                   const isSelected = selectedIds.includes(photo.id);
-                  const isAboveTheFold = photoIndex < columns * 2;
+                  const isAboveTheFold = photoIndex < effectiveColumns * 2;
                   return (
                     <div
                       key={photo.id}
