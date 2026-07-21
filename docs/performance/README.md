@@ -21,6 +21,46 @@ npm run perf:lighthouse -- --issue 5 --view home --url http://127.0.0.1:4173/
 
 React Profiler is enabled only in `performance` mode. Normal `npm run build` does not collect profiler data.
 
+## Public Vercel Baseline
+
+Use `https://photomap-three.vercel.app/` for deployed-app Lighthouse comparisons after an issue is completed.
+
+Current baseline, measured on 2026-07-21 from three Lighthouse runs:
+
+- Raw reports:
+  - `E:\memory\photomap\lightHouse\issue-vercel-baseline-2026-07-21-run1-home.report.report.json`
+  - `E:\memory\photomap\lightHouse\issue-vercel-baseline-2026-07-21-run2-home.report.report.json`
+  - `E:\memory\photomap\lightHouse\issue-vercel-baseline-2026-07-21-run3-home.report.report.json`
+- Median Performance: 86
+- Median FCP: 1447 ms
+- Median LCP: 3860 ms
+- Median TBT: 137 ms
+- Median CLS: 0.005175
+- Median Speed Index: 3032 ms
+- Median TTI: 4076 ms
+- Median total byte weight: 360 KiB
+
+After each issue lands on Vercel, run Lighthouse against the public URL at least three times and compare the median against this baseline. Report score deltas in points, and timing/payload deltas as percentages:
+
+```powershell
+cd Frontend
+npm run perf:lighthouse -- --issue <issue>-vercel-run1 --view home --url https://photomap-three.vercel.app/
+npm run perf:lighthouse -- --issue <issue>-vercel-run2 --view home --url https://photomap-three.vercel.app/
+npm run perf:lighthouse -- --issue <issue>-vercel-run3 --view home --url https://photomap-three.vercel.app/
+```
+
+Use this formula for metrics where lower is better, such as LCP, TBT, Speed Index, TTI, and bytes:
+
+```text
+improvement_percent = (baseline_median - new_median) / baseline_median * 100
+```
+
+Use this formula for Lighthouse Performance score:
+
+```text
+score_delta_points = new_median - baseline_median
+```
+
 ## React Profiler Export
 
 Run the target flow in performance preview, then browser console:
