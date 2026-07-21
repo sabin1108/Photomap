@@ -61,6 +61,41 @@ Use this formula for Lighthouse Performance score:
 score_delta_points = new_median - baseline_median
 ```
 
+## Meaningful User-Perceived Targets
+
+Do not treat percentage improvement or Core Web Vitals pass/fail alone as success. LCP at 2500 ms is a web-wide quality threshold, not proof that the user no longer feels a wait.
+
+Use three bands for loading work:
+
+- Meaningful user-perceived target: primary content appears in 1000 ms or less. This is the range where users can keep flow and do not feel they are waiting on navigation.
+- Strong improvement target: primary content appears in 1500 ms or less. This is still not instant, but it is closer to the human-perception range and is harder than the web-wide Core Web Vitals threshold.
+- Minimum quality gate: LCP at or below 2500 ms. This clears the Core Web Vitals good threshold, but it should not be described as eliminating waiting.
+- Abandonment-risk gate: keep mobile loading below 3000 ms where possible. Google-published guidance says many mobile visits are abandoned after about this range.
+- Poor-experience gate: LCP above 4000 ms is poor and must be treated as user-visible waiting.
+
+For Photomap public Vercel measurements, call an optimization meaningful only when it satisfies one of these:
+
+- It moves Vercel median LCP to 1500 ms or lower.
+- It moves Vercel median LCP below 3000 ms and removes at least 1000 ms from the current baseline.
+- It moves Vercel median LCP below 2500 ms and the UI no longer shows a blank/spinner-dominant first view.
+- It reduces a measured interaction delay to 200 ms or lower, with 100 ms as the direct-manipulation stretch target.
+
+Current Vercel baseline from 2026-07-21 is median LCP 3860 ms. Therefore:
+
+- 3860 ms to 2500 ms is a useful Core Web Vitals improvement, but still a wait.
+- 3860 ms to below 3000 ms is meaningful only if at least 1000 ms is removed and the first view has real content.
+- 3860 ms to 1500 ms or lower is the user-perceived target for this app.
+- 3860 ms to 1000 ms or lower is the stretch target where navigation starts to feel flow-preserving.
+
+References:
+
+- `https://web.dev/articles/defining-core-web-vitals-thresholds`
+- `https://web.dev/articles/lcp`
+- `https://web.dev/articles/inp`
+- `https://developers.google.com/search/docs/appearance/core-web-vitals`
+- `https://support.google.com/adsense/answer/7450973`
+- `https://jakobnielsenphd.substack.com/p/time-scale-ux`
+
 ## React Profiler Export
 
 Run the target flow in performance preview, then browser console:

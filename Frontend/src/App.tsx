@@ -51,10 +51,8 @@ export default function App() {
   const showPerformanceMonitor = import.meta.env.VITE_SHOW_PERFORMANCE_MONITOR === 'true';
 
   useEffect(() => {
-    const requestIdle = window.requestIdleCallback ?? ((callback: IdleRequestCallback) => window.setTimeout(callback, 1200));
-    const cancelIdle = window.cancelIdleCallback ?? window.clearTimeout;
-    const idleId = requestIdle(() => setShouldRenderGlobe(true), { timeout: 1800 });
-    return () => cancelIdle(idleId);
+    const globeDelayId = window.setTimeout(() => setShouldRenderGlobe(true), 4500);
+    return () => window.clearTimeout(globeDelayId);
   }, []);
   useEffect(() => {
     if (!isPublicDemo && !loading && activeCategory === 'admin' && !isAdmin) {
