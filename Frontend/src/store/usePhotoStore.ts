@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Photo, DBMedia } from '../type';
 import { getSupabase } from '../lib/supabaseClient';
 import { isPublicDemo, localFavoriteStorageKey } from '../lib/demoConfig';
+import { publicDemoSeedPhotos } from '../lib/demoSeedPhotos';
 import { toast } from 'sonner';
 
 interface PhotoStore {
@@ -135,7 +136,14 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         if (get().isInitialized && get().currentUserId === userId) return;
 
         console.log(`🔄 [PhotoStore] Initializing for user: ${userId}`);
-        set({ isInitialized: true, isLoading: true, loadError: null, currentUserId: userId, photos: [], categories: [] });
+        set({
+            isInitialized: true,
+            isLoading: true,
+            loadError: null,
+            currentUserId: userId,
+            photos: isPublicDemo ? publicDemoSeedPhotos : [],
+            categories: []
+        });
 
         await Promise.all([
             get().fetchCategories(userId),
