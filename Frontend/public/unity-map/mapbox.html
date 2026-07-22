@@ -267,9 +267,22 @@
 
             map.on('style.load', () => {
                 map.setFog({ 'color': 'rgb(186, 210, 235)', 'high-color': 'rgb(36, 92, 223)', 'horizon-blend': 0.02, 'space-color': 'rgb(11, 11, 25)', 'star-intensity': 0.6 });
+                if (rawDBData.length > 0) applyMapMode();
             });
 
-            map.on('render', updateMarkersRealtime);
+                        let pendingMarkerUpdate = false;
+            function scheduleMarkerUpdate() {
+                if (pendingMarkerUpdate) return;
+                pendingMarkerUpdate = true;
+                requestAnimationFrame(() => {
+                    pendingMarkerUpdate = false;
+                    updateMarkersRealtime();
+                });
+            }
+            map.on('idle', scheduleMarkerUpdate);
+            map.on('moveend', scheduleMarkerUpdate);
+            map.on('zoomend', scheduleMarkerUpdate);
+            map.on('sourcedata', scheduleMarkerUpdate);
             map.on('move', () => { updateUnityPosition(); handleMapInteraction(); });
             map.on('zoom', () => { updateUnityPosition(); handleMapInteraction(); });
             map.on('mousedown', () => closeUnity());
@@ -333,7 +346,9 @@
                                     const urls = (leaf.properties.urls || "").split('|').filter(Boolean);
                                     allUrls = allUrls.concat(urls);
                                 });
-                                showUnity('cluster_' + feature.properties.cluster_id, coords[0], coords[1], allUrls);
+                                const firstLeaf = leaves.find(l => l.geometry && l.geometry.coordinates);
+                                const targetCoords = firstLeaf ? firstLeaf.geometry.coordinates : coords;
+                                showUnity('cluster_' + feature.properties.cluster_id, targetCoords[0], targetCoords[1], allUrls);
                             });
                         });
                     }
@@ -424,7 +439,7 @@
         }
 
         function showUnity(id, lng, lat, photoUrls) {
-            if (!myUnityInstance) return;
+            const unityReady = !!myUnityInstance;
             activeMarkerLngLat = [lng, lat];
             updateUnityPosition();
 
@@ -434,9 +449,11 @@
                     center: [lng, lat],
                     zoom: 17,
                     essential: true,
-                    duration: 1000 // 1초간 빠르게 확대
+                    duration: 1800 // 클릭한 사진 위치로 부드럽게 이동
                 });
             }
+
+            if (!unityReady) return;
 
             const urlString = photoUrls.filter(u => u).join('|');
 

@@ -5,6 +5,7 @@ import { Search, Settings2, Edit2, Trash2, X, MapPin } from 'lucide-react';
 import { cn } from './ui/utils';
 import { Drawer } from 'vaul';
 import type { Photo } from '../type';
+import { getPhotoImageUrl } from '../lib/imageUrl';
 
 interface Map2DViewProps {
   onNavigate?: (view: string) => void;
@@ -52,6 +53,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
 
   const mapPhotos = useMemo(() => filteredPhotos.filter(hasValidCoordinates), [filteredPhotos]);
   const photosWithoutCoordinates = filteredPhotos.length - mapPhotos.length;
+  const previewPhotos = useMemo(() => mapPhotos.slice(0, 6), [mapPhotos]);
 
   const buildIframePayload = useCallback(() => ({
     markers: mapPhotos,
@@ -81,7 +83,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   }, []);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setShouldLoadIframe(true), 0);
+    const timer = window.setTimeout(() => setShouldLoadIframe(true), 250);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -112,9 +114,14 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
 
     sendUpdate();
 
+    const retryTimers = [250, 1000, 2500].map(delay => window.setTimeout(sendUpdate, delay));
+
     // iframe 초기화 타이밍 차이를 흡수하기 위해 마지막 payload만 1회 재전송
-    const timer = setTimeout(sendUpdate, 1000);
-    return () => clearTimeout(timer);
+    const timer = window.setTimeout(sendUpdate, 1000);
+    return () => {
+      window.clearTimeout(timer);
+      retryTimers.forEach(window.clearTimeout);
+    };
   }, [buildIframePayload, isIframeReady, postIframePayload]);
 
   return (
@@ -278,7 +285,28 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
       </div>
 
       {/* Unity + Mapbox Iframe 영역 */}
-      <div className="flex-1 relative w-full h-full bg-[#EBE6DA]">
+      <div className="flex-1 relative w-full h-full bg-[#EBE6DA]">        {!isIframeReady && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#EBE6DA]">
+            <div className="w-full max-w-xl px-6">
+              <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-stone-600">
+                <MapPin className="h-4 w-4 text-[#E09F87]" />
+                <span>지도 준비 중 · 사진 위치 {mapPhotos.length}개</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 overflow-hidden rounded-2xl border border-white/70 bg-white/70 p-2 shadow-sm">
+                {previewPhotos.map(photo => (
+                  <img
+                    key={photo.id}
+                    src={getPhotoImageUrl(photo, "thumb")}
+                    alt={photo.title || "지도 사진 미리보기"}
+                    className="aspect-square w-full rounded-xl object-cover bg-stone-200"
+                    loading="eager"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <iframe
           ref={iframeRef}
           src={shouldLoadIframe ? "/unity-map/index.html" : "about:blank"}
@@ -286,7 +314,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
           className="w-full h-full border-none outline-none"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
-          loading="lazy"
+          loading="eager"
         />
       </div>
     </div>
