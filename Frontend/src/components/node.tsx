@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { zoom, } from 'd3-zoom';
 import { select } from 'd3-selection';
 import { usePhotoStore } from '../store/usePhotoStore';
@@ -78,8 +78,25 @@ export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean 
     }, []);
 
     const isTagMode = !selectedTag;
-    const tagsList = Array.from(new Set(photos.flatMap(p => p.tags || []).filter(t => t && t.trim() !== '')));
-    const displayTags = isTagMode ? tagsList.slice(0, maxTags) : [];
+    const tagsList = useMemo(() => {
+        const tagCounts = new Map<string, number>();
+
+        photos.forEach(photo => {
+            new Set((photo.tags || []).map(tag => tag.trim()).filter(Boolean)).forEach(tag => {
+                tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+            });
+        });
+
+        return Array.from(tagCounts)
+            .sort(([tagA, countA], [tagB, countB]) =>
+                countB - countA || tagA.localeCompare(tagB, 'ko')
+            )
+            .map(([tag]) => tag);
+    }, [photos]);
+    const displayTags = useMemo(
+        () => isTagMode ? tagsList.slice(0, maxTags) : [],
+        [isTagMode, maxTags, tagsList]
+    );
 
     //D3 물리 엔진을 Custom Hook으로 완전 분리 호출하여 코드 대폭 감축
     const { simData, simRef } = useForceSimulation({

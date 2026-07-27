@@ -182,7 +182,7 @@ export function useForceSimulation({
         });
 
         return () => { sim.stop(); };
-    }, [photos, isTagMode, selectedTag, selectedLocation, maxRadius, animationKey]);
+    }, [photos, isTagMode, displayTags, selectedTag, selectedLocation, maxRadius, animationKey]);
 
     return { simData, simRef };
 }
