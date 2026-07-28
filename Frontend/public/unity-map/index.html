@@ -213,9 +213,11 @@
         let sourceDateMap = {};
         let currentMode = "MAP";
         let hasFlown = false;
+        let isMapStyleReady = false;
         let myUnityInstance = null;
         let activeMarkerLngLat = null;
         let lastCaptureTime = 0;
+        let pendingFocusPhoto = null;
 
         const container = document.querySelector("#unity-container");
         const canvas = document.querySelector("#unity-canvas");
@@ -260,10 +262,18 @@
                 const photos = event.data.data;
                 console.log("📥 [Iframe] Updating markers:", photos.length, "photos");
                 rawDBData = photos;
-                if (map && map.isStyleLoaded()) {
+                if (map && isMapStyleReady) {
                     applyMapMode();
                 } else if (map) {
                     map.once('style.load', () => applyMapMode());
+                }
+            }
+
+            if (event.data.type === 'FOCUS_PHOTO') {
+                pendingFocusPhoto = event.data.data;
+
+                if (map) {
+                    focusPhotoOnMap(pendingFocusPhoto);
                 }
             }
         });
@@ -307,6 +317,7 @@
 
             map.on('style.load', () => {
                 console.log("🎨 [Iframe] Map style loaded.");
+                isMapStyleReady = true;
                 map.setFog({ 'color': 'rgb(186, 210, 235)', 'high-color': 'rgb(36, 92, 223)', 'horizon-blend': 0.02, 'space-color': 'rgb(11, 11, 25)', 'star-intensity': 0.6 });
                 if (rawDBData.length > 0) applyMapMode();
 
@@ -406,7 +417,8 @@
                                 });
                                 const firstLeaf = leaves.find(l => l.geometry && l.geometry.coordinates);
                                 const targetCoords = firstLeaf ? firstLeaf.geometry.coordinates : coords;
-                                showUnity(markerKey, targetCoords[0], targetCoords[1], urls);
+                                const selectedId = firstLeaf ? firstLeaf.properties.id : markerKey;
+                                showUnity(selectedId, targetCoords[0], targetCoords[1], urls);
                             });
                         };
                     } else {
@@ -470,21 +482,9 @@
             map.addLayer({ id: `inv-cluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['has', 'point_count'], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
             map.addLayer({ id: `inv-uncluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
 
-            // 최초 로딩 시 랜덤 사진으로 비행
+            // 최초 진입은 목록의 대표 사진 위치로 이동한다.
             if (rawDBData.length > 0 && !hasFlown) {
-                const randomPhoto = rawDBData[Math.floor(Math.random() * rawDBData.length)];
-                const lng = randomPhoto.lng || randomPhoto.lon || 0;
-                const lat = randomPhoto.lat || 0;
-                if (lng !== 0 || lat !== 0) {
-                    console.log("✈️ [Iframe] Flying to random photo:", [lng, lat]);
-                    map.flyTo({
-                        center: [lng, lat],
-                        zoom: 12,
-                        essential: true,
-                        duration: 1600 // 초기 사진 위치로 빠르게 이동
-                    });
-                    hasFlown = true;
-                }
+                focusPhotoOnMap(pendingFocusPhoto || rawDBData[0]);
             }
         }
 
@@ -512,20 +512,34 @@
             container.style.left = pos.x + "px"; container.style.top = pos.y + "px";
         }
 
+        function focusPhotoOnMap(photo, zoom = 12) {
+            if (!photo || !map) return;
+
+            const lng = Number(photo.lng ?? photo.lon);
+            const lat = Number(photo.lat);
+            if (!Number.isFinite(lng) || !Number.isFinite(lat) || (lng === 0 && lat === 0)) return;
+
+            pendingFocusPhoto = null;
+            hasFlown = true;
+            map.flyTo({
+                center: [lng, lat],
+                zoom,
+                essential: true,
+                duration: zoom > 12 ? 1800 : 1600
+            });
+            window.parent.postMessage({
+                type: 'PHOTO_FOCUSED',
+                data: { id: photo.id, lng, lat }
+            }, '*');
+        }
+
         function showUnity(id, lng, lat, photoUrls) {
             const unityReady = !!myUnityInstance;
             activeMarkerLngLat = [lng, lat];
             updateUnityPosition();
 
             // 1. 클릭 시 마커 위치로 줌인 (Focus)
-            if (map) {
-                map.flyTo({
-                    center: [lng, lat],
-                    zoom: 17,
-                    essential: true,
-                    duration: 1800 // 클릭한 사진 위치로 부드럽게 이동
-                });
-            }
+            focusPhotoOnMap({ id, lng, lat }, 17);
 
             if (!unityReady) return;
 

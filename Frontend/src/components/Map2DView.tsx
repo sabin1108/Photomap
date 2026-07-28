@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { useShallow } from 'zustand/react/shallow';
-import { Search, Settings2, Edit2, Trash2, X, MapPin } from 'lucide-react';
+import { Search, Settings2, Edit2, Trash2, X, MapPin, Eye } from 'lucide-react';
 import { cn } from './ui/utils';
 import { Drawer } from 'vaul';
 import type { Photo } from '../type';
 import { getPhotoImageUrl } from '../lib/imageUrl';
+import { PhotoModal } from './ui/photo-modal';
 
 interface Map2DViewProps {
   onNavigate?: (view: string) => void;
@@ -26,6 +27,9 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   const [categorySearch, setCategorySearch] = useState('');
   const [isIframeReady, setIsIframeReady] = useState(false);
   const [shouldLoadIframe, setShouldLoadIframe] = useState(false);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
+  const [detailPhoto, setDetailPhoto] = useState<Photo | null>(null);
+  const [focusStatus, setFocusStatus] = useState<'waiting' | 'moving' | 'focused'>('waiting');
 
   const { photos, categories } = usePhotoStore(
     useShallow(state => ({ photos: state.photos, categories: state.categories }))
@@ -37,6 +41,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
     markers: Photo[];
     config: Record<string, string | undefined>;
   } | null>(null);
+  const pendingFocusPhotoRef = useRef<Photo | null>(null);
 
   const filteredPhotos = useMemo(() => photos.filter(photo => {
     const matchesSearch = searchKeyword === '' ||
@@ -53,7 +58,11 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
 
   const mapPhotos = useMemo(() => filteredPhotos.filter(hasValidCoordinates), [filteredPhotos]);
   const photosWithoutCoordinates = filteredPhotos.length - mapPhotos.length;
-  const previewPhotos = useMemo(() => mapPhotos.slice(0, 6), [mapPhotos]);
+  const previewPhotos = useMemo(() => mapPhotos.slice(0, 8), [mapPhotos]);
+  const selectedPhoto = useMemo(
+    () => mapPhotos.find(photo => photo.id === selectedPhotoId) ?? mapPhotos[0] ?? null,
+    [mapPhotos, selectedPhotoId]
+  );
 
   const buildIframePayload = useCallback(() => ({
     markers: mapPhotos,
@@ -82,6 +91,19 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
     return true;
   }, []);
 
+  const postPhotoFocus = useCallback((photo: Photo) => {
+    const target = iframeRef.current?.contentWindow;
+    if (!target) return false;
+
+    target.postMessage({
+      type: 'FOCUS_PHOTO',
+      data: { id: photo.id, lat: photo.lat, lng: photo.lng }
+    }, '*');
+
+    setFocusStatus('moving');
+    return true;
+  }, []);
+
   useEffect(() => {
     const timer = window.setTimeout(() => setShouldLoadIframe(true), 250);
     return () => window.clearTimeout(timer);
@@ -90,8 +112,20 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   // iframe 메시지 수신
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      if (event.source !== iframeRef.current?.contentWindow) return;
+
       if (event.data.type === 'IFRAME_READY') {
         setIsIframeReady(true);
+      }
+
+      if (event.data.type === 'PHOTO_FOCUSED') {
+        setSelectedPhotoId(String(event.data.data.id));
+        setFocusStatus('focused');
+      }
+
+      if (event.data.type === 'MAP_PHOTO_SELECTED') {
+        setSelectedPhotoId(String(event.data.data.id));
+        setFocusStatus('focused');
       }
     };
     window.addEventListener('message', handleMessage);
@@ -123,6 +157,24 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
       retryTimers.forEach(window.clearTimeout);
     };
   }, [buildIframePayload, isIframeReady, postIframePayload]);
+
+  useEffect(() => {
+    const pendingPhoto = pendingFocusPhotoRef.current;
+    if (!isIframeReady || !pendingPhoto) return;
+
+    if (postPhotoFocus(pendingPhoto)) {
+      pendingFocusPhotoRef.current = null;
+    }
+  }, [isIframeReady, postPhotoFocus]);
+
+  const handlePreviewFocus = useCallback((photo: Photo) => {
+    setSelectedPhotoId(photo.id);
+    pendingFocusPhotoRef.current = photo;
+
+    if (isIframeReady && postPhotoFocus(photo)) {
+      pendingFocusPhotoRef.current = null;
+    }
+  }, [isIframeReady, postPhotoFocus]);
 
   return (
     <div className="w-full h-full relative bg-[#F5F2EB] overflow-hidden flex flex-col">
@@ -285,24 +337,12 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
       </div>
 
       {/* Unity + Mapbox Iframe 영역 */}
-      <div className="flex-1 relative w-full h-full bg-[#EBE6DA]">        {!isIframeReady && (
+      <div className="flex-1 relative w-full h-full bg-[#EBE6DA]">
+        {!isIframeReady && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#EBE6DA]">
-            <div className="w-full max-w-xl px-6">
-              <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-stone-600">
-                <MapPin className="h-4 w-4 text-[#E09F87]" />
-                <span>지도 준비 중 · 사진 위치 {mapPhotos.length}개</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 overflow-hidden rounded-2xl border border-white/70 bg-white/70 p-2 shadow-sm">
-                {previewPhotos.map(photo => (
-                  <img
-                    key={photo.id}
-                    src={getPhotoImageUrl(photo, "thumb")}
-                    alt={photo.title || "지도 사진 미리보기"}
-                    className="aspect-square w-full rounded-xl object-cover bg-stone-200"
-                    loading="eager"
-                  />
-                ))}
-              </div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-stone-600">
+              <MapPin className="h-4 w-4 text-[#E09F87]" />
+              <span>지도 준비 중 · 사진 위치 {mapPhotos.length}개</span>
             </div>
           </div>
         )}
@@ -317,6 +357,79 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
           loading="eager"
         />
       </div>
+
+      {previewPhotos.length > 0 && (
+        <section
+          data-testid="map-photo-preview-list"
+          aria-label="지도 사진 미리보기"
+          className="pointer-events-auto absolute bottom-20 left-3 right-3 z-[30] rounded-3xl border border-white/70 bg-white/90 p-3 shadow-xl backdrop-blur-xl md:bottom-5 md:left-6 md:right-6"
+        >
+          <div className="mb-2 flex items-center justify-between gap-3 px-1">
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-stone-700">
+                {selectedPhoto?.title || '사진 위치 탐색'}
+              </p>
+              <p
+                data-testid="map-focus-status"
+                aria-live="polite"
+                className="truncate text-[11px] text-stone-500"
+              >
+                {focusStatus === 'focused'
+                  ? '지도 이동 완료'
+                  : focusStatus === 'moving'
+                    ? '선택한 사진 위치로 이동 중'
+                    : '대표 사진 위치를 찾는 중'}
+                {selectedPhoto?.location ? ` · ${selectedPhoto.location}` : ''}
+              </p>
+            </div>
+            {selectedPhoto && (
+              <button
+                type="button"
+                onClick={() => setDetailPhoto(selectedPhoto)}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-stone-800 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-stone-700"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                사진 상세 보기
+              </button>
+            )}
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {previewPhotos.map(photo => {
+              const isSelected = selectedPhoto?.id === photo.id;
+              return (
+                <button
+                  key={photo.id}
+                  type="button"
+                  aria-label={`${photo.title || '제목 없는 사진'} 위치로 이동`}
+                  aria-pressed={isSelected}
+                  onClick={() => handlePreviewFocus(photo)}
+                  className={cn(
+                    'relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border-2 bg-stone-200 transition-all md:h-20 md:w-20',
+                    isSelected
+                      ? 'border-[#E09F87] ring-2 ring-[#E09F87]/25'
+                      : 'border-white hover:border-stone-300'
+                  )}
+                >
+                  <img
+                    src={getPhotoImageUrl(photo, 'thumb')}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <PhotoModal.Root photo={detailPhoto} onClose={() => setDetailPhoto(null)}>
+        <PhotoModal.Image />
+        <PhotoModal.Panel>
+          <PhotoModal.Header />
+          <PhotoModal.Metadata isReadOnly={isReadOnlyDemo} />
+        </PhotoModal.Panel>
+      </PhotoModal.Root>
     </div>
   );
 }

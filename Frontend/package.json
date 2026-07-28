@@ -67,6 +67,7 @@
             "zustand": "^5.0.12"
       },
       "devDependencies": {
+            "@playwright/test": "^1.62.0",
             "@types/node": "^20.10.0",
             "@types/react": "^19.2.7",
             "@types/react-dom": "^19.2.3",
@@ -79,6 +80,7 @@
       },
       "scripts": {
             "dev": "vite --port 3000",
+            "test:map": "playwright test tests/map-flow.spec.js",
             "build": "vite build",
             "build:perf": "vite build --mode performance",
             "preview": "vite preview --host 127.0.0.1 --port 4173",
