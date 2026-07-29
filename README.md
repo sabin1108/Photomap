@@ -38,7 +38,7 @@ PhotoMap은 사진을 단순히 저장하는 것을 넘어, 사진에 포함된 
 - **팀 구성**: 3인 (Frontend 1명, DB/Supabase 1명, Unity 1명)
 - **담당 역할**: 프론트엔드 아키텍처 설계, Zustand 상태 관리, 이미지 렌더링 최적화, D3 시각화, Unity WebGL 연동, Vercel 배포 정리
 - **배포 대상**: Vercel
-- **현재 데모 상태**: 2026-07-20 KST 기준, 공개 접근 가능한 production URL은 아직 검증되지 않았습니다.
+- **현재 데모 상태**: 2026-07-29 KST 기준 [production 공개 데모](https://photomap-three.vercel.app/) 배포 및 read-only 탐색 흐름 검증 완료
 
 ## 아키텍처 개요
 
@@ -89,7 +89,10 @@ Backend / BaaS
 
 - Unity WebGL 기반 사진 확대 및 호버 인터랙션
 - Mapbox API 기반 3D 지도 시각화
-- iframe 준비 상태와 marker/config payload 전송 순서를 분리해 초기 race condition 완화
+- 지도 탭 첫 진입 시 대표 사진 위치로 자동 이동
+- 지도 주변 상시 사진 미리보기와 선택 사진 위치 `flyTo` 연결
+- 미리보기에서 read-only 사진 상세 화면 확인
+- iframe 준비, Mapbox style 준비, source 로딩 상태를 분리해 초기·반복 선택 race condition 방지
 
 ### 4. 그래프 뷰
 
@@ -136,6 +139,14 @@ D3 물리 시뮬레이션 중 좌표 변경을 React state로 반복 반영하�
 ### Vercel LCP 발견 지연 개선
 
 2026-07-21 Vercel 측정에서 LCP 이미지가 초기 HTML에서 늦게 발견되는 문제가 확인되어 Supabase media origin `preconnect`, LCP 이미지 preload, public demo seed 사진을 추가했습니다. 측정 기록 기준 median LCP는 `3860ms -> 3280ms`로 개선되었지만, 목표인 `2500ms` 이하에는 아직 도달하지 않아 추가 개선 대상으로 남겨두었습니다.
+
+### 지도 탐색 흐름 성능 검증
+
+Issue #17 지도 미리보기와 위치 이동 복구 후 동일 Vercel URL에서 측정했습니다.
+
+- Lighthouse Performance `89 -> 92`, LCP `3585ms -> 3312ms`, TBT `36ms -> 25ms`, Speed Index `2894ms -> 2064ms`
+- performance-mode React Profiler 16 commits 동일, 평균 `actualDuration` `3.99ms -> 3.84ms`
+- 지도 화면은 lazy chunk로 유지했으며 `npm run test:map`으로 대표 위치 이동, 미리보기 선택 이동, 상세 확인 흐름을 production에서 검증
 
 ### 성능 근거 관리
 
@@ -192,6 +203,13 @@ npm run build
 cd Frontend
 npm run build:perf
 npm run preview:perf
+```
+
+지도 탐색 회귀 테스트:
+
+```powershell
+cd Frontend
+npm run test:map
 ```
 
 ## 환경변수
