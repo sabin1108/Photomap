@@ -267,7 +267,7 @@ const CustomDateTimePicker = React.memo(function CustomDateTimePicker({
 });
 CustomDateTimePicker.displayName = "CustomDateTimePicker";
 
-export type UploadItem = {
+type UploadItem = {
   file: File;
   preview: string;
   exif: { lat?: number, lng?: number, takeTime?: string };

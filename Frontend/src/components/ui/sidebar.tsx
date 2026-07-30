@@ -7,7 +7,7 @@ const SidebarContext = React.createContext<{ isOpen: boolean; setIsOpen: (o: boo
   setIsOpen: () => { },
 });
 
-export function Root({
+function Root({
   isOpen,
   setIsOpen,
   children,
@@ -42,7 +42,7 @@ export function Root({
   );
 }
 
-export function Header({ title, subtitle }: { title: string; subtitle?: string }) {
+function Header({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-10 px-4">
       <h1 className="text-2xl font-light tracking-wider text-stone-800">
@@ -58,7 +58,7 @@ export function Header({ title, subtitle }: { title: string; subtitle?: string }
   );
 }
 
-export function Nav({ children }: { children: React.ReactNode }) {
+function Nav({ children }: { children: React.ReactNode }) {
   return (
     <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
       {children}
@@ -66,7 +66,7 @@ export function Nav({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Footer({ children }: { children: React.ReactNode }) {
+function Footer({ children }: { children: React.ReactNode }) {
   return (
     <div className="mt-auto px-2 pt-6 space-y-1 border-t border-stone-200/50">
       {children}
@@ -80,7 +80,7 @@ interface ItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isActive?: boolean;
 }
 
-export function Item({ icon: Icon, label, isActive, className, ...props }: ItemProps) {
+function Item({ icon: Icon, label, isActive, className, ...props }: ItemProps) {
   return (
     <button
       className={cn(

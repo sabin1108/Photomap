@@ -49,4 +49,4 @@ const PopoverAnchor = React.memo(function PopoverAnchor({
 });
 PopoverAnchor.displayName = "PopoverAnchor";
 
-export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor };
+export { Popover, PopoverTrigger, PopoverContent };

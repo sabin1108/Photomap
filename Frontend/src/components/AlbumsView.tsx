@@ -10,7 +10,7 @@ import { PhotoFeed } from './PhotoFeed';
 import { UploadScreen } from './UploadScreen';
 import { cn } from './ui/utils';
 import { useGridBreakpoints } from '../hooks/useGridBreakpoints';
-export interface Album {
+interface Album {
   id: string;
   title: string;
   cover: string;

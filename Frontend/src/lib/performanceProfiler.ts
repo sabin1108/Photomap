@@ -1,6 +1,6 @@
 import type { ProfilerOnRenderCallback } from "react";
 
-export interface PhotomapProfilerEntry {
+interface PhotomapProfilerEntry {
   id: string;
   phase: "mount" | "update" | "nested-update";
   actualDuration: number;
@@ -10,7 +10,7 @@ export interface PhotomapProfilerEntry {
   recordedAt: string;
 }
 
-export interface PhotomapProfilerExport {
+interface PhotomapProfilerExport {
   createdAt: string;
   entryCount: number;
   entries: PhotomapProfilerEntry[];
@@ -42,7 +42,7 @@ const getEntries = () => {
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
-export const exportProfilerData = (): PhotomapProfilerExport => {
+const exportProfilerData = (): PhotomapProfilerExport => {
   const entries = getEntries();
   const summary: PhotomapProfilerExport["summary"] = {};
 
@@ -78,7 +78,7 @@ export const exportProfilerData = (): PhotomapProfilerExport => {
   };
 };
 
-export const resetProfilerData = () => {
+const resetProfilerData = () => {
   window.__PHOTOMAP_PROFILER__ = [];
 };
 

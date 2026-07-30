@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-export interface FrameBudgetEntry {
+interface FrameBudgetEntry {
   label: string;
   startedAt: string;
   endedAt: string;

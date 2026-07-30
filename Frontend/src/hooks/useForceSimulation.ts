@@ -12,7 +12,7 @@ export type GraphNode = d3.SimulationNodeDatum & {
     dragMoved?: boolean;
 };
 
-export type GraphLine = d3.SimulationLinkDatum<GraphNode> & {
+type GraphLine = d3.SimulationLinkDatum<GraphNode> & {
     id: string;
     delay: number;
     isSecondary?: boolean;
