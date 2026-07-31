@@ -216,13 +216,16 @@
         let isMapStyleReady = false;
         let myUnityInstance = null;
         let activeMarkerLngLat = null;
-        let lastCaptureTime = 0;
         let pendingFocusPhoto = null;
+        let isBackgroundCaptureInFlight = false;
+        let hasQueuedBackgroundCapture = false;
 
         const container = document.querySelector("#unity-container");
         const canvas = document.querySelector("#unity-canvas");
         const loadingBar = document.querySelector("#unity-loading-bar");
         const progressBarFull = document.querySelector("#unity-progress-bar-full");
+
+        const backgroundCanvas = document.createElement('canvas');
 
         // React 부모로부터 설정 수신
         window.addEventListener('message', (event) => {
@@ -348,21 +351,15 @@
             map.on('moveend', scheduleMarkerUpdate);
             map.on('zoomend', scheduleMarkerUpdate);
             map.on('sourcedata', scheduleMarkerUpdate);
-            map.on('move', () => { updateUnityPosition(); handleMapInteraction(); });
-            map.on('zoom', () => { updateUnityPosition(); handleMapInteraction(); });
+            map.on('render', updateUnityPosition);
+            map.on('moveend', captureActiveBackground);
             map.on('mousedown', () => closeUnity());
             map.on('wheel', () => closeUnity());
             map.on('touchstart', () => closeUnity());
         }
 
-        function handleMapInteraction() {
-            if (container.classList.contains('active')) {
-                const now = Date.now();
-                if (now - lastCaptureTime > 50) {
-                    lastCaptureTime = now;
-                    captureAndSendBackground();
-                }
-            }
+        function captureActiveBackground() {
+            if (container.classList.contains('active')) captureAndSendBackground();
         }
 
         function updateMarkersRealtime() {
@@ -563,26 +560,44 @@
         }
 
         function closeUnity() {
+            if (!container.classList.contains('active')) return;
             container.classList.remove('active'); activeMarkerLngLat = null;
             if (myUnityInstance) myUnityInstance.SendMessage('MapManager', 'CloseCarousel');
         }
 
         function captureAndSendBackground() {
+            if (isBackgroundCaptureInFlight) {
+                hasQueuedBackgroundCapture = true;
+                return;
+            }
+
             try {
                 if (!myUnityInstance || !map) return;
+                isBackgroundCaptureInFlight = true;
                 const mCanvas = map.getCanvas();
                 const rect = container.getBoundingClientRect();
                 const mRect = mCanvas.getBoundingClientRect();
                 const dpr = window.devicePixelRatio || 1;
-                const temp = document.createElement('canvas');
-                temp.width = rect.width * dpr; temp.height = rect.height * dpr;
-                const ctx = temp.getContext('2d');
-                ctx.drawImage(mCanvas, (rect.left - mRect.left) * dpr, (rect.top - mRect.top) * dpr, temp.width, temp.height, 0, 0, temp.width, temp.height);
-                temp.toBlob(b => {
+                backgroundCanvas.width = rect.width * dpr;
+                backgroundCanvas.height = rect.height * dpr;
+                const ctx = backgroundCanvas.getContext('2d');
+                ctx.drawImage(mCanvas, (rect.left - mRect.left) * dpr, (rect.top - mRect.top) * dpr, backgroundCanvas.width, backgroundCanvas.height, 0, 0, backgroundCanvas.width, backgroundCanvas.height);
+                backgroundCanvas.toBlob(b => {
+                    isBackgroundCaptureInFlight = false;
+                    if (!b) return;
                     const blobUrl = URL.createObjectURL(b);
                     myUnityInstance.SendMessage('BackgroundReceiver', 'ReceiveBackgroundUrl', blobUrl);
+                    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+
+                    if (hasQueuedBackgroundCapture) {
+                        hasQueuedBackgroundCapture = false;
+                        requestAnimationFrame(captureActiveBackground);
+                    }
                 }, 'image/png');
-            } catch (e) { }
+            } catch (e) {
+                isBackgroundCaptureInFlight = false;
+                hasQueuedBackgroundCapture = false;
+            }
         }
 
         // 초기화 완료 신호
