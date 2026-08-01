@@ -7,7 +7,6 @@
     <!-- Mapbox v3.1.2 (Latest compatible for the project logic) -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -32,7 +31,7 @@
             z-index: 1;
         }
 
-        #close-btn {
+        #unity-container {
             position: absolute;
             top: 0;
             left: 0;
@@ -84,7 +83,7 @@
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
-            display: block;
+            display: none;
             z-index: 100;
             background: white;
             padding: 20px;
@@ -204,7 +203,6 @@
     </div>
 
     <script>
-        let supabaseClient = null;
         let isInitialized = false;
         let map = null;
         let rawDBData = [];
@@ -219,6 +217,8 @@
         let pendingFocusPhoto = null;
         let isBackgroundCaptureInFlight = false;
         let hasQueuedBackgroundCapture = false;
+        let unityLoadPromise = null;
+        let carouselRequestId = 0;
 
         const container = document.querySelector("#unity-container");
         const canvas = document.querySelector("#unity-canvas");
@@ -237,7 +237,7 @@
                 // 설정 수신 알림
                 window.parent.postMessage({ type: 'CONFIG_RECEIVED' }, '*');
 
-                const { supabaseUrl, supabaseKey, mapboxToken } = event.data.data;
+                const { mapboxToken } = event.data.data;
 
                 if (mapboxToken && !map) {
                     isInitialized = true;
@@ -249,15 +249,7 @@
                         window.mapboxgl.accessToken = cleanToken;
                     }
 
-                    // 토큰 반영 및 안정성을 위한 딜레이
-                    setTimeout(() => {
-                        initializeMap(cleanToken);
-                    }, 100);
-                }
-
-                if (!supabaseClient && supabaseUrl && supabaseKey) {
-                    console.log("🔐 [Iframe] Initializing Supabase client for potential use...");
-                    supabaseClient = window.supabase.createClient(supabaseUrl.trim(), supabaseKey.trim());
+                    initializeMap(cleanToken);
                 }
             }
 
@@ -290,14 +282,38 @@
             devicePixelRatio: 1,
         };
 
-        const script = document.createElement("script");
-        script.src = buildUrl + "/webgl.loader.js";
-        script.onload = () => {
-            createUnityInstance(canvas, unityConfig, (progress) => { progressBarFull.style.width = 100 * progress + "%"; })
-                .then((instance) => { myUnityInstance = instance; loadingBar.style.display = "none"; })
-                .catch((err) => console.error("Unity loading failed:", err));
-        };
-        document.body.appendChild(script);
+        function ensureUnityLoaded() {
+            if (myUnityInstance) return Promise.resolve(myUnityInstance);
+            if (unityLoadPromise) return unityLoadPromise;
+
+            loadingBar.style.display = "block";
+            progressBarFull.style.width = "0%";
+            unityLoadPromise = new Promise((resolve, reject) => {
+                const script = document.createElement("script");
+                script.src = buildUrl + "/webgl.loader.js";
+                script.onload = () => {
+                    createUnityInstance(canvas, unityConfig, (progress) => {
+                        progressBarFull.style.width = 100 * progress + "%";
+                    }).then((instance) => {
+                        myUnityInstance = instance;
+                        loadingBar.style.display = "none";
+                        resolve(instance);
+                    }).catch((err) => {
+                        unityLoadPromise = null;
+                        loadingBar.style.display = "none";
+                        reject(err);
+                    });
+                };
+                script.onerror = () => {
+                    unityLoadPromise = null;
+                    loadingBar.style.display = "none";
+                    reject(new Error("Unity loader download failed"));
+                };
+                document.body.appendChild(script);
+            });
+
+            return unityLoadPromise;
+        }
 
         function initializeMap(token) {
             if (!token || map) return;
@@ -531,35 +547,41 @@
         }
 
         function showUnity(id, lng, lat, photoUrls) {
-            const unityReady = !!myUnityInstance;
+            const requestId = ++carouselRequestId;
             activeMarkerLngLat = [lng, lat];
             updateUnityPosition();
 
             // 1. 클릭 시 마커 위치로 줌인 (Focus)
             focusPhotoOnMap({ id, lng, lat }, 17);
 
-            if (!unityReady) return;
-
             const urlString = photoUrls.filter(u => u).join('|');
 
             // 2. 유니티 컨테이너 활성화 및 사진 전송
-            setTimeout(() => {
-                captureAndSendBackground();
-                container.classList.add('active');
-
-                // 유니티가 즉시 렌더링되도록 포커스 및 리사이즈 이벤트 강제 발생
-                if (canvas) canvas.focus();
-                window.dispatchEvent(new Event('resize'));
+            ensureUnityLoaded().then(() => {
+                if (requestId !== carouselRequestId) return;
 
                 setTimeout(() => {
-                    myUnityInstance.SendMessage('MapManager', 'OpenCarouselWithUrls', urlString);
-                    // 활성화 직후 다시 한번 리사이즈 트리거
+                    if (requestId !== carouselRequestId) return;
+                    captureAndSendBackground();
+                    container.classList.add('active');
+
+                    // 유니티가 즉시 렌더링되도록 포커스 및 리사이즈 이벤트 강제 발생
+                    if (canvas) canvas.focus();
                     window.dispatchEvent(new Event('resize'));
-                }, 150);
-            }, 50);
+
+                    setTimeout(() => {
+                        if (requestId !== carouselRequestId) return;
+                        myUnityInstance.SendMessage('MapManager', 'OpenCarouselWithUrls', urlString);
+                        // 활성화 직후 다시 한번 리사이즈 트리거
+                        window.dispatchEvent(new Event('resize'));
+                    }, 150);
+                }, 50);
+            }).catch((err) => console.error("Unity loading failed:", err));
         }
 
         function closeUnity() {
+            carouselRequestId++;
+            loadingBar.style.display = "none";
             if (!container.classList.contains('active')) return;
             container.classList.remove('active'); activeMarkerLngLat = null;
             if (myUnityInstance) myUnityInstance.SendMessage('MapManager', 'CloseCarousel');

@@ -19,3 +19,18 @@ test('repeated wheel events close the Unity carousel only once', () => {
 
   expect(closeUnityBody).toContain("if (!container.classList.contains('active')) return;");
 });
+
+test('initial map load defers Unity WebGL until a photo requests it', () => {
+  const runtime = fs.readFileSync(runtimePath, 'utf8');
+  const mapView = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'components', 'Map2DView.tsx'),
+    'utf8'
+  );
+
+  expect(runtime).not.toContain('@supabase/supabase-js');
+  expect(runtime).toContain('function ensureUnityLoaded()');
+  expect(runtime).toContain('ensureUnityLoaded().then');
+  expect(runtime).toMatch(/#unity-loading-bar[\s\S]*?display:\s*none/);
+  expect(mapView).not.toContain('setShouldLoadIframe');
+  expect(mapView).toContain('src="/unity-map/index.html"');
+});

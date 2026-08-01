@@ -26,7 +26,6 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [categorySearch, setCategorySearch] = useState('');
   const [isIframeReady, setIsIframeReady] = useState(false);
-  const [shouldLoadIframe, setShouldLoadIframe] = useState(false);
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
   const [detailPhoto, setDetailPhoto] = useState<Photo | null>(null);
   const [focusStatus, setFocusStatus] = useState<'waiting' | 'moving' | 'focused'>('waiting');
@@ -102,11 +101,6 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
 
     setFocusStatus('moving');
     return true;
-  }, []);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setShouldLoadIframe(true), 250);
-    return () => window.clearTimeout(timer);
   }, []);
 
   // iframe 메시지 수신
@@ -349,7 +343,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
 
         <iframe
           ref={iframeRef}
-          src={shouldLoadIframe ? "/unity-map/index.html" : "about:blank"}
+          src="/unity-map/index.html"
           title="Unity Mapbox View"
           className="w-full h-full border-none outline-none"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
