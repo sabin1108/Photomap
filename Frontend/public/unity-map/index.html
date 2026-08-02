@@ -230,6 +230,11 @@
         // React 부모로부터 설정 수신
         window.addEventListener('message', (event) => {
             if (!event.data) return;
+
+            if (event.data.type === 'REQUEST_IFRAME_READY') {
+                window.parent.postMessage({ type: 'IFRAME_READY' }, '*');
+                return;
+            }
             if (event.data.type === 'INIT_CONFIG') {
                 if (isInitialized) return;
                 console.log("📥 [Iframe] Config received:", event.data.data);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { useShallow } from 'zustand/react/shallow';
 import { Search, Settings2, Edit2, Trash2, X, MapPin, Eye } from 'lucide-react';
@@ -103,8 +103,12 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
     return true;
   }, []);
 
+  const requestIframeReady = useCallback(() => {
+    iframeRef.current?.contentWindow?.postMessage({ type: 'REQUEST_IFRAME_READY' }, '*');
+  }, []);
+
   // iframe 메시지 수신
-  useEffect(() => {
+  useLayoutEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.source !== iframeRef.current?.contentWindow) return;
 
@@ -344,6 +348,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
         <iframe
           ref={iframeRef}
           src="/unity-map/index.html"
+          onLoad={requestIframeReady}
           title="Unity Mapbox View"
           className="w-full h-full border-none outline-none"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

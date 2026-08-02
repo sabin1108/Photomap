@@ -34,3 +34,38 @@ test('initial map load defers Unity WebGL until a photo requests it', () => {
   expect(mapView).not.toContain('setShouldLoadIframe');
   expect(mapView).toContain('src="/unity-map/index.html"');
 });
+
+test('iframe readiness can be recovered after the initial signal is missed', async ({ page }) => {
+  const runtime = fs
+    .readFileSync(runtimePath, 'utf8')
+    .replace(/\s*<link href="https:\/\/api\.mapbox\.com[^>]+>/, '')
+    .replace(/\s*<script src="https:\/\/api\.mapbox\.com[^>]+><\/script>/, '');
+
+  await page.setContent('<iframe id="map-frame"></iframe>');
+
+  const recovered = await page.evaluate(async (iframeHtml) => {
+    const frame = document.querySelector('#map-frame');
+    const loaded = new Promise(resolve => frame.addEventListener('load', resolve, { once: true }));
+    frame.srcdoc = iframeHtml;
+    await loaded;
+    await new Promise(resolve => window.setTimeout(resolve, 50));
+
+    return new Promise(resolve => {
+      const timeout = window.setTimeout(() => {
+        window.removeEventListener('message', handleMessage);
+        resolve(false);
+      }, 250);
+      const handleMessage = (event) => {
+        if (event.source !== frame.contentWindow || event.data?.type !== 'IFRAME_READY') return;
+        window.clearTimeout(timeout);
+        window.removeEventListener('message', handleMessage);
+        resolve(true);
+      };
+
+      window.addEventListener('message', handleMessage);
+      frame.contentWindow.postMessage({ type: 'REQUEST_IFRAME_READY' }, '*');
+    });
+  }, runtime);
+
+  expect(recovered).toBe(true);
+});
