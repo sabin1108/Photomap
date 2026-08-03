@@ -371,7 +371,6 @@
             map.on('idle', scheduleMarkerUpdate);
             map.on('moveend', scheduleMarkerUpdate);
             map.on('zoomend', scheduleMarkerUpdate);
-            map.on('sourcedata', scheduleMarkerUpdate);
             map.on('render', updateUnityPosition);
             map.on('moveend', captureActiveBackground);
             map.on('mousedown', () => closeUnity());

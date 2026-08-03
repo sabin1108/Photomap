@@ -69,3 +69,18 @@ test('iframe readiness can be recovered after the initial signal is missed', asy
 
   expect(recovered).toBe(true);
 });
+
+test('ready iframe receives one payload without source-event marker churn', () => {
+  const runtime = fs.readFileSync(runtimePath, 'utf8');
+  const mapView = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'components', 'Map2DView.tsx'),
+    'utf8'
+  );
+  const delayedPayloadSends = mapView.match(/setTimeout\(sendUpdate/g) ?? [];
+
+  expect(delayedPayloadSends).toHaveLength(0);
+  expect(mapView).not.toContain('retryTimers');
+  expect(runtime).not.toContain("map.on('sourcedata', scheduleMarkerUpdate)");
+  expect(runtime).toContain("map.on('idle', scheduleMarkerUpdate)");
+  expect(runtime).toContain("map.on('moveend', scheduleMarkerUpdate)");
+});

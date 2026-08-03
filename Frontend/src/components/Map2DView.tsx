@@ -145,15 +145,6 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
     };
 
     sendUpdate();
-
-    const retryTimers = [250, 1000, 2500].map(delay => window.setTimeout(sendUpdate, delay));
-
-    // iframe 초기화 타이밍 차이를 흡수하기 위해 마지막 payload만 1회 재전송
-    const timer = window.setTimeout(sendUpdate, 1000);
-    return () => {
-      window.clearTimeout(timer);
-      retryTimers.forEach(window.clearTimeout);
-    };
   }, [buildIframePayload, isIframeReady, postIframePayload]);
 
   useEffect(() => {
