@@ -13,6 +13,14 @@ interface Map2DViewProps {
   isReadOnlyDemo?: boolean;
 }
 
+interface MapMarkerPayload {
+  id: string;
+  lat: number;
+  lng: number;
+  url: string;
+  thumbnail_url: string;
+}
+
 const hasValidCoordinates = (photo: Photo) =>
   typeof photo.lat === 'number' &&
   typeof photo.lng === 'number' &&
@@ -30,14 +38,18 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   const [detailPhoto, setDetailPhoto] = useState<Photo | null>(null);
   const [focusStatus, setFocusStatus] = useState<'waiting' | 'moving' | 'focused'>('waiting');
 
-  const { photos, categories } = usePhotoStore(
-    useShallow(state => ({ photos: state.photos, categories: state.categories }))
+  const { photos, categories, isLoading } = usePhotoStore(
+    useShallow(state => ({
+      photos: state.photos,
+      categories: state.categories,
+      isLoading: state.isLoading
+    }))
   );
   const updateCategory = usePhotoStore(state => state.updateCategory);
   const deleteCategory = usePhotoStore(state => state.deleteCategory);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const pendingPayloadRef = useRef<{
-    markers: Photo[];
+    markers: MapMarkerPayload[];
     config: Record<string, string | undefined>;
   } | null>(null);
   const pendingFocusPhotoRef = useRef<Photo | null>(null);
@@ -56,6 +68,13 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   }), [activeFilter, photos, searchKeyword]);
 
   const mapPhotos = useMemo(() => filteredPhotos.filter(hasValidCoordinates), [filteredPhotos]);
+  const mapMarkers = useMemo<MapMarkerPayload[]>(() => mapPhotos.map(photo => ({
+    id: photo.id,
+    lat: photo.lat!,
+    lng: photo.lng!,
+    url: photo.url,
+    thumbnail_url: getPhotoImageUrl(photo, 'thumb')
+  })), [mapPhotos]);
   const photosWithoutCoordinates = filteredPhotos.length - mapPhotos.length;
   const previewPhotos = useMemo(() => mapPhotos.slice(0, 8), [mapPhotos]);
   const selectedPhoto = useMemo(
@@ -64,11 +83,11 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   );
 
   const buildIframePayload = useCallback(() => ({
-    markers: mapPhotos,
+    markers: mapMarkers,
     config: {
       mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN
     }
-  }), [mapPhotos]);
+  }), [mapMarkers]);
 
   const postIframePayload = useCallback((payload: ReturnType<typeof buildIframePayload>) => {
     const target = iframeRef.current?.contentWindow;
@@ -135,7 +154,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
     const payload = buildIframePayload();
     pendingPayloadRef.current = payload;
 
-    if (!isIframeReady) return;
+    if (!isIframeReady || isLoading) return;
 
     const sendUpdate = () => {
       const pendingPayload = pendingPayloadRef.current;
@@ -145,7 +164,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
     };
 
     sendUpdate();
-  }, [buildIframePayload, isIframeReady, postIframePayload]);
+  }, [buildIframePayload, isIframeReady, isLoading, postIframePayload]);
 
   useEffect(() => {
     const pendingPhoto = pendingFocusPhotoRef.current;

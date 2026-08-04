@@ -211,6 +211,7 @@
         let sourceDateMap = {};
         let currentMode = "MAP";
         let hasFlown = false;
+        let focusedPhotoId = null;
         let isMapStyleReady = false;
         let myUnityInstance = null;
         let activeMarkerLngLat = null;
@@ -264,8 +265,6 @@
                 rawDBData = photos;
                 if (map && isMapStyleReady) {
                     applyMapMode();
-                } else if (map) {
-                    map.once('style.load', () => applyMapMode());
                 }
             }
 
@@ -481,7 +480,7 @@
                 const id = loc.id || (loc.location_id ? String(loc.location_id) : Math.random().toString());
                 const lat = loc.lat || 0;
                 const lng = loc.lng || loc.lon || 0;
-                const thumbnails = loc.url || (loc.media && loc.media.length > 0 ? (loc.media[0].thumbnail_url || loc.media[0].file_url) : '');
+                const thumbnails = loc.thumbnail_url || loc.url || (loc.media && loc.media.length > 0 ? (loc.media[0].thumbnail_url || loc.media[0].file_url) : '');
                 const fullUrls = loc.allUrls || (loc.media ? loc.media.map(m => m.file_url).join('|') : loc.url || '');
 
                 return {
@@ -498,10 +497,11 @@
             map.addSource(sourceId, { type: 'geojson', data: { type: 'FeatureCollection', features }, cluster: true, clusterMaxZoom: 20, clusterRadius: 60 });
             map.addLayer({ id: `inv-cluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['has', 'point_count'], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
             map.addLayer({ id: `inv-uncluster-${sourceId}`, type: 'circle', source: sourceId, filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
-
-            // 최초 진입은 목록의 대표 사진 위치로 이동한다.
-            if (rawDBData.length > 0 && !hasFlown) {
-                focusPhotoOnMap(pendingFocusPhoto || rawDBData[0]);
+            // Recenter when initial or when replacement data no longer contains focused photo.
+            const focusedPhotoStillExists = focusedPhotoId !== null && rawDBData.some(photo => String(photo.id) === focusedPhotoId);
+            if (rawDBData.length > 0 && (!hasFlown || !focusedPhotoStillExists)) {
+                const pendingPhotoStillExists = pendingFocusPhoto && rawDBData.some(photo => String(photo.id) === String(pendingFocusPhoto.id));
+                focusPhotoOnMap(pendingPhotoStillExists ? pendingFocusPhoto : rawDBData[0]);
             }
         }
 
@@ -538,6 +538,7 @@
 
             pendingFocusPhoto = null;
             hasFlown = true;
+            focusedPhotoId = String(photo.id);
             map.flyTo({
                 center: [lng, lat],
                 zoom,

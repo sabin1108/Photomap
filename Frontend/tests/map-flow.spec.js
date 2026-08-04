@@ -9,6 +9,13 @@ test('map previews stay visible and drive map focus', async ({ page }) => {
   const previewList = page.getByTestId('map-photo-preview-list');
   await expect(previewList).toBeVisible({ timeout: 20_000 });
 
+  const mapThumbnail = page
+    .frameLocator('iframe[title="Unity Mapbox View"]')
+    .locator('.marker-wrapper img')
+    .first();
+  await expect(mapThumbnail).toBeVisible({ timeout: 30_000 });
+  await expect.poll(() => mapThumbnail.evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+
   const previewButtons = previewList.getByRole('button', { name: /위치로 이동$/ });
   await expect(previewButtons.first()).toBeVisible();
   expect(await previewButtons.count()).toBeGreaterThan(1);

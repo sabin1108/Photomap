@@ -81,6 +81,27 @@ test('ready iframe receives one payload without source-event marker churn', () =
   expect(delayedPayloadSends).toHaveLength(0);
   expect(mapView).not.toContain('retryTimers');
   expect(runtime).not.toContain("map.on('sourcedata', scheduleMarkerUpdate)");
+  expect(runtime).not.toContain("map.once('style.load', () => applyMapMode())");
   expect(runtime).toContain("map.on('idle', scheduleMarkerUpdate)");
   expect(runtime).toContain("map.on('moveend', scheduleMarkerUpdate)");
+});
+
+test('initial marker payload waits for settled photos and uses compact thumbnails', () => {
+  const runtime = fs.readFileSync(runtimePath, 'utf8');
+  const mapView = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'components', 'Map2DView.tsx'),
+    'utf8'
+  );
+
+  expect(mapView).toContain('if (!isIframeReady || isLoading) return;');
+  expect(mapView).toContain("thumbnail_url: getPhotoImageUrl(photo, 'thumb')");
+  expect(mapView).toContain('markers: mapMarkers');
+  expect(runtime).toContain('const thumbnails = loc.thumbnail_url || loc.url');
+});
+
+test('replacement data recenters when the focused photo disappears', () => {
+  const runtime = fs.readFileSync(runtimePath, 'utf8');
+
+  expect(runtime).toContain('let focusedPhotoId = null;');
+  expect(runtime).toContain('!hasFlown || !focusedPhotoStillExists');
 });
