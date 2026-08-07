@@ -14,6 +14,7 @@ interface PhotoStore {
     loadError: string | null;  // 공개 데모에서 사용자에게 보여줄 데이터 로딩 오류
     hasMore: boolean;         // 더 불러올 데이터가 있는지 여부
     currentUserId: string | null; // 현재 로드된 사용자 ID
+    favoriteIds: Set<string>; // 현재 session에서 한 번 조회한 즐겨찾기 ID
 
     // [Actions] 데이터 초기화 및 조회
     initialize: (userId: string) => Promise<void>;      // App.tsx 진입 시 호출
@@ -47,6 +48,17 @@ interface PhotoStore {
     checkIsFavorite: (userId: string, mediaId: number) => Promise<boolean>;
     clear: () => void; // 스토어 초기화 (로그아웃 시 사용)
 }
+
+export const PHOTO_SELECT = `
+    media_id,
+    file_url,
+    thumbnail_url,
+    take_time,
+    created_time,
+    location (address_text, lat, lon),
+    category (name),
+    media_description (description_text)
+`;
 
 const mapMediaToPhoto = (media: DBMedia): Photo => {
     const loc = media.location;
@@ -130,6 +142,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     loadError: null,
     hasMore: true,
     currentUserId: null,
+    favoriteIds: new Set<string>(),
 
     initialize: async (userId: string) => {
         // 이미 해당 사용자로 초기화되었다면 중단
@@ -142,7 +155,8 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             loadError: null,
             currentUserId: userId,
             photos: isPublicDemo ? publicDemoSeedPhotos : [],
-            categories: []
+            categories: [],
+            favoriteIds: new Set<string>()
         });
 
         await Promise.all([
@@ -178,12 +192,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             const supabase = await getSupabase();
             const mediaPromise = supabase
                 .from('media')
-                .select(`
-                    *,
-                    location (*),
-                    category (*),
-                    media_description (*)
-                `)
+                .select(PHOTO_SELECT)
                 .eq('user_id', userId)
                 .order('created_time', { ascending: false })
                 .limit(limit);
@@ -213,6 +222,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                 });
                 set({
                     photos: loadedPhotos,
+                    favoriteIds,
                     loadError: null,
                     hasMore: loadedPhotos.length === limit
                 });
@@ -230,29 +240,20 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         try {
             set({ isLoading: true });
             const currentOffset = get().photos.length;
+            const supabase = await getSupabase();
 
             const mediaPromise = supabase
                 .from('media')
-                .select(`
-                    *,
-                    location (*),
-                    category (*),
-                    media_description (*)
-                `)
+                .select(PHOTO_SELECT)
                 .eq('user_id', userId)
                 .order('created_time', { ascending: false })
                 .range(currentOffset, currentOffset + limit - 1);
 
-            const favPromise = supabase
-                .from('favorites')
-                .select('media_id')
-                .eq('user_id', userId);
-
-            const [mediaResponse, favResponse] = await Promise.all([mediaPromise, favPromise]);
+            const mediaResponse = await mediaPromise;
 
             if (mediaResponse.error) throw mediaResponse.error;
 
-            const favoriteIds = mergeLocalFavoriteIds(new Set(favResponse.data?.map(f => String(f.media_id)) || []));
+            const favoriteIds = get().favoriteIds;
 
             if (mediaResponse.data) {
                 const newPhotos: Photo[] = (mediaResponse.data as unknown as DBMedia[]).map(media => {
@@ -472,7 +473,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         const supabase = await getSupabase();
         const { data } = await supabase
             .from('favorites')
-            .select('*')
+            .select('media_id')
             .eq('user_id', userId)
             .eq('media_id', mediaId)
             .single();
@@ -500,9 +501,15 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         const wasAlreadyFavorite = get().photos.find(p => p.id === id)?.isFavorite ?? false;
 
         // 낙관적 업데이트(즉각 UI 반영)
-        set(state => ({
-            photos: state.photos.map(p => p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)
-        }));
+        set(state => {
+            const favoriteIds = new Set(state.favoriteIds);
+            if (wasAlreadyFavorite) favoriteIds.delete(id);
+            else favoriteIds.add(id);
+            return {
+                favoriteIds,
+                photos: state.photos.map(p => p.id === id ? { ...p, isFavorite: !p.isFavorite } : p)
+            };
+        });
 
         try {
             if (isPublicDemo) {
@@ -520,9 +527,15 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             const { data: { session } } = await supabase.auth.getSession();
 
             if (!session) {
-                set(state => ({
-                    photos: state.photos.map(p => p.id === id ? { ...p, isFavorite: wasAlreadyFavorite } : p)
-                }));
+                set(state => {
+                    const favoriteIds = new Set(state.favoriteIds);
+                    if (wasAlreadyFavorite) favoriteIds.add(id);
+                    else favoriteIds.delete(id);
+                    return {
+                        favoriteIds,
+                        photos: state.photos.map(p => p.id === id ? { ...p, isFavorite: wasAlreadyFavorite } : p)
+                    };
+                });
                 toast.error('로그인 후 좋아요를 사용할 수 있습니다.');
                 return;
             }
@@ -531,9 +544,15 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             await get().toggleFavoriteDB(session.user.id, mediaId, wasAlreadyFavorite);
         } catch (error) {
             // DB 실패 시 원래 상태로 롤백
-            set(state => ({
-                photos: state.photos.map(p => p.id === id ? { ...p, isFavorite: wasAlreadyFavorite } : p)
-            }));
+            set(state => {
+                const favoriteIds = new Set(state.favoriteIds);
+                if (wasAlreadyFavorite) favoriteIds.add(id);
+                else favoriteIds.delete(id);
+                return {
+                    favoriteIds,
+                    photos: state.photos.map(p => p.id === id ? { ...p, isFavorite: wasAlreadyFavorite } : p)
+                };
+            });
             console.error('즐겨찾기 실패:', error);
         }
     },
@@ -704,7 +723,8 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             isLoading: false,
             loadError: null,
             hasMore: true,
-            currentUserId: null
+            currentUserId: null,
+            favoriteIds: new Set<string>()
         });
         console.log('🧹 [PhotoStore] Store cleared.');
     }

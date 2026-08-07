@@ -55,7 +55,7 @@
             "perf:lighthouse": "node scripts/run-lighthouse.mjs",
             "perf:summary": "node scripts/summarize-performance.mjs",
             "perf:analyze": "node scripts/analyze-lighthouse-performance.mjs",
-            "test:load-contract": "node --test tests/load/load-contract.test.mjs",
+            "test:load-contract": "node --test tests/load/*.test.mjs",
             "load:check": "node --check tests/load/supabase-read.js"
       }
 }
