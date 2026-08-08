@@ -39,3 +39,26 @@ k6 run -e LOAD_PROFILE=soak tests/load/supabase-read.js
 
 승인 없는 Vercel URL, production Supabase, 실제 Mapbox/Kakao endpoint에는 실행하지
 않는다.
+
+## localhost 정적 자산 부하
+
+먼저 performance build와 preview를 실행한다.
+
+```powershell
+npm run build:perf
+npm run preview:perf
+```
+
+다른 terminal에서 localhost만 대상으로 실행한다.
+
+```powershell
+npm run load:local -- --concurrency 10 --duration-seconds 15
+npm run load:local -- --concurrency 50 --duration-seconds 15
+npm run load:local -- --concurrency 100 --duration-seconds 15
+npm run load:local -- --concurrency 200 --duration-seconds 15
+```
+
+`local-static-load.mjs`는 기본적으로 localhost 외 target을 거부한다. HTML에서 entry
+asset을 찾고 root HTML, favicon, entry JS, entry CSS, Unity map HTML을 반복
+요청한다. 이 결과는 local static server의 처리량과 latency만 나타내며 Vercel CDN,
+Supabase DB capacity, browser rendering 성능을 대신하지 않는다.
