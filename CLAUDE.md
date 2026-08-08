@@ -8,3 +8,17 @@
 | ?좎쭨 | 蹂寃??댁슜 | ???| ?댁쑀 |
 |---|---|---|---|
 | 2026-07-11 | 珥덇린 Photomap 怨듦컻 ?곕え harness 援ъ꽦 | `.claude/agents`, `.claude/skills/photomap-demo-orchestrator` | PRD #2? 援ы쁽 ?댁뒋 #3-#11????븷蹂?媛쒕컻/寃利??먮쫫?쇰줈 ?섎늻湲??꾪빐 |
+
+## Agent skills
+
+### Issue tracker
+
+GitHub `sabin1108/Photomap` Issues를 사용한다. `docs/agents/issue-tracker.md` 참고.
+
+### Triage labels
+
+기본 triage label 이름을 사용한다. `docs/agents/triage-labels.md` 참고.
+
+### Domain docs
+
+single-context 문서 구조를 사용한다. `docs/agents/domain.md` 참고.
