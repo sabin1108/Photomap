@@ -103,3 +103,16 @@ docs/performance/GUIDE_AND_TEMPLATE.md
 docs/performance/performance_snapshot_*.md
 docs/performance/artifacts/*
 !docs/performance/artifacts/.gitkeep
+
+# Local agent and editor tooling
+/.agents/
+/skills-lock.json
+/.vscode/
+
+# Local Supabase and load-test artifacts
+/supabase/production-schema.sql
+/docs/load-testing/raw/
+
+# Local Unity authoring/export projects
+/Unity/MapBoxweb/
+/Unity/mabboxhtml/
