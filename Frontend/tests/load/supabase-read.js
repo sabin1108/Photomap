@@ -46,14 +46,16 @@ function requireStagingConfiguration() {
   if (!baseUrl || !apiKey || !userId) fail('LOAD_SUPABASE_URL, LOAD_SUPABASE_ANON_KEY, and LOAD_USER_ID are required.');
   if (baseUrl.includes('wmxdaprqassvwboiownd')) fail('Known PhotoMap production Supabase project is blocked.');
   if (apiKey.startsWith('sb_secret_')) fail('Secret/service keys are forbidden. Use a staging publishable or anon key.');
-  return { baseUrl, apiKey, userId };
+  return { baseUrl, userId };
 }
 
 export function setup() {
-  return requireStagingConfiguration();
+  const { baseUrl, userId } = requireStagingConfiguration();
+  return { baseUrl, userId };
 }
 
-export default function ({ baseUrl, apiKey, userId }) {
+export default function ({ baseUrl, userId }) {
+  const apiKey = __ENV.LOAD_SUPABASE_ANON_KEY;
   const headers = { apikey: apiKey, Authorization: `Bearer ${apiKey}`, Accept: 'application/json' };
   const mediaSelect = [
     'media_id', 'file_url', 'thumbnail_url', 'take_time', 'created_time',

@@ -11,6 +11,11 @@ test('production and secret credentials are blocked', () => {
   assert.doesNotMatch(source, /service_role\s*[:=]\s*['"]/);
 });
 
+test('summary export cannot include the API key in setup data', () => {
+  assert.match(source, /return \{ baseUrl, userId \};/);
+  assert.doesNotMatch(source, /return \{ baseUrl, apiKey, userId \};/);
+});
+
 test('initial photo flow exercises three read endpoints', () => {
   assert.match(source, /\/rest\/v1\/category\?/);
   assert.match(source, /\/rest\/v1\/media\?/);
