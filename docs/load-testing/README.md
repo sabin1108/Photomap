@@ -25,3 +25,8 @@ E:\memory\photomap\2026-08-08-10k-user-load-test-environment.md
 
 Results record environment, dataset cardinality, response percentiles, error rate,
 dropped iterations, Supabase resource usage, egress, and recovery time.
+
+## Results
+
+- [2026-08-13 Supabase staging read baseline](results-2026-08-13.md)
+- [2026-08-08 environment and local baseline](results-2026-08-08.md)
