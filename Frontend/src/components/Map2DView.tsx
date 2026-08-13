@@ -72,7 +72,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
     id: photo.id,
     lat: photo.lat!,
     lng: photo.lng!,
-    url: photo.url,
+    url: getPhotoImageUrl(photo, 'thumb'),
     thumbnail_url: getPhotoImageUrl(photo, 'thumb')
   })), [mapPhotos]);
   const photosWithoutCoordinates = filteredPhotos.length - mapPhotos.length;

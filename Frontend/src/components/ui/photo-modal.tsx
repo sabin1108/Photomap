@@ -4,6 +4,7 @@ import { Photo } from "../../type";
 import { X, MapPin, Calendar, Folder, AlignLeft } from "lucide-react";
 import { usePhotoStore } from "../../store/usePhotoStore";
 import { isPublicDemo } from "../../lib/demoConfig";
+import { getReliablePhotoImageUrl } from '../../lib/imageUrl';
 
 interface PhotoModalContextValue {
     photo: Photo | null;
@@ -63,7 +64,7 @@ function Image() {
                 <X size={20} />
             </button>
             <img
-                src={photo.url}
+                src={getReliablePhotoImageUrl(photo, 'full')}
                 alt={photo.title}
                 className="w-full h-full object-contain"
             />

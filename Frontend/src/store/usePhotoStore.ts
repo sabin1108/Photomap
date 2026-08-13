@@ -87,11 +87,12 @@ const mapMediaToPhoto = (media: DBMedia): Photo => {
         }
     }
 
-    const performanceFixture = `/performance-fixtures/travel-baseline.jpg?photo=${media.media_id}`;
+    const performanceDisplay = `/performance-fixtures/travel-display.webp?photo=${media.media_id}`;
+    const performanceThumbnail = `/performance-fixtures/travel-thumb.webp?photo=${media.media_id}`;
     return {
         id: String(media.media_id),
-        url: isPerformancePreview ? performanceFixture : media.file_url || '',
-        thumbnail_url: isPerformancePreview ? performanceFixture : media.thumbnail_url,
+        url: isPerformancePreview ? performanceDisplay : media.file_url || '',
+        thumbnail_url: isPerformancePreview ? performanceThumbnail : media.thumbnail_url,
         title: extractTitle,
         description: descText,
         location: loc?.address_text || 'Unknown',

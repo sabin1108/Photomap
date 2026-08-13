@@ -8,6 +8,7 @@ import { Button } from './ui/button';
 import { Heart, Trash2 } from 'lucide-react';
 import { cn } from './ui/utils';
 import { useForceSimulation, GraphNode } from '../hooks/useForceSimulation';
+import { getPhotoImageUrl } from '../lib/imageUrl';
 
 export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean }) {
     const photos = usePhotoStore(state => state.photos);
@@ -241,7 +242,7 @@ export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean 
                         <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#E09F87] p-1 shadow-lg relative transition duration-300 ${!isTagMode && !isExiting ? 'cursor-pointer hover:scale-105' : ''}`}
                             onClick={() => { if (!isTagMode && !isExiting) handleTransition(null, selectedLocation); }}>
                             <div className="w-full h-full rounded-full border-[3px] border-white overflow-hidden z-10 bg-stone-50 flex items-center justify-center">
-                                {centralPhoto ? <img alt="center" className={`w-full h-full object-cover transition-transform duration-700 ${!isExiting ? 'hover:scale-110' : ''}`} src={centralPhoto.url} /> : <div className="w-4 h-4 bg-stone-300 animate-pulse rounded-full" />}
+                                {centralPhoto ? <img alt="center" className={`w-full h-full object-cover transition-transform duration-700 ${!isExiting ? 'hover:scale-110' : ''}`} src={getPhotoImageUrl(centralPhoto, 'thumb')} /> : <div className="w-4 h-4 bg-stone-300 animate-pulse rounded-full" />}
                             </div>
                             <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 z-30 pointer-events-none transition-opacity ${isExiting ? 'opacity-0' : 'opacity-100'}`}>
                                 <span className="text-stone-700 bg-white border text-[10px] md:text-xs font-semibold px-3 py-1 rounded-full text-center whitespace-nowrap">{centerNode?.label}</span>
@@ -276,7 +277,7 @@ export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean 
                                         </div>
                                     ) : (node.type === 'photo' && node.photo) && (
                                         <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white bg-white shadow-md group-hover:scale-110 relative">
-                                            <img className="w-full h-full rounded-full object-cover" src={node.photo.url} alt="" />
+                                            <img className="w-full h-full rounded-full object-cover" src={getPhotoImageUrl(node.photo, 'thumb')} alt="" />
                                         </div>
                                     )}
                                 </div>
