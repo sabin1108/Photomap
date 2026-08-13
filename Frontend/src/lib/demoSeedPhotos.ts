@@ -1,6 +1,6 @@
 import type { Photo } from '../type';
 
-export const publicDemoSeedPhotos: Photo[] = [
+const sourceDemoSeedPhotos: Photo[] = [
   {
     id: 'demo-seed-bangkok-night-road',
     title: 'Bangkok Night Road',
@@ -86,3 +86,13 @@ export const publicDemoSeedPhotos: Photo[] = [
     aspectRatio: 'h-[400px]'
   }
 ];
+
+const usePerformanceFixtures =
+  typeof window !== 'undefined' &&
+  window.location.hostname.includes('perf-image-delivery');
+
+export const publicDemoSeedPhotos: Photo[] = sourceDemoSeedPhotos.map((photo, index) => {
+  if (!usePerformanceFixtures) return photo;
+  const fixtureUrl = `/performance-fixtures/travel-baseline.jpg?photo=${index + 1}`;
+  return { ...photo, url: fixtureUrl, thumbnail_url: fixtureUrl };
+});
