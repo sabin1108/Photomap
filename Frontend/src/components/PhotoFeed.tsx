@@ -12,7 +12,7 @@ import { useGridBreakpoints } from '../hooks/useGridBreakpoints';
 import { useAuthStore } from '../store/useAuthStore';
 import { useShallow } from 'zustand/react/shallow';
 import { demoUserId, isPublicDemo } from '../lib/demoConfig';
-import { getPhotoImageUrl } from '../lib/imageUrl';
+import { getGridImageLoadingPolicy, getPhotoImageUrl } from '../lib/imageUrl';
 
 interface PhotoFeedProps {
   className?: string;
@@ -239,7 +239,7 @@ export function PhotoFeed({
                   if (!photo) return <div key={`empty-${colIndex}`} />;
 
                   const isSelected = selectedIds.includes(photo.id);
-                  const isAboveTheFold = photoIndex < effectiveColumns * 2;
+                  const imageLoading = getGridImageLoadingPolicy(photoIndex, effectiveColumns);
                   return (
                     <div
                       key={photo.id}
@@ -254,9 +254,9 @@ export function PhotoFeed({
                           src={getPhotoImageUrl(photo, "thumb")}
                           alt={photo.title}
                           className="w-full h-full object-cover"
-                          loading={isAboveTheFold ? "eager" : "lazy"}
+                          loading={imageLoading.loading}
                           decoding="async"
-                          fetchPriority={isAboveTheFold ? "high" : "auto"}
+                          fetchPriority={imageLoading.fetchPriority}
                           width={320}
                           height={320}
                         />

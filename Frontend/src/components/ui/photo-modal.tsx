@@ -4,6 +4,7 @@ import { Photo } from "../../type";
 import { X, MapPin, Calendar, Folder, AlignLeft } from "lucide-react";
 import { usePhotoStore } from "../../store/usePhotoStore";
 import { isPublicDemo } from "../../lib/demoConfig";
+import { getPhotoImageUrl } from '../../lib/imageUrl';
 
 interface PhotoModalContextValue {
     photo: Photo | null;
@@ -50,6 +51,24 @@ function Root({ photo, onClose, children }: RootProps) {
 
 function Image() {
     const { photo, onClose } = usePhotoModalContext();
+    const [visibleUrl, setVisibleUrl] = useState(() => photo ? getPhotoImageUrl(photo, 'thumb') : '');
+
+    useEffect(() => {
+        if (!photo) return;
+        const thumbnailUrl = getPhotoImageUrl(photo, 'thumb');
+        const fullUrl = getPhotoImageUrl(photo, 'full');
+        setVisibleUrl(thumbnailUrl);
+        if (fullUrl === thumbnailUrl) return;
+
+        const fullImage = new window.Image();
+        fullImage.decoding = 'async';
+        fullImage.onload = () => setVisibleUrl(fullUrl);
+        fullImage.src = fullUrl;
+        return () => {
+            fullImage.onload = null;
+        };
+    }, [photo]);
+
     if (!photo) return null;
 
     return (
@@ -63,9 +82,10 @@ function Image() {
                 <X size={20} />
             </button>
             <img
-                src={photo.url}
+                src={visibleUrl}
                 alt={photo.title}
                 className="w-full h-full object-contain"
+                data-image-variant={visibleUrl === getPhotoImageUrl(photo, 'full') ? 'full' : 'preview'}
             />
         </div>
     );

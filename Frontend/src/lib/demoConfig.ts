@@ -3,6 +3,16 @@ export const isPublicDemo =
 
 export const demoUserId = import.meta.env.VITE_DEMO_USER_ID || '';
 
+export const isPerformancePreview =
+  typeof window !== 'undefined' &&
+  window.location.hostname.includes('perf-image-delivery');
+
+export const performanceImageMode =
+  isPerformancePreview &&
+  new URLSearchParams(window.location.search).get('perfImageMode') === 'baseline'
+    ? 'baseline'
+    : 'optimized';
+
 export const localFavoriteStorageKey = demoUserId
   ? `photomap-demo-favorites:${demoUserId}`
   : 'photomap-demo-favorites';

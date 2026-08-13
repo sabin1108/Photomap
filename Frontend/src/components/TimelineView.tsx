@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
 import { usePhotoStore } from '../store/usePhotoStore';
+import { getPhotoImageUrl } from '../lib/imageUrl';
 
 interface TimelineEvent {
   id: string;
@@ -36,7 +37,7 @@ export function TimelineView() {
         title: photo.title,
         location: photo.location,
         description: photo.description || '',
-        images: [photo.url],
+        images: [getPhotoImageUrl(photo, 'thumb')],
       };
     });
   }, [photos]);

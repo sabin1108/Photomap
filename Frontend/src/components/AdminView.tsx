@@ -14,6 +14,7 @@ import { Button } from './ui/button';
 import { Calendar, Heart, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { Photo } from '../type';
+import { getPhotoImageUrl } from '../lib/imageUrl';
 
 interface AdminViewProps {
   onNavigate: (category: string) => void;
@@ -124,7 +125,7 @@ export function AdminView({ onNavigate }: AdminViewProps) {
                     <TableCell>
                       <div className="w-12 h-12 rounded-md overflow-hidden bg-stone-100 flex-shrink-0">
                         <ImageWithFallback
-                          src={photo.url}
+                          src={getPhotoImageUrl(photo, 'thumb')}
                           alt={photo.title}
                           className="w-full h-full object-cover"
                         />

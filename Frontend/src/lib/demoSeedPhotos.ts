@@ -1,6 +1,7 @@
 import type { Photo } from '../type';
+import { isPerformancePreview, performanceImageMode } from './demoConfig';
 
-export const publicDemoSeedPhotos: Photo[] = [
+const sourceDemoSeedPhotos: Photo[] = [
   {
     id: 'demo-seed-bangkok-night-road',
     title: 'Bangkok Night Road',
@@ -86,3 +87,16 @@ export const publicDemoSeedPhotos: Photo[] = [
     aspectRatio: 'h-[400px]'
   }
 ];
+
+export const publicDemoSeedPhotos: Photo[] = sourceDemoSeedPhotos.map((photo, index) => {
+  if (!isPerformancePreview) return photo;
+  if (performanceImageMode === 'baseline') {
+    const baseline = `/performance-fixtures/travel-baseline.jpg?photo=${index + 1}`;
+    return { ...photo, url: baseline, thumbnail_url: baseline };
+  }
+  return {
+    ...photo,
+    url: `/performance-fixtures/travel-display.webp?photo=${index + 1}`,
+    thumbnail_url: `/performance-fixtures/travel-thumb.webp?photo=${index + 1}`,
+  };
+});

@@ -1,22 +1,26 @@
 import type { Photo } from "../type";
 
-const publicStorageMarker = "/storage/v1/object/public/";
-
-const toSupabaseTransformUrl = (url: string, width: number, height: number) => {
-  if (!url.includes(publicStorageMarker)) return url;
-
-  const [base, objectPath] = url.split(publicStorageMarker);
-  if (!base || !objectPath) return url;
-
-  const transformed = new URL(`${base}/storage/v1/render/image/public/${objectPath}`);
-  transformed.searchParams.set("width", String(width));
-  transformed.searchParams.set("height", String(height));
-  transformed.searchParams.set("resize", "cover");
-  transformed.searchParams.set("quality", "70");
-  return transformed.toString();
-};
-
 export const getPhotoImageUrl = (photo: Photo, variant: "thumb" | "full" = "thumb") => {
-  if (variant === "full") return photo.url;
-  return photo.thumbnail_url || toSupabaseTransformUrl(photo.url, 320, 320);
+  if (variant === "full") return normalizeLegacyImageUrl(photo.url);
+  return normalizeLegacyImageUrl(photo.thumbnail_url || photo.url);
 };
+
+export const getGridImageLoadingPolicy = (photoIndex: number, columns: number) => ({
+  loading: photoIndex < Math.max(columns, 1) ? 'eager' as const : 'lazy' as const,
+  fetchPriority: photoIndex === 0 ? 'high' as const : 'auto' as const,
+});
+
+export const normalizeLegacyImageUrl = (url: string) => {
+  const legacyMarker = '/storage/v1/render/image/public/';
+  if (!url.includes(legacyMarker)) return url;
+
+  const [base, objectPathWithQuery] = url.split(legacyMarker);
+  const objectPath = objectPathWithQuery?.split('?')[0];
+  if (!base || !objectPath) return url;
+  return base + '/storage/v1/object/public/' + objectPath;
+};
+
+export const getReliablePhotoImageUrl = (
+  photo: Photo,
+  variant: 'thumb' | 'full' = 'thumb',
+) => getPhotoImageUrl(photo, variant);

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Photo, DBMedia } from '../type';
 import { getSupabase } from '../lib/supabaseClient';
-import { isPublicDemo, localFavoriteStorageKey } from '../lib/demoConfig';
+import { isPerformancePreview, isPublicDemo, localFavoriteStorageKey, performanceImageMode } from '../lib/demoConfig';
 import { publicDemoSeedPhotos } from '../lib/demoSeedPhotos';
 import { toast } from 'sonner';
 
@@ -87,10 +87,17 @@ const mapMediaToPhoto = (media: DBMedia): Photo => {
         }
     }
 
+    const performanceDisplay = `/performance-fixtures/travel-display.webp?photo=${media.media_id}`;
+    const performanceThumbnail = `/performance-fixtures/travel-thumb.webp?photo=${media.media_id}`;
+    const performanceBaseline = `/performance-fixtures/travel-baseline.jpg?photo=${media.media_id}`;
     return {
         id: String(media.media_id),
-        url: media.file_url || '',
-        thumbnail_url: media.thumbnail_url,
+        url: isPerformancePreview
+            ? performanceImageMode === 'baseline' ? performanceBaseline : performanceDisplay
+            : media.file_url || '',
+        thumbnail_url: isPerformancePreview
+            ? performanceImageMode === 'baseline' ? performanceBaseline : performanceThumbnail
+            : media.thumbnail_url,
         title: extractTitle,
         description: descText,
         location: loc?.address_text || 'Unknown',
@@ -220,8 +227,14 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                         isFavorite: favoriteIds.has(photo.id)
                     };
                 });
+                const visiblePhotos = isPublicDemo && loadedPhotos.length === 0
+                    ? publicDemoSeedPhotos.map(photo => ({
+                        ...photo,
+                        isFavorite: favoriteIds.has(photo.id)
+                    }))
+                    : loadedPhotos;
                 set({
-                    photos: loadedPhotos,
+                    photos: visiblePhotos,
                     favoriteIds,
                     loadError: null,
                     hasMore: loadedPhotos.length === limit
@@ -335,6 +348,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     addPhoto: async (photo: Photo, _file: File | null, meta: { title?: string, folder: string, description: string, tags: string, lat?: number, lng?: number, address?: string }) => {
         const toastId = toast.loading("데이터베이스에 저장 중...");
         try {
+            const supabase = await getSupabase();
             const userId = await getUserId();
 
             const roundedLat = meta.lat ? Number(meta.lat.toFixed(7)) : 0;

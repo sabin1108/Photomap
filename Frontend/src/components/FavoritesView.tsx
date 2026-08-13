@@ -13,6 +13,7 @@ import {
 import { Photo } from '../type';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { useShallow } from 'zustand/react/shallow';
+import { getPhotoImageUrl } from '../lib/imageUrl';
 
 export function FavoritesView() {
     const { photos, categories } = usePhotoStore(
@@ -41,7 +42,7 @@ export function FavoritesView() {
                         {selectedPhoto && (
                             <>
                                 <ImageWithFallback
-                                    src={selectedPhoto.url}
+                                    src={getPhotoImageUrl(selectedPhoto, 'full')}
                                     className="w-full h-full object-contain"
                                     alt={selectedPhoto.title}
                                 />
@@ -191,7 +192,7 @@ export function FavoritesView() {
                         <div key={photo.id} className="relative group animate-in fade-in duration-500">
                             <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-stone-200 shadow-sm transition-transform duration-500 group-hover:-translate-y-1">
                                 <ImageWithFallback
-                                    src={photo.url}
+                                    src={getPhotoImageUrl(photo, 'thumb')}
                                     className="w-full h-full object-cover"
                                     alt={photo.title}
                                 />

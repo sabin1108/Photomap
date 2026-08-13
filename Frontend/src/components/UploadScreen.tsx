@@ -14,6 +14,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { Photo } from '../type';
 import { getSupabase } from '../lib/supabaseClient';
+import { buildImageVariantPaths, createImageVariants } from '../lib/imageVariants';
 import exifr from 'exifr';
 interface UploadScreenProps {
   onClose: () => void;
@@ -464,19 +465,46 @@ export function UploadScreen({ onClose, initialLocation, initialCategory }: Uplo
       setUploadProgress(prev => ({ ...prev, current: i + 1 }));
 
       try {
-        const safeDir = 'uploads';
-        const fileName = `${Date.now()}_${item.file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
-        const filePath = `${safeDir}/${fileName}`;
+        const uploadId = Date.now() + '-' + crypto.randomUUID();
+        const paths = buildImageVariantPaths(item.file.name, uploadId);
+        let displayPath = paths.original;
+        let thumbnailPath = paths.original;
+        const uploads: Array<{ path: string; body: Blob; contentType: string }> = [{
+          path: paths.original,
+          body: item.file,
+          contentType: item.file.type || 'application/octet-stream',
+        }];
 
-        const { error: uploadError } = await supabase.storage
-          .from('photos')
-          .upload(filePath, item.file);
+        try {
+          const variants = await createImageVariants(item.file);
+          displayPath = paths.display;
+          thumbnailPath = paths.thumbnail;
+          uploads.push(
+            { path: paths.display, body: variants.display, contentType: 'image/webp' },
+            { path: paths.thumbnail, body: variants.thumbnail, contentType: 'image/webp' },
+          );
+        } catch (variantError) {
+          console.warn('파생 이미지 생성 실패, 원본으로 대체합니다.', variantError);
+        }
 
+        const uploadResults = await Promise.all(uploads.map(upload =>
+          supabase.storage
+            .from('photos')
+            .upload(upload.path, upload.body, {
+              cacheControl: '31536000',
+              contentType: upload.contentType,
+              upsert: false,
+            })
+        ));
+        const uploadError = uploadResults.find(result => result.error)?.error;
         if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage
           .from('photos')
-          .getPublicUrl(filePath);
+          .getPublicUrl(displayPath);
+        const { data: { publicUrl: thumbnailUrl } } = supabase.storage
+          .from('photos')
+          .getPublicUrl(thumbnailPath);
 
         const rawFolder = folderName.trim();
         const batchTags = rawFolder.split(',').map(t => t.trim().replace(/^@+/, '')).filter(Boolean);
@@ -487,6 +515,7 @@ export function UploadScreen({ onClose, initialLocation, initialCategory }: Uplo
         const tempPhoto: Photo = {
           id: crypto.randomUUID(),
           url: publicUrl,
+          thumbnail_url: thumbnailUrl,
           title: item.title || batchTitle || item.file.name,
           location: "Unknown",
           date: item.customDate || item.exif.takeTime || new Date().toISOString(),

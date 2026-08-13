@@ -10,6 +10,7 @@ import { PhotoFeed } from './PhotoFeed';
 import { UploadScreen } from './UploadScreen';
 import { cn } from './ui/utils';
 import { useGridBreakpoints } from '../hooks/useGridBreakpoints';
+import { getPhotoImageUrl } from '../lib/imageUrl';
 interface Album {
   id: string;
   title: string;
@@ -54,8 +55,8 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
   const systemAlbums: Album[] = useMemo(() => {
     const favPhotos = photos.filter(p => p.isFavorite);
     return [
-      { id: 'system_all', title: '전체 사진', cover: photos[0]?.url || '', count: photos.length, date: photos[0]?.date || '비어 있음', theme: 'light', icon: ImageIcon },
-      { id: 'system_favorites', title: '좋아요', cover: favPhotos[0]?.url || '', count: favPhotos.length, date: favPhotos[0]?.date || '비어 있음', theme: 'light', icon: Heart }
+      { id: 'system_all', title: '전체 사진', cover: photos[0] ? getPhotoImageUrl(photos[0], 'thumb') : '', count: photos.length, date: photos[0]?.date || '비어 있음', theme: 'light', icon: ImageIcon },
+      { id: 'system_favorites', title: '좋아요', cover: favPhotos[0] ? getPhotoImageUrl(favPhotos[0], 'thumb') : '', count: favPhotos.length, date: favPhotos[0]?.date || '비어 있음', theme: 'light', icon: Heart }
     ];
   }, [photos]);
 
@@ -66,7 +67,7 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
       const locPhotos = photos.filter(p => p.location === loc);
       const sortedPhotos = [...locPhotos].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       return {
-        id: `loc_${loc}`, title: loc as string, cover: sortedPhotos[0]?.url || '', count: locPhotos.length, date: sortedPhotos[0]?.date || '새 항목', theme: 'light', icon: MapPin, isLocation: true
+        id: `loc_${loc}`, title: loc as string, cover: sortedPhotos[0] ? getPhotoImageUrl(sortedPhotos[0], 'thumb') : '', count: locPhotos.length, date: sortedPhotos[0]?.date || '새 항목', theme: 'light', icon: MapPin, isLocation: true
       };
     }).sort((a, b) => b.count - a.count);
   }, [photos]);
@@ -77,7 +78,7 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
       const categoryPhotos = photos.filter(p => p.category === category || p.tags.includes(category));
       const sortedPhotos = [...categoryPhotos].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       return {
-        id: category, title: category.charAt(0).toUpperCase() + category.slice(1), cover: sortedPhotos[0]?.url || '', count: categoryPhotos.length, date: sortedPhotos[0]?.date || '새 항목', theme: 'light'
+        id: category, title: category.charAt(0).toUpperCase() + category.slice(1), cover: sortedPhotos[0] ? getPhotoImageUrl(sortedPhotos[0], 'thumb') : '', count: categoryPhotos.length, date: sortedPhotos[0]?.date || '새 항목', theme: 'light'
       };
     });
   }, [categories, photos]);
