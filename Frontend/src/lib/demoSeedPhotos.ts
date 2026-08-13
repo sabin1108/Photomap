@@ -1,4 +1,5 @@
 import type { Photo } from '../type';
+import { isPerformancePreview } from './demoConfig';
 
 const sourceDemoSeedPhotos: Photo[] = [
   {
@@ -87,12 +88,8 @@ const sourceDemoSeedPhotos: Photo[] = [
   }
 ];
 
-const usePerformanceFixtures =
-  typeof window !== 'undefined' &&
-  window.location.hostname.includes('perf-image-delivery');
-
 export const publicDemoSeedPhotos: Photo[] = sourceDemoSeedPhotos.map((photo, index) => {
-  if (!usePerformanceFixtures) return photo;
+  if (!isPerformancePreview) return photo;
   const fixtureUrl = `/performance-fixtures/travel-baseline.jpg?photo=${index + 1}`;
   return { ...photo, url: fixtureUrl, thumbnail_url: fixtureUrl };
 });
