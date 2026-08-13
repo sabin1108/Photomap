@@ -220,8 +220,14 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                         isFavorite: favoriteIds.has(photo.id)
                     };
                 });
+                const visiblePhotos = isPublicDemo && loadedPhotos.length === 0
+                    ? publicDemoSeedPhotos.map(photo => ({
+                        ...photo,
+                        isFavorite: favoriteIds.has(photo.id)
+                    }))
+                    : loadedPhotos;
                 set({
-                    photos: loadedPhotos,
+                    photos: visiblePhotos,
                     favoriteIds,
                     loadError: null,
                     hasMore: loadedPhotos.length === limit
