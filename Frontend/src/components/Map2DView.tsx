@@ -50,7 +50,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const pendingPayloadRef = useRef<{
     markers: MapMarkerPayload[];
-    config: Record<string, string | undefined>;
+    config: { mapboxToken: string | undefined };
   } | null>(null);
   const pendingFocusPhotoRef = useRef<Photo | null>(null);
 

@@ -348,6 +348,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     addPhoto: async (photo: Photo, _file: File | null, meta: { title?: string, folder: string, description: string, tags: string, lat?: number, lng?: number, address?: string }) => {
         const toastId = toast.loading("데이터베이스에 저장 중...");
         try {
+            const supabase = await getSupabase();
             const userId = await getUserId();
 
             const roundedLat = meta.lat ? Number(meta.lat.toFixed(7)) : 0;
