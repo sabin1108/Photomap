@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Photo, DBMedia } from '../type';
 import { getSupabase } from '../lib/supabaseClient';
-import { isPerformancePreview, isPublicDemo, localFavoriteStorageKey } from '../lib/demoConfig';
+import { isPerformancePreview, isPublicDemo, localFavoriteStorageKey, performanceImageMode } from '../lib/demoConfig';
 import { publicDemoSeedPhotos } from '../lib/demoSeedPhotos';
 import { toast } from 'sonner';
 
@@ -89,10 +89,15 @@ const mapMediaToPhoto = (media: DBMedia): Photo => {
 
     const performanceDisplay = `/performance-fixtures/travel-display.webp?photo=${media.media_id}`;
     const performanceThumbnail = `/performance-fixtures/travel-thumb.webp?photo=${media.media_id}`;
+    const performanceBaseline = `/performance-fixtures/travel-baseline.jpg?photo=${media.media_id}`;
     return {
         id: String(media.media_id),
-        url: isPerformancePreview ? performanceDisplay : media.file_url || '',
-        thumbnail_url: isPerformancePreview ? performanceThumbnail : media.thumbnail_url,
+        url: isPerformancePreview
+            ? performanceImageMode === 'baseline' ? performanceBaseline : performanceDisplay
+            : media.file_url || '',
+        thumbnail_url: isPerformancePreview
+            ? performanceImageMode === 'baseline' ? performanceBaseline : performanceThumbnail
+            : media.thumbnail_url,
         title: extractTitle,
         description: descText,
         location: loc?.address_text || 'Unknown',

@@ -1,5 +1,5 @@
 import type { Photo } from '../type';
-import { isPerformancePreview } from './demoConfig';
+import { isPerformancePreview, performanceImageMode } from './demoConfig';
 
 const sourceDemoSeedPhotos: Photo[] = [
   {
@@ -90,6 +90,10 @@ const sourceDemoSeedPhotos: Photo[] = [
 
 export const publicDemoSeedPhotos: Photo[] = sourceDemoSeedPhotos.map((photo, index) => {
   if (!isPerformancePreview) return photo;
+  if (performanceImageMode === 'baseline') {
+    const baseline = `/performance-fixtures/travel-baseline.jpg?photo=${index + 1}`;
+    return { ...photo, url: baseline, thumbnail_url: baseline };
+  }
   return {
     ...photo,
     url: `/performance-fixtures/travel-display.webp?photo=${index + 1}`,

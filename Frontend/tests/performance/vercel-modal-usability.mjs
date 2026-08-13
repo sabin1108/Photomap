@@ -91,9 +91,11 @@ for (let run = 1; run <= coldRuns; run += 1) {
   const page = await context.newPage();
   await throttle(page);
   try {
+    const navigationStarted = Date.now();
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 });
     await waitImage(primaryPhoto(page), 120_000);
-    cold.push({ run, ...(await openDetail(page)) });
+    const primaryImageMs = Date.now() - navigationStarted;
+    cold.push({ run, primaryImageMs, ...(await openDetail(page)) });
   } catch (error) {
     cold.push({ run, imageSuccess: false, error: error.message });
   }
@@ -121,6 +123,7 @@ const result = {
   profile,
   samples: { coldRuns, warmRuns, warmups },
   metrics: {
+    coldPrimaryImage: summarize(cold.map(item => item.primaryImageMs).filter(Number.isFinite)),
     coldShell: summarize(cold.map(item => item.shellMs).filter(Number.isFinite)),
     coldImage: {
       ...summarize(coldSuccess.map(item => item.imageMs)),
