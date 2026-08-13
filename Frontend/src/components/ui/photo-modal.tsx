@@ -4,7 +4,7 @@ import { Photo } from "../../type";
 import { X, MapPin, Calendar, Folder, AlignLeft } from "lucide-react";
 import { usePhotoStore } from "../../store/usePhotoStore";
 import { isPublicDemo } from "../../lib/demoConfig";
-import { getReliablePhotoImageUrl } from '../../lib/imageUrl';
+import { getPhotoImageUrl } from '../../lib/imageUrl';
 
 interface PhotoModalContextValue {
     photo: Photo | null;
