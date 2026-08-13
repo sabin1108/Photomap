@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "measuredAt": "2026-08-13T09:49:12.541Z",
+  "target": "https://photomap-git-perf-image-delivery-sabins-projects-011c6dea.vercel.app/?perfImageMode=optimized",
+  "policy": {
+    "target": "https://photomap-git-perf-image-delivery-sabins-projects-011c6dea.vercel.app/?perfImageMode=optimized",
+    "hostname": "photomap-git-perf-image-delivery-sabins-projects-011c6dea.vercel.app",
+    "isProduction": false,
+    "mode": "staging",
+    "allowMap": true
+  },
+  "profiles": [
+    {
+      "name": "mobile-mid-4g",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mobile": true,
+      "cpu": 4,
+      "latency": 150,
+      "down": 1.6,
+      "up": 0.75
+    },
+    {
+      "name": "mobile-low-slow4g",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "mobile": true,
+      "cpu": 6,
+      "latency": 300,
+      "down": 0.75,
+      "up": 0.35
+    },
+    {
+      "name": "desktop-wifi",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "mobile": false,
+      "cpu": 1,
+      "latency": 40,
+      "down": 10,
+      "up": 5
+    }
+  ],
+  "aggregate": {
+    "관계 보기": {
+      "attempts": 10,
+      "successRate": 1,
+      "navigation": {
+        "count": 10,
+        "p50Ms": 1465.2,
+        "p75Ms": 2994.7,
+        "p95Ms": 4898.6,
+        "maxMs": 4898.6
+      },
+      "mobileMenuOpen": {
+        "count": 7,
+        "p50Ms": 120,
+        "p75Ms": 286.8,
+        "p95Ms": 314.7,
+        "maxMs": 314.7
+      }
+    },
+    "앨범": {
+      "attempts": 10,
+      "successRate": 1,
+      "navigation": {
+        "count": 10,
+        "p50Ms": 1815.3,
+        "p75Ms": 3902.1,
+        "p95Ms": 3937.7,
+        "maxMs": 3937.7
+      },
+      "mobileMenuOpen": {
+        "count": 7,
+        "p50Ms": 246.3,
+        "p75Ms": 302.9,
+        "p95Ms": 346.9,
+        "maxMs": 346.9
+      }
+    }
+  },
+  "samples": [
+    {
+      "session": 1,
+      "profile": "mobile-mid-4g",
+      "action": "관계 보기",
+      "menuOpenMs": 116.3,
+      "navigationMs": 1273.2,
+      "success": true
+    },
+    {
+      "session": 2,
+      "profile": "mobile-low-slow4g",
+      "action": "앨범",
+      "menuOpenMs": 274.4,
+      "navigationMs": 3933.6,
+      "success": true
+    },
+    {
+      "session": 3,
+      "profile": "desktop-wifi",
+      "action": "관계 보기",
+      "menuOpenMs": null,
+      "navigationMs": 237.5,
+      "success": true
+    },
+    {
+      "session": 4,
+      "profile": "mobile-mid-4g",
+      "action": "앨범",
+      "menuOpenMs": 104.1,
+      "navigationMs": 1850.3,
+      "success": true
+    },
+    {
+      "session": 5,
+      "profile": "mobile-low-slow4g",
+      "action": "관계 보기",
+      "menuOpenMs": 276.7,
+      "navigationMs": 2994.7,
+      "success": true
+    },
+    {
+      "session": 6,
+      "profile": "desktop-wifi",
+      "action": "앨범",
+      "menuOpenMs": null,
+      "navigationMs": 348.4,
+      "success": true
+    },
+    {
+      "session": 7,
+      "profile": "mobile-mid-4g",
+      "action": "관계 보기",
+      "menuOpenMs": 111.4,
+      "navigationMs": 4898.6,
+      "success": true
+    },
+    {
+      "session": 8,
+      "profile": "mobile-low-slow4g",
+      "action": "앨범",
+      "menuOpenMs": 246.3,
+      "navigationMs": 3937.7,
+      "success": true
+    },
+    {
+      "session": 9,
+      "profile": "desktop-wifi",
+      "action": "관계 보기",
+      "menuOpenMs": null,
+      "navigationMs": 239.7,
+      "success": true
+    },
+    {
+      "session": 10,
+      "profile": "mobile-mid-4g",
+      "action": "앨범",
+      "menuOpenMs": 109.9,
+      "navigationMs": 1815.3,
+      "success": true
+    },
+    {
+      "session": 11,
+      "profile": "mobile-low-slow4g",
+      "action": "관계 보기",
+      "menuOpenMs": 314.7,
+      "navigationMs": 3056.8,
+      "success": true
+    },
+    {
+      "session": 12,
+      "profile": "desktop-wifi",
+      "action": "앨범",
+      "menuOpenMs": null,
+      "navigationMs": 338.3,
+      "success": true
+    },
+    {
+      "session": 13,
+      "profile": "mobile-mid-4g",
+      "action": "관계 보기",
+      "menuOpenMs": 120,
+      "navigationMs": 1527.2,
+      "success": true
+    },
+    {
+      "session": 14,
+      "profile": "mobile-low-slow4g",
+      "action": "앨범",
+      "menuOpenMs": 302.9,
+      "navigationMs": 3902.1,
+      "success": true
+    },
+    {
+      "session": 15,
+      "profile": "desktop-wifi",
+      "action": "관계 보기",
+      "menuOpenMs": null,
+      "navigationMs": 259.1,
+      "success": true
+    },
+    {
+      "session": 16,
+      "profile": "mobile-mid-4g",
+      "action": "앨범",
+      "menuOpenMs": 102.5,
+      "navigationMs": 1811.5,
+      "success": true
+    },
+    {
+      "session": 17,
+      "profile": "mobile-low-slow4g",
+      "action": "관계 보기",
+      "menuOpenMs": 286.8,
+      "navigationMs": 2928,
+      "success": true
+    },
+    {
+      "session": 18,
+      "profile": "desktop-wifi",
+      "action": "앨범",
+      "menuOpenMs": null,
+      "navigationMs": 350.4,
+      "success": true
+    },
+    {
+      "session": 19,
+      "profile": "mobile-mid-4g",
+      "action": "관계 보기",
+      "menuOpenMs": 108.6,
+      "navigationMs": 1465.2,
+      "success": true
+    },
+    {
+      "session": 20,
+      "profile": "mobile-low-slow4g",
+      "action": "앨범",
+      "menuOpenMs": 346.9,
+      "navigationMs": 3806.1,
+      "success": true
+    }
+  ],
+  "limitations": [
+    "Synthetic browser traffic, not real-user monitoring.",
+    "Production pilot is sequential and capped at 20 sessions."
+  ]
+}

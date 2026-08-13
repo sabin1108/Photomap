@@ -1,0 +1,173 @@
+{
+  "measuredAt": "2026-08-13T09:40:03.719Z",
+  "url": "https://photomap-git-perf-image-delivery-sabins-projects-011c6dea.vercel.app/?perfImageMode=baseline",
+  "profile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "cpuSlowdown": 4,
+    "latencyMs": 150,
+    "downloadBitsPerSecond": 1600000,
+    "uploadBitsPerSecond": 750000
+  },
+  "samples": {
+    "coldRuns": 5,
+    "warmRuns": 10,
+    "warmups": 5
+  },
+  "metrics": {
+    "coldPrimaryImage": {
+      "count": 5,
+      "minMs": 77491,
+      "p50Ms": 78028,
+      "p95Ms": 79050,
+      "p99Ms": 79050,
+      "maxMs": 79050,
+      "meanMs": 78238.4
+    },
+    "coldShell": {
+      "count": 5,
+      "minMs": 200.1,
+      "p50Ms": 214.6,
+      "p95Ms": 251,
+      "p99Ms": 251,
+      "maxMs": 251,
+      "meanMs": 218.6
+    },
+    "coldImage": {
+      "count": 5,
+      "minMs": 255.8,
+      "p50Ms": 285.5,
+      "p95Ms": 345.8,
+      "p99Ms": 345.8,
+      "maxMs": 345.8,
+      "meanMs": 288.6,
+      "failures": 0,
+      "successRate": 1
+    },
+    "warmShell": {
+      "count": 10,
+      "minMs": 98.5,
+      "p50Ms": 109.9,
+      "p95Ms": 209.4,
+      "p99Ms": 209.4,
+      "maxMs": 209.4,
+      "meanMs": 130.7
+    },
+    "warmImage": {
+      "count": 10,
+      "minMs": 144.6,
+      "p50Ms": 173.2,
+      "p95Ms": 284.1,
+      "p99Ms": 284.1,
+      "maxMs": 284.1,
+      "meanMs": 187.5,
+      "failures": 0,
+      "successRate": 1
+    }
+  },
+  "cold": [
+    {
+      "run": 1,
+      "primaryImageMs": 79050,
+      "shellMs": 200.1,
+      "imageMs": 255.8,
+      "imageSuccess": true
+    },
+    {
+      "run": 2,
+      "primaryImageMs": 78783,
+      "shellMs": 251,
+      "imageMs": 345.8,
+      "imageSuccess": true
+    },
+    {
+      "run": 3,
+      "primaryImageMs": 77491,
+      "shellMs": 221.7,
+      "imageMs": 285.5,
+      "imageSuccess": true
+    },
+    {
+      "run": 4,
+      "primaryImageMs": 78028,
+      "shellMs": 205.7,
+      "imageMs": 286.1,
+      "imageSuccess": true
+    },
+    {
+      "run": 5,
+      "primaryImageMs": 77840,
+      "shellMs": 214.6,
+      "imageMs": 269.8,
+      "imageSuccess": true
+    }
+  ],
+  "warm": [
+    {
+      "run": 1,
+      "shellMs": 209.4,
+      "imageMs": 284.1,
+      "imageSuccess": true
+    },
+    {
+      "run": 2,
+      "shellMs": 109.9,
+      "imageMs": 153.9,
+      "imageSuccess": true
+    },
+    {
+      "run": 3,
+      "shellMs": 98.5,
+      "imageMs": 213.5,
+      "imageSuccess": true
+    },
+    {
+      "run": 4,
+      "shellMs": 102.2,
+      "imageMs": 146.2,
+      "imageSuccess": true
+    },
+    {
+      "run": 5,
+      "shellMs": 160,
+      "imageMs": 220.1,
+      "imageSuccess": true
+    },
+    {
+      "run": 6,
+      "shellMs": 130.8,
+      "imageMs": 173.2,
+      "imageSuccess": true
+    },
+    {
+      "run": 7,
+      "shellMs": 152.1,
+      "imageMs": 194.3,
+      "imageSuccess": true
+    },
+    {
+      "run": 8,
+      "shellMs": 103.2,
+      "imageMs": 144.6,
+      "imageSuccess": true
+    },
+    {
+      "run": 9,
+      "shellMs": 104,
+      "imageMs": 146,
+      "imageSuccess": true
+    },
+    {
+      "run": 10,
+      "shellMs": 136.4,
+      "imageMs": 198.8,
+      "imageSuccess": true
+    }
+  ],
+  "limitations": [
+    "Synthetic lab measurement, not field RUM.",
+    "Cold samples use a fresh browser context; warm samples reuse cache and session."
+  ]
+}
