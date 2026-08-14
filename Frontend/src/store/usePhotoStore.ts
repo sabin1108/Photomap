@@ -166,6 +166,11 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             favoriteIds: new Set<string>()
         });
 
+        if (isPerformancePreview) {
+            set({ isLoading: false, hasMore: false });
+            return;
+        }
+
         await Promise.all([
             get().fetchCategories(userId),
             get().fetchPhotos(userId)

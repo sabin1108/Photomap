@@ -5,7 +5,8 @@ export const demoUserId = import.meta.env.VITE_DEMO_USER_ID || '';
 
 export const isPerformancePreview =
   typeof window !== 'undefined' &&
-  window.location.hostname.includes('perf-image-delivery');
+  (window.location.hostname.includes('perf-image-delivery') ||
+    new URLSearchParams(window.location.search).has('perfImageMode'));
 
 export const performanceImageMode =
   isPerformancePreview &&
