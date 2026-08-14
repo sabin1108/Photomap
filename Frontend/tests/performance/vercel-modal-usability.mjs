@@ -1,6 +1,7 @@
 import { chromium } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -24,6 +25,8 @@ const profile = {
   downloadBitsPerSecond: 1_600_000,
   uploadBitsPerSecond: 750_000,
 };
+const require = createRequire(import.meta.url);
+const playwrightVersion = require('@playwright/test/package.json').version;
 
 if (![coldRuns, warmRuns, warmups].every(Number.isInteger)
   || coldRuns < 1 || warmRuns < 0 || warmups < 0) {
@@ -174,10 +177,11 @@ const primaryPhoto = page => target.searchParams.has('perfImageMode')
 const readVitals = page => page.evaluate(() => {
   const navigation = performance.getEntriesByType('navigation')[0];
   const paint = performance.getEntriesByName('first-contentful-paint')[0];
+  const lcpEntries = performance.getEntriesByType('largest-contentful-paint');
   const state = window.__PHOTOMAP_MODAL_METRICS__;
   return {
     fcpMs: paint?.startTime ?? null,
-    lcpMs: state?.lcp ?? null,
+    lcpMs: lcpEntries.at(-1)?.startTime ?? state?.lcp ?? null,
     cls: state?.cls ?? null,
     ttfbMs: navigation?.responseStart ?? null,
     observerUnavailable: state?.observerUnavailable || false,
@@ -240,6 +244,7 @@ const runCold = async (browser, run) => {
     const primary = await waitImage(primaryPhoto(page), 120_000);
     sample.primaryImageMs = Date.now() - navigationStarted;
     sample.primaryImageSuccess = primary.complete && primary.naturalWidth > 0;
+    await page.waitForTimeout(100);
     Object.assign(sample, await readVitals(page));
     const modal = await openDetail(page, network);
     sample.shellMs = modal.shellMs;
@@ -331,7 +336,7 @@ const result = {
     gitBranch: git('branch', '--show-current'),
     gitDirty: Boolean(git('status', '--porcelain')),
     node: process.version,
-    playwright: process.env.npm_package_devDependencies__playwright_test || null,
+    playwright: playwrightVersion,
     browser: `Chrome ${browserVersion}`,
     os: `${os.type()} ${os.release()} ${os.arch()}`,
     runnerRegion: 'single physical runner; exact geographic region not independently verified',
