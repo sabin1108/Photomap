@@ -3,8 +3,24 @@ import test from 'node:test';
 
 import { getGridImageLoadingPolicy, getPhotoImageUrl, getReliablePhotoImageUrl } from '../src/lib/imageUrl.ts';
 import { buildImageVariantPaths } from '../src/lib/imageVariants.ts';
+import { isPerformancePreviewLocation } from '../src/lib/performancePreview.ts';
 
 const originalUrl = 'https://project.supabase.co/storage/v1/object/public/photos/uploads/photo.jpg';
+
+test('performance fixture mode never replaces production data', () => {
+  assert.equal(
+    isPerformancePreviewLocation('photomap-three.vercel.app', '?perfImageMode=optimized'),
+    false,
+  );
+  assert.equal(
+    isPerformancePreviewLocation('photomap-preview.vercel.app', '?perfImageMode=optimized'),
+    true,
+  );
+  assert.equal(
+    isPerformancePreviewLocation('photomap-preview.vercel.app', ''),
+    false,
+  );
+});
 
 test('thumbnail fallback never depends on the paid Supabase image transform endpoint', () => {
   const photo = { url: originalUrl, thumbnail_url: null };
