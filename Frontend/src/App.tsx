@@ -21,7 +21,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useAuthStore } from './store/useAuthStore';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { demoUserId, isPublicDemo } from './lib/demoConfig';
+import { demoUserId, isPerformancePreview, isPublicDemo } from './lib/demoConfig';
 import { missingSupabaseEnv } from './lib/supabaseClient';
 
 function MissingConfigScreen({ message }: { message: string }) {
@@ -61,8 +61,10 @@ export default function App() {
   }, [activeCategory, isAdmin, loading]);
 
   useEffect(() => {
-    const targetUserId = isPublicDemo ? demoUserId : user?.id;
-    if (!missingSupabaseEnv && targetUserId) {
+    const targetUserId = isPerformancePreview
+      ? 'performance-fixture'
+      : isPublicDemo ? demoUserId : user?.id;
+    if ((isPerformancePreview || !missingSupabaseEnv) && targetUserId) {
       initialize(targetUserId);
     }
   }, [user?.id, initialize]);
@@ -75,11 +77,11 @@ export default function App() {
     return countries.size;
   }, [photos]);
 
-  if (missingSupabaseEnv) {
+  if (!isPerformancePreview && missingSupabaseEnv) {
     return <MissingConfigScreen message="VITE_SUPABASE_URL과 VITE_SUPABASE_ANON_KEY를 Vercel 환경변수에 등록해 주세요." />;
   }
 
-  if (isPublicDemo && !demoUserId) {
+  if (!isPerformancePreview && isPublicDemo && !demoUserId) {
     return <MissingConfigScreen message="로그인 없는 공개 데모를 위해 VITE_DEMO_USER_ID를 Vercel 환경변수에 등록해 주세요." />;
   }
 
