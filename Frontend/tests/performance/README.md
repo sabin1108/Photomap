@@ -71,3 +71,25 @@ node tests/performance/vercel-virtual-traffic.mjs `
 
 기본 output은 raw sample, p50/p75/p95/p99, action 성공률, FCP/LCP/INP/CLS/TTFB,
 request failure, HTTP error, console error, 관측 byte를 포함한다.
+
+## 이미지 전달 반복 측정
+
+Production Supabase에 접속하지 않는 명시적 Vercel Preview에서만 100회 측정한다.
+Vercel Authentication을 끄고 `perfImageMode` fixture가 보이는지 먼저 확인한다.
+
+```powershell
+$env:PHOTOMAP_BASE_URL='https://DEPLOYMENT.vercel.app/?perfImageMode=optimized'
+$env:PHOTOMAP_COLD_MODAL_RUNS='100'
+$env:PHOTOMAP_WARM_MODAL_RUNS='10'
+$env:PHOTOMAP_MODAL_WARMUPS='5'
+$env:PHOTOMAP_MODAL_OUTPUT='E:\memory\photomap\characteristic\image-final-optimized-100.json'
+$env:VIRTUAL_TRAFFIC_CONFIRM='staging-only'
+$env:VIRTUAL_TRAFFIC_STAGING_HOST='DEPLOYMENT.vercel.app'
+node tests/performance/vercel-modal-usability.mjs
+```
+
+runner는 cold run마다 새 browser context를 만들고 concurrency 1로 실행한다.
+실패 실행을 분모에 포함하며 LCP, 전송량, request failure, HTTP 오류, console 오류,
+Git commit, Node, Chrome, OS를 JSON에 기록한다.
+
+최종 근거: `docs/performance/image-delivery-evidence-2026-08-14.md`

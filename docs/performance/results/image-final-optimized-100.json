@@ -1,0 +1,3396 @@
+{
+  "schemaVersion": 2,
+  "measuredAt": "2026-08-14T13:28:09.491Z",
+  "finishedAt": "2026-08-14T13:33:09.209Z",
+  "durationSeconds": 299.7,
+  "url": "https://photomap-kyksltxjd-sabins-projects-011c6dea.vercel.app/?perfImageMode=optimized",
+  "policy": {
+    "target": "https://photomap-kyksltxjd-sabins-projects-011c6dea.vercel.app/",
+    "hostname": "photomap-kyksltxjd-sabins-projects-011c6dea.vercel.app",
+    "isProduction": false,
+    "mode": "staging",
+    "allowMap": true
+  },
+  "preflight": {
+    "status": 200,
+    "title": "Photomap Public Archive",
+    "observedSupabaseHosts": []
+  },
+  "profile": {
+    "name": "mobile-mid-4g",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "deviceScaleFactor": 2,
+    "cpuSlowdown": 4,
+    "latencyMs": 150,
+    "downloadBitsPerSecond": 1600000,
+    "uploadBitsPerSecond": 750000
+  },
+  "execution": {
+    "concurrency": 1,
+    "coldContextPolicy": "fresh Chromium browser context per run",
+    "warmContextPolicy": "one shared Chromium browser context after warmups",
+    "coldRuns": 100,
+    "warmRuns": 10,
+    "warmups": 5
+  },
+  "environment": {
+    "gitCommit": "3f0beac58f20cc55f5314d3b746930855735a586",
+    "gitBranch": "perf/image-evidence-100",
+    "gitDirty": true,
+    "node": "v24.16.0",
+    "playwright": "1.62.0",
+    "browser": "Chrome 151.0.7922.138",
+    "os": "Windows_NT 10.0.26200 x64",
+    "runnerRegion": "single physical runner; exact geographic region not independently verified"
+  },
+  "metrics": {
+    "coldRunSuccessRate": 1,
+    "coldPrimaryImage": {
+      "count": 100,
+      "minMs": 2412,
+      "p50Ms": 2506,
+      "p75Ms": 2552,
+      "p95Ms": 2615,
+      "p99Ms": 2664,
+      "maxMs": 2679,
+      "meanMs": 2513.3,
+      "failures": 0,
+      "successRate": 1
+    },
+    "coldLcp": {
+      "count": 100,
+      "minMs": 2376,
+      "p50Ms": 2472,
+      "p75Ms": 2500,
+      "p95Ms": 2568,
+      "p99Ms": 2608,
+      "maxMs": 2668,
+      "meanMs": 2472
+    },
+    "coldFcp": {
+      "count": 100,
+      "minMs": 1208,
+      "p50Ms": 1272,
+      "p75Ms": 1300,
+      "p95Ms": 1364,
+      "p99Ms": 1428,
+      "maxMs": 1432,
+      "meanMs": 1278.7
+    },
+    "coldTtfb": {
+      "count": 100,
+      "minMs": 27.3,
+      "p50Ms": 43.9,
+      "p75Ms": 110.2,
+      "p95Ms": 132.9,
+      "p99Ms": 141.7,
+      "maxMs": 142.7,
+      "meanMs": 72.2
+    },
+    "coldCls": {
+      "count": 100,
+      "minMs": 0,
+      "p50Ms": 0,
+      "p75Ms": 0,
+      "p95Ms": 0,
+      "p99Ms": 0,
+      "maxMs": 0,
+      "meanMs": 0
+    },
+    "coldShell": {
+      "count": 100,
+      "minMs": 98.8,
+      "p50Ms": 109.4,
+      "p75Ms": 117.2,
+      "p95Ms": 133.2,
+      "p99Ms": 147.6,
+      "maxMs": 166.2,
+      "meanMs": 113.8
+    },
+    "coldModalImage": {
+      "count": 100,
+      "minMs": 119.3,
+      "p50Ms": 133.3,
+      "p75Ms": 141.9,
+      "p95Ms": 165.3,
+      "p99Ms": 175.6,
+      "maxMs": 201.8,
+      "meanMs": 138.5,
+      "failures": 0,
+      "successRate": 1
+    },
+    "coldNetwork": {
+      "requests": 1300,
+      "transferredBytes": 33542287,
+      "requestFailures": 0,
+      "httpErrors": 0,
+      "consoleErrors": 0
+    },
+    "warmShell": {
+      "count": 10,
+      "minMs": 47.3,
+      "p50Ms": 49.3,
+      "p75Ms": 50.4,
+      "p95Ms": 50.8,
+      "p99Ms": 50.8,
+      "maxMs": 50.8,
+      "meanMs": 49.2
+    },
+    "warmModalImage": {
+      "count": 10,
+      "minMs": 63.1,
+      "p50Ms": 64.9,
+      "p75Ms": 67.3,
+      "p95Ms": 68.1,
+      "p99Ms": 68.1,
+      "maxMs": 68.1,
+      "meanMs": 65.7,
+      "failures": 0,
+      "successRate": 1
+    }
+  },
+  "cold": [
+    {
+      "run": 1,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2463,
+      "fcpMs": 1316,
+      "lcpMs": 2408,
+      "cls": 0,
+      "ttfbMs": 27.30000000447035,
+      "observerUnavailable": false,
+      "shellMs": 104.5,
+      "modalImageMs": 127.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335355,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 2,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2509,
+      "fcpMs": 1328,
+      "lcpMs": 2516,
+      "cls": 0,
+      "ttfbMs": 120.30000000447035,
+      "observerUnavailable": false,
+      "shellMs": 124.5,
+      "modalImageMs": 147.5,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335379,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 3,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2420,
+      "fcpMs": 1232,
+      "lcpMs": 2416,
+      "cls": 0,
+      "ttfbMs": 31.200000002980232,
+      "observerUnavailable": false,
+      "shellMs": 101.3,
+      "modalImageMs": 122.6,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335380,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 4,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2416,
+      "fcpMs": 1236,
+      "lcpMs": 2424,
+      "cls": 0,
+      "ttfbMs": 65.10000000149012,
+      "observerUnavailable": false,
+      "shellMs": 101.4,
+      "modalImageMs": 123.4,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335406,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 5,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2454,
+      "fcpMs": 1260,
+      "lcpMs": 2460,
+      "cls": 0,
+      "ttfbMs": 102.20000000298023,
+      "observerUnavailable": false,
+      "shellMs": 105.2,
+      "modalImageMs": 127.7,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335398,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 6,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2506,
+      "fcpMs": 1236,
+      "lcpMs": 2428,
+      "cls": 0,
+      "ttfbMs": 27.5,
+      "observerUnavailable": false,
+      "shellMs": 110.6,
+      "modalImageMs": 145.4,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335372,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 7,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2679,
+      "fcpMs": 1428,
+      "lcpMs": 2668,
+      "cls": 0,
+      "ttfbMs": 132.79999999701977,
+      "observerUnavailable": false,
+      "shellMs": 127.1,
+      "modalImageMs": 155.4,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335402,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 8,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2664,
+      "fcpMs": 1348,
+      "lcpMs": 2576,
+      "cls": 0,
+      "ttfbMs": 103.90000000596046,
+      "observerUnavailable": false,
+      "shellMs": 130,
+      "modalImageMs": 158.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335420,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 9,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2617,
+      "fcpMs": 1364,
+      "lcpMs": 2568,
+      "cls": 0,
+      "ttfbMs": 141.5,
+      "observerUnavailable": false,
+      "shellMs": 147.6,
+      "modalImageMs": 175.6,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335404,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 10,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2519,
+      "fcpMs": 1292,
+      "lcpMs": 2500,
+      "cls": 0,
+      "ttfbMs": 32.20000000298023,
+      "observerUnavailable": false,
+      "shellMs": 133.2,
+      "modalImageMs": 165.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335405,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 11,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2582,
+      "fcpMs": 1376,
+      "lcpMs": 2588,
+      "cls": 0,
+      "ttfbMs": 134.60000000149012,
+      "observerUnavailable": false,
+      "shellMs": 118.9,
+      "modalImageMs": 147.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335430,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 12,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2563,
+      "fcpMs": 1276,
+      "lcpMs": 2464,
+      "cls": 0,
+      "ttfbMs": 31.600000001490116,
+      "observerUnavailable": false,
+      "shellMs": 122.6,
+      "modalImageMs": 149.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335378,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 13,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2510,
+      "fcpMs": 1264,
+      "lcpMs": 2472,
+      "cls": 0,
+      "ttfbMs": 41.600000001490116,
+      "observerUnavailable": false,
+      "shellMs": 117.5,
+      "modalImageMs": 141.7,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335434,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 14,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2485,
+      "fcpMs": 1236,
+      "lcpMs": 2432,
+      "cls": 0,
+      "ttfbMs": 34.100000001490116,
+      "observerUnavailable": false,
+      "shellMs": 108.7,
+      "modalImageMs": 132.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335408,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 15,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2585,
+      "fcpMs": 1284,
+      "lcpMs": 2484,
+      "cls": 0,
+      "ttfbMs": 110.19999999552965,
+      "observerUnavailable": false,
+      "shellMs": 109.2,
+      "modalImageMs": 132.4,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335426,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 16,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2548,
+      "fcpMs": 1316,
+      "lcpMs": 2496,
+      "cls": 0,
+      "ttfbMs": 120.80000000447035,
+      "observerUnavailable": false,
+      "shellMs": 117.7,
+      "modalImageMs": 143.4,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335409,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 17,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2486,
+      "fcpMs": 1252,
+      "lcpMs": 2448,
+      "cls": 0,
+      "ttfbMs": 32.20000000298023,
+      "observerUnavailable": false,
+      "shellMs": 110.7,
+      "modalImageMs": 133.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335403,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 18,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2531,
+      "fcpMs": 1288,
+      "lcpMs": 2484,
+      "cls": 0,
+      "ttfbMs": 106.79999999701977,
+      "observerUnavailable": false,
+      "shellMs": 129.6,
+      "modalImageMs": 155,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335424,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 19,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2470,
+      "fcpMs": 1260,
+      "lcpMs": 2448,
+      "cls": 0,
+      "ttfbMs": 109.09999999403954,
+      "observerUnavailable": false,
+      "shellMs": 104.9,
+      "modalImageMs": 131.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335417,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 20,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2592,
+      "fcpMs": 1324,
+      "lcpMs": 2524,
+      "cls": 0,
+      "ttfbMs": 142.69999999552965,
+      "observerUnavailable": false,
+      "shellMs": 106,
+      "modalImageMs": 130.5,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335424,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 21,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2554,
+      "fcpMs": 1308,
+      "lcpMs": 2528,
+      "cls": 0,
+      "ttfbMs": 127.39999999850988,
+      "observerUnavailable": false,
+      "shellMs": 115.6,
+      "modalImageMs": 142.5,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335423,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 22,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2508,
+      "fcpMs": 1244,
+      "lcpMs": 2440,
+      "cls": 0,
+      "ttfbMs": 33.69999999552965,
+      "observerUnavailable": false,
+      "shellMs": 107.9,
+      "modalImageMs": 131,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335387,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 23,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2535,
+      "fcpMs": 1292,
+      "lcpMs": 2480,
+      "cls": 0,
+      "ttfbMs": 110.10000000149012,
+      "observerUnavailable": false,
+      "shellMs": 108.6,
+      "modalImageMs": 132.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335444,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 24,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2437,
+      "fcpMs": 1228,
+      "lcpMs": 2412,
+      "cls": 0,
+      "ttfbMs": 31.299999997019768,
+      "observerUnavailable": false,
+      "shellMs": 115.8,
+      "modalImageMs": 140.4,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335384,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 25,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2429,
+      "fcpMs": 1228,
+      "lcpMs": 2408,
+      "cls": 0,
+      "ttfbMs": 34.100000001490116,
+      "observerUnavailable": false,
+      "shellMs": 112.2,
+      "modalImageMs": 137.5,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335399,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 26,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2483,
+      "fcpMs": 1252,
+      "lcpMs": 2440,
+      "cls": 0,
+      "ttfbMs": 40,
+      "observerUnavailable": false,
+      "shellMs": 114.3,
+      "modalImageMs": 136.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335398,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 27,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2488,
+      "fcpMs": 1228,
+      "lcpMs": 2424,
+      "cls": 0,
+      "ttfbMs": 43.100000001490116,
+      "observerUnavailable": false,
+      "shellMs": 131.9,
+      "modalImageMs": 155.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335383,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 28,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2497,
+      "fcpMs": 1280,
+      "lcpMs": 2476,
+      "cls": 0,
+      "ttfbMs": 110.20000000298023,
+      "observerUnavailable": false,
+      "shellMs": 109.8,
+      "modalImageMs": 138.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335414,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 29,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2524,
+      "fcpMs": 1244,
+      "lcpMs": 2444,
+      "cls": 0,
+      "ttfbMs": 31.30000000447035,
+      "observerUnavailable": false,
+      "shellMs": 109.5,
+      "modalImageMs": 135.1,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335405,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 30,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2504,
+      "fcpMs": 1288,
+      "lcpMs": 2444,
+      "cls": 0,
+      "ttfbMs": 107.10000000149012,
+      "observerUnavailable": false,
+      "shellMs": 106,
+      "modalImageMs": 130.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335407,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 31,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2607,
+      "fcpMs": 1348,
+      "lcpMs": 2540,
+      "cls": 0,
+      "ttfbMs": 117.10000000149012,
+      "observerUnavailable": false,
+      "shellMs": 105,
+      "modalImageMs": 128.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335470,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 32,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2479,
+      "fcpMs": 1248,
+      "lcpMs": 2440,
+      "cls": 0,
+      "ttfbMs": 37.29999999701977,
+      "observerUnavailable": false,
+      "shellMs": 113.3,
+      "modalImageMs": 135.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335411,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 33,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2496,
+      "fcpMs": 1280,
+      "lcpMs": 2488,
+      "cls": 0,
+      "ttfbMs": 109.89999999850988,
+      "observerUnavailable": false,
+      "shellMs": 111.2,
+      "modalImageMs": 134.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335448,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 34,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2427,
+      "fcpMs": 1232,
+      "lcpMs": 2436,
+      "cls": 0,
+      "ttfbMs": 37.80000000447035,
+      "observerUnavailable": false,
+      "shellMs": 107.7,
+      "modalImageMs": 130.7,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335423,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 35,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2615,
+      "fcpMs": 1432,
+      "lcpMs": 2608,
+      "cls": 0,
+      "ttfbMs": 33.400000005960464,
+      "observerUnavailable": false,
+      "shellMs": 109.4,
+      "modalImageMs": 139.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335418,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 36,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2555,
+      "fcpMs": 1280,
+      "lcpMs": 2476,
+      "cls": 0,
+      "ttfbMs": 31.30000000447035,
+      "observerUnavailable": false,
+      "shellMs": 116.1,
+      "modalImageMs": 138.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335426,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 37,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2471,
+      "fcpMs": 1244,
+      "lcpMs": 2416,
+      "cls": 0,
+      "ttfbMs": 34.19999999552965,
+      "observerUnavailable": false,
+      "shellMs": 110.4,
+      "modalImageMs": 134.7,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335401,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 38,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2549,
+      "fcpMs": 1268,
+      "lcpMs": 2468,
+      "cls": 0,
+      "ttfbMs": 44.100000001490116,
+      "observerUnavailable": false,
+      "shellMs": 123.1,
+      "modalImageMs": 154.4,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335402,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 39,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2540,
+      "fcpMs": 1296,
+      "lcpMs": 2488,
+      "cls": 0,
+      "ttfbMs": 109.5,
+      "observerUnavailable": false,
+      "shellMs": 108.9,
+      "modalImageMs": 132.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335473,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 40,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2476,
+      "fcpMs": 1276,
+      "lcpMs": 2480,
+      "cls": 0,
+      "ttfbMs": 112,
+      "observerUnavailable": false,
+      "shellMs": 113.7,
+      "modalImageMs": 136.7,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335417,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 41,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2457,
+      "fcpMs": 1244,
+      "lcpMs": 2460,
+      "cls": 0,
+      "ttfbMs": 36.79999999701977,
+      "observerUnavailable": false,
+      "shellMs": 125.2,
+      "modalImageMs": 151.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335406,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 42,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2497,
+      "fcpMs": 1264,
+      "lcpMs": 2500,
+      "cls": 0,
+      "ttfbMs": 31.599999994039536,
+      "observerUnavailable": false,
+      "shellMs": 116.7,
+      "modalImageMs": 141.7,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335405,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 43,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2545,
+      "fcpMs": 1320,
+      "lcpMs": 2548,
+      "cls": 0,
+      "ttfbMs": 43.899999998509884,
+      "observerUnavailable": false,
+      "shellMs": 114.1,
+      "modalImageMs": 140.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335393,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 44,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2576,
+      "fcpMs": 1280,
+      "lcpMs": 2488,
+      "cls": 0,
+      "ttfbMs": 44.5,
+      "observerUnavailable": false,
+      "shellMs": 118,
+      "modalImageMs": 141.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335409,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 45,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2432,
+      "fcpMs": 1236,
+      "lcpMs": 2440,
+      "cls": 0,
+      "ttfbMs": 31.799999997019768,
+      "observerUnavailable": false,
+      "shellMs": 166.2,
+      "modalImageMs": 201.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335388,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 46,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2474,
+      "fcpMs": 1260,
+      "lcpMs": 2480,
+      "cls": 0,
+      "ttfbMs": 33.5,
+      "observerUnavailable": false,
+      "shellMs": 117.2,
+      "modalImageMs": 140.6,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335400,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 47,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2552,
+      "fcpMs": 1316,
+      "lcpMs": 2500,
+      "cls": 0,
+      "ttfbMs": 127.60000000149012,
+      "observerUnavailable": false,
+      "shellMs": 128.5,
+      "modalImageMs": 153,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335446,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 48,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2533,
+      "fcpMs": 1248,
+      "lcpMs": 2464,
+      "cls": 0,
+      "ttfbMs": 39.899999998509884,
+      "observerUnavailable": false,
+      "shellMs": 107.3,
+      "modalImageMs": 133,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335406,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 49,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2620,
+      "fcpMs": 1368,
+      "lcpMs": 2568,
+      "cls": 0,
+      "ttfbMs": 125.20000000298023,
+      "observerUnavailable": false,
+      "shellMs": 131.8,
+      "modalImageMs": 165.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335425,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 50,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2453,
+      "fcpMs": 1220,
+      "lcpMs": 2440,
+      "cls": 0,
+      "ttfbMs": 31.899999998509884,
+      "observerUnavailable": false,
+      "shellMs": 135.6,
+      "modalImageMs": 160.7,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335414,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 51,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2587,
+      "fcpMs": 1300,
+      "lcpMs": 2520,
+      "cls": 0,
+      "ttfbMs": 31.400000005960464,
+      "observerUnavailable": false,
+      "shellMs": 123.2,
+      "modalImageMs": 151.6,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335430,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 52,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2517,
+      "fcpMs": 1340,
+      "lcpMs": 2528,
+      "cls": 0,
+      "ttfbMs": 107.29999999701977,
+      "observerUnavailable": false,
+      "shellMs": 116.4,
+      "modalImageMs": 141.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335425,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 53,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2582,
+      "fcpMs": 1276,
+      "lcpMs": 2532,
+      "cls": 0,
+      "ttfbMs": 32.79999999701977,
+      "observerUnavailable": false,
+      "shellMs": 98.8,
+      "modalImageMs": 119.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335427,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 54,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2456,
+      "fcpMs": 1260,
+      "lcpMs": 2448,
+      "cls": 0,
+      "ttfbMs": 108.09999999403954,
+      "observerUnavailable": false,
+      "shellMs": 99.9,
+      "modalImageMs": 123.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335433,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 55,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2430,
+      "fcpMs": 1208,
+      "lcpMs": 2404,
+      "cls": 0,
+      "ttfbMs": 33.69999999552965,
+      "observerUnavailable": false,
+      "shellMs": 124.8,
+      "modalImageMs": 151.1,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335422,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 56,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2603,
+      "fcpMs": 1304,
+      "lcpMs": 2500,
+      "cls": 0,
+      "ttfbMs": 33.100000001490116,
+      "observerUnavailable": false,
+      "shellMs": 113.8,
+      "modalImageMs": 136.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335418,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 57,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2533,
+      "fcpMs": 1296,
+      "lcpMs": 2480,
+      "cls": 0,
+      "ttfbMs": 126.39999999850988,
+      "observerUnavailable": false,
+      "shellMs": 102.7,
+      "modalImageMs": 124.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335430,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 58,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2600,
+      "fcpMs": 1312,
+      "lcpMs": 2520,
+      "cls": 0,
+      "ttfbMs": 127.29999999701977,
+      "observerUnavailable": false,
+      "shellMs": 105.4,
+      "modalImageMs": 131,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335437,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 59,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2414,
+      "fcpMs": 1228,
+      "lcpMs": 2400,
+      "cls": 0,
+      "ttfbMs": 32.899999998509884,
+      "observerUnavailable": false,
+      "shellMs": 102.5,
+      "modalImageMs": 126.5,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335391,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 60,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2459,
+      "fcpMs": 1236,
+      "lcpMs": 2388,
+      "cls": 0,
+      "ttfbMs": 33.69999999552965,
+      "observerUnavailable": false,
+      "shellMs": 113.7,
+      "modalImageMs": 137.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335433,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 61,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2492,
+      "fcpMs": 1272,
+      "lcpMs": 2424,
+      "cls": 0,
+      "ttfbMs": 112,
+      "observerUnavailable": false,
+      "shellMs": 105.4,
+      "modalImageMs": 127.6,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335464,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 62,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2553,
+      "fcpMs": 1280,
+      "lcpMs": 2480,
+      "cls": 0,
+      "ttfbMs": 34.600000001490116,
+      "observerUnavailable": false,
+      "shellMs": 108.9,
+      "modalImageMs": 131.7,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335437,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 63,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2571,
+      "fcpMs": 1292,
+      "lcpMs": 2488,
+      "cls": 0,
+      "ttfbMs": 128.10000000149012,
+      "observerUnavailable": false,
+      "shellMs": 105.4,
+      "modalImageMs": 127.7,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335466,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 64,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2472,
+      "fcpMs": 1264,
+      "lcpMs": 2464,
+      "cls": 0,
+      "ttfbMs": 108.60000000149012,
+      "observerUnavailable": false,
+      "shellMs": 107.3,
+      "modalImageMs": 131,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335431,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 65,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2420,
+      "fcpMs": 1228,
+      "lcpMs": 2416,
+      "cls": 0,
+      "ttfbMs": 33.69999999552965,
+      "observerUnavailable": false,
+      "shellMs": 107.8,
+      "modalImageMs": 131.6,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335403,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 66,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2511,
+      "fcpMs": 1272,
+      "lcpMs": 2456,
+      "cls": 0,
+      "ttfbMs": 107.89999999850988,
+      "observerUnavailable": false,
+      "shellMs": 106,
+      "modalImageMs": 128.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335451,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 67,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2431,
+      "fcpMs": 1236,
+      "lcpMs": 2408,
+      "cls": 0,
+      "ttfbMs": 28.799999997019768,
+      "observerUnavailable": false,
+      "shellMs": 110.8,
+      "modalImageMs": 132.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335422,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 68,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2504,
+      "fcpMs": 1300,
+      "lcpMs": 2500,
+      "cls": 0,
+      "ttfbMs": 126.60000000149012,
+      "observerUnavailable": false,
+      "shellMs": 109.4,
+      "modalImageMs": 131.6,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335450,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 69,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2585,
+      "fcpMs": 1340,
+      "lcpMs": 2536,
+      "cls": 0,
+      "ttfbMs": 127.5,
+      "observerUnavailable": false,
+      "shellMs": 113.3,
+      "modalImageMs": 138.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335452,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 70,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2543,
+      "fcpMs": 1288,
+      "lcpMs": 2492,
+      "cls": 0,
+      "ttfbMs": 111.70000000298023,
+      "observerUnavailable": false,
+      "shellMs": 113.9,
+      "modalImageMs": 137.4,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335443,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 71,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2472,
+      "fcpMs": 1232,
+      "lcpMs": 2424,
+      "cls": 0,
+      "ttfbMs": 32.30000000447035,
+      "observerUnavailable": false,
+      "shellMs": 103.1,
+      "modalImageMs": 126.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335429,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 72,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2499,
+      "fcpMs": 1304,
+      "lcpMs": 2492,
+      "cls": 0,
+      "ttfbMs": 138.29999999701977,
+      "observerUnavailable": false,
+      "shellMs": 106.5,
+      "modalImageMs": 129.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335448,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 73,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2434,
+      "fcpMs": 1232,
+      "lcpMs": 2412,
+      "cls": 0,
+      "ttfbMs": 41.5,
+      "observerUnavailable": false,
+      "shellMs": 105.1,
+      "modalImageMs": 128.4,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335446,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 74,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2469,
+      "fcpMs": 1268,
+      "lcpMs": 2428,
+      "cls": 0,
+      "ttfbMs": 107.89999999850988,
+      "observerUnavailable": false,
+      "shellMs": 114.5,
+      "modalImageMs": 141.4,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335468,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 75,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2543,
+      "fcpMs": 1260,
+      "lcpMs": 2452,
+      "cls": 0,
+      "ttfbMs": 32.70000000298023,
+      "observerUnavailable": false,
+      "shellMs": 104.8,
+      "modalImageMs": 128.4,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335406,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 76,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2439,
+      "fcpMs": 1232,
+      "lcpMs": 2408,
+      "cls": 0,
+      "ttfbMs": 35.5,
+      "observerUnavailable": false,
+      "shellMs": 146.7,
+      "modalImageMs": 170.6,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335403,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 77,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2524,
+      "fcpMs": 1300,
+      "lcpMs": 2488,
+      "cls": 0,
+      "ttfbMs": 105.59999999403954,
+      "observerUnavailable": false,
+      "shellMs": 126.1,
+      "modalImageMs": 148.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335453,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 78,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2560,
+      "fcpMs": 1396,
+      "lcpMs": 2560,
+      "cls": 0,
+      "ttfbMs": 132.89999999850988,
+      "observerUnavailable": false,
+      "shellMs": 114.6,
+      "modalImageMs": 137.6,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335437,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 79,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2490,
+      "fcpMs": 1240,
+      "lcpMs": 2424,
+      "cls": 0,
+      "ttfbMs": 34.899999998509884,
+      "observerUnavailable": false,
+      "shellMs": 109.2,
+      "modalImageMs": 132.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335431,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 80,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2509,
+      "fcpMs": 1276,
+      "lcpMs": 2476,
+      "cls": 0,
+      "ttfbMs": 104.59999999403954,
+      "observerUnavailable": false,
+      "shellMs": 104,
+      "modalImageMs": 131.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335439,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 81,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2637,
+      "fcpMs": 1348,
+      "lcpMs": 2508,
+      "cls": 0,
+      "ttfbMs": 124.60000000149012,
+      "observerUnavailable": false,
+      "shellMs": 123.7,
+      "modalImageMs": 149.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335458,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 82,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2551,
+      "fcpMs": 1280,
+      "lcpMs": 2496,
+      "cls": 0,
+      "ttfbMs": 35,
+      "observerUnavailable": false,
+      "shellMs": 142.2,
+      "modalImageMs": 172.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335427,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 83,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2563,
+      "fcpMs": 1356,
+      "lcpMs": 2552,
+      "cls": 0,
+      "ttfbMs": 124.29999999701977,
+      "observerUnavailable": false,
+      "shellMs": 132.8,
+      "modalImageMs": 161,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335476,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 84,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2610,
+      "fcpMs": 1312,
+      "lcpMs": 2524,
+      "cls": 0,
+      "ttfbMs": 122.60000000149012,
+      "observerUnavailable": false,
+      "shellMs": 107.3,
+      "modalImageMs": 132.1,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335459,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 85,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2584,
+      "fcpMs": 1296,
+      "lcpMs": 2484,
+      "cls": 0,
+      "ttfbMs": 32.400000005960464,
+      "observerUnavailable": false,
+      "shellMs": 103.9,
+      "modalImageMs": 127.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335420,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 86,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2530,
+      "fcpMs": 1308,
+      "lcpMs": 2492,
+      "cls": 0,
+      "ttfbMs": 104.09999999403954,
+      "observerUnavailable": false,
+      "shellMs": 106.4,
+      "modalImageMs": 128,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335440,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 87,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2484,
+      "fcpMs": 1268,
+      "lcpMs": 2448,
+      "cls": 0,
+      "ttfbMs": 48.20000000298023,
+      "observerUnavailable": false,
+      "shellMs": 104.4,
+      "modalImageMs": 127.1,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335428,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 88,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2501,
+      "fcpMs": 1328,
+      "lcpMs": 2504,
+      "cls": 0,
+      "ttfbMs": 141.70000000298023,
+      "observerUnavailable": false,
+      "shellMs": 108.5,
+      "modalImageMs": 133.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335442,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 89,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2443,
+      "fcpMs": 1244,
+      "lcpMs": 2404,
+      "cls": 0,
+      "ttfbMs": 53,
+      "observerUnavailable": false,
+      "shellMs": 110.5,
+      "modalImageMs": 132.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335428,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 90,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2469,
+      "fcpMs": 1248,
+      "lcpMs": 2432,
+      "cls": 0,
+      "ttfbMs": 38.29999999701977,
+      "observerUnavailable": false,
+      "shellMs": 106,
+      "modalImageMs": 126.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335412,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 91,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2459,
+      "fcpMs": 1232,
+      "lcpMs": 2420,
+      "cls": 0,
+      "ttfbMs": 32.5,
+      "observerUnavailable": false,
+      "shellMs": 107.3,
+      "modalImageMs": 128.2,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335432,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 92,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2534,
+      "fcpMs": 1220,
+      "lcpMs": 2420,
+      "cls": 0,
+      "ttfbMs": 35.80000000447035,
+      "observerUnavailable": false,
+      "shellMs": 106.5,
+      "modalImageMs": 128.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335448,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 93,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2512,
+      "fcpMs": 1292,
+      "lcpMs": 2480,
+      "cls": 0,
+      "ttfbMs": 128.40000000596046,
+      "observerUnavailable": false,
+      "shellMs": 105.1,
+      "modalImageMs": 126.1,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335473,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 94,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2412,
+      "fcpMs": 1224,
+      "lcpMs": 2376,
+      "cls": 0,
+      "ttfbMs": 35.29999999701977,
+      "observerUnavailable": false,
+      "shellMs": 107.5,
+      "modalImageMs": 130.3,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335445,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 95,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2439,
+      "fcpMs": 1228,
+      "lcpMs": 2416,
+      "cls": 0,
+      "ttfbMs": 29.100000001490116,
+      "observerUnavailable": false,
+      "shellMs": 105.9,
+      "modalImageMs": 135,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335408,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 96,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2492,
+      "fcpMs": 1284,
+      "lcpMs": 2488,
+      "cls": 0,
+      "ttfbMs": 105.19999999552965,
+      "observerUnavailable": false,
+      "shellMs": 107.5,
+      "modalImageMs": 129.9,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335466,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 97,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2492,
+      "fcpMs": 1232,
+      "lcpMs": 2408,
+      "cls": 0,
+      "ttfbMs": 32.29999999701977,
+      "observerUnavailable": false,
+      "shellMs": 109.1,
+      "modalImageMs": 130.5,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335414,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 98,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2535,
+      "fcpMs": 1232,
+      "lcpMs": 2488,
+      "cls": 0,
+      "ttfbMs": 37.19999999552965,
+      "observerUnavailable": false,
+      "shellMs": 108.9,
+      "modalImageMs": 130.8,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335427,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 99,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2482,
+      "fcpMs": 1244,
+      "lcpMs": 2432,
+      "cls": 0,
+      "ttfbMs": 38.399999998509884,
+      "observerUnavailable": false,
+      "shellMs": 104.4,
+      "modalImageMs": 128,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335431,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    },
+    {
+      "run": 100,
+      "success": true,
+      "primaryImageSuccess": true,
+      "modalImageSuccess": true,
+      "primaryImageMs": 2482,
+      "fcpMs": 1252,
+      "lcpMs": 2448,
+      "cls": 0,
+      "ttfbMs": 44.5,
+      "observerUnavailable": false,
+      "shellMs": 107.6,
+      "modalImageMs": 129.1,
+      "modalNetwork": {
+        "requests": 1,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      },
+      "network": {
+        "requests": 13,
+        "transferredBytes": 335429,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0,
+        "requestFailures": [],
+        "httpErrors": [],
+        "consoleErrors": []
+      }
+    }
+  ],
+  "warm": [
+    {
+      "run": 1,
+      "shellMs": 49.8,
+      "imageMs": 64.9,
+      "imageSuccess": true,
+      "network": {
+        "requests": 0,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      }
+    },
+    {
+      "run": 2,
+      "shellMs": 50.4,
+      "imageMs": 67.9,
+      "imageSuccess": true,
+      "network": {
+        "requests": 0,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      }
+    },
+    {
+      "run": 3,
+      "shellMs": 47.3,
+      "imageMs": 64.7,
+      "imageSuccess": true,
+      "network": {
+        "requests": 0,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      }
+    },
+    {
+      "run": 4,
+      "shellMs": 50.5,
+      "imageMs": 65.6,
+      "imageSuccess": true,
+      "network": {
+        "requests": 0,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      }
+    },
+    {
+      "run": 5,
+      "shellMs": 49.3,
+      "imageMs": 64.3,
+      "imageSuccess": true,
+      "network": {
+        "requests": 0,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      }
+    },
+    {
+      "run": 6,
+      "shellMs": 48.1,
+      "imageMs": 63.1,
+      "imageSuccess": true,
+      "network": {
+        "requests": 0,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      }
+    },
+    {
+      "run": 7,
+      "shellMs": 47.4,
+      "imageMs": 64.5,
+      "imageSuccess": true,
+      "network": {
+        "requests": 0,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      }
+    },
+    {
+      "run": 8,
+      "shellMs": 50.8,
+      "imageMs": 66.7,
+      "imageSuccess": true,
+      "network": {
+        "requests": 0,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      }
+    },
+    {
+      "run": 9,
+      "shellMs": 48.7,
+      "imageMs": 68.1,
+      "imageSuccess": true,
+      "network": {
+        "requests": 0,
+        "transferredBytes": 261288,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      }
+    },
+    {
+      "run": 10,
+      "shellMs": 49.5,
+      "imageMs": 67.3,
+      "imageSuccess": true,
+      "network": {
+        "requests": 0,
+        "transferredBytes": 0,
+        "requestFailureCount": 0,
+        "httpErrorCount": 0,
+        "consoleErrorCount": 0
+      }
+    }
+  ],
+  "limitations": [
+    "Synthetic lab measurement, not field RUM or Vercel Speed Insights.",
+    "One physical runner; network and CPU conditions are Chrome DevTools Protocol emulation.",
+    "LCP is read after primary image completion and may differ from finalized field LCP.",
+    "CDP encodedDataLength includes HTTP response headers and excludes browser cache reads.",
+    "Concurrency 1 measures repeatability and user latency, not server saturation or capacity."
+  ]
+}

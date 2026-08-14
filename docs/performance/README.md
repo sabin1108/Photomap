@@ -9,6 +9,14 @@ Photomap performance evidence lives outside the repo under `E:\memory\photomap`.
 - Human-readable performance characteristics: `E:\memory\photomap\characteristic`
 - Chat/work log: `E:\memory\photomap\chat`
 
+## Latest Image Delivery Evidence
+
+- [2026-08-14 반복 측정 상세 보고서](./image-delivery-evidence-2026-08-14.md)
+- optimized cold 100회, baseline cold 30회
+- 첫 사진 p95 17.552초에서 2.615초로 85.1% 감소
+- LCP p75 17.392초에서 2.500초로 85.6% 감소
+- raw JSON은 `docs/performance/results`와 canonical memory에 함께 보관한다.
+
 ## One Issue Flow
 
 ```powershell
