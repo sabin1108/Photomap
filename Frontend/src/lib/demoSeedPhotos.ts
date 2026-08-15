@@ -1,5 +1,6 @@
 import type { Photo } from '../type';
 import { isPerformancePreview, performanceImageMode } from './demoConfig';
+import { resolvePublicDemoImageUrls } from './publicDemoImages';
 
 const sourceDemoSeedPhotos: Photo[] = [
   {
@@ -89,7 +90,10 @@ const sourceDemoSeedPhotos: Photo[] = [
 ];
 
 export const publicDemoSeedPhotos: Photo[] = sourceDemoSeedPhotos.map((photo, index) => {
-  if (!isPerformancePreview) return photo;
+  if (!isPerformancePreview) {
+    const images = resolvePublicDemoImageUrls(photo.url);
+    return images ? { ...photo, url: images.display, thumbnail_url: images.thumbnail } : photo;
+  }
   if (performanceImageMode === 'baseline') {
     const baseline = `/performance-fixtures/travel-baseline.jpg?photo=${index + 1}`;
     return { ...photo, url: baseline, thumbnail_url: baseline };

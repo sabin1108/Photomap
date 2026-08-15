@@ -40,6 +40,7 @@
             "@vitejs/plugin-react-swc": "^3.10.2",
             "autoprefixer": "^10.4.23",
             "postcss": "^8.5.6",
+            "sharp": "^0.35.3",
             "tailwindcss": "^3.4.17",
             "typescript": "^5.9.3",
             "vite": "^6.4.3"
@@ -57,6 +58,7 @@
             "perf:analyze": "node scripts/analyze-lighthouse-performance.mjs",
             "test:load-contract": "node --test tests/load/*.test.mjs",
             "load:check": "node --check tests/load/supabase-read.js",
-            "load:local": "node tests/load/local-static-load.mjs"
+            "load:local": "node tests/load/local-static-load.mjs",
+            "demo-images:build": "node scripts/build-public-demo-images.mjs"
       }
 }

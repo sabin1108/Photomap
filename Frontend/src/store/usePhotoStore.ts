@@ -3,6 +3,7 @@ import { Photo, DBMedia } from '../type';
 import { getSupabase } from '../lib/supabaseClient';
 import { isPerformancePreview, isPublicDemo, localFavoriteStorageKey, performanceImageMode } from '../lib/demoConfig';
 import { publicDemoSeedPhotos } from '../lib/demoSeedPhotos';
+import { resolvePublicDemoImageUrls } from '../lib/publicDemoImages';
 import { toast } from 'sonner';
 
 interface PhotoStore {
@@ -90,14 +91,17 @@ const mapMediaToPhoto = (media: DBMedia): Photo => {
     const performanceDisplay = `/performance-fixtures/travel-display.webp?photo=${media.media_id}`;
     const performanceThumbnail = `/performance-fixtures/travel-thumb.webp?photo=${media.media_id}`;
     const performanceBaseline = `/performance-fixtures/travel-baseline.jpg?photo=${media.media_id}`;
+    const publicDemoImages = isPublicDemo
+        ? resolvePublicDemoImageUrls(media.file_url || media.thumbnail_url || '')
+        : null;
     return {
         id: String(media.media_id),
         url: isPerformancePreview
             ? performanceImageMode === 'baseline' ? performanceBaseline : performanceDisplay
-            : media.file_url || '',
+            : publicDemoImages?.display || media.file_url || '',
         thumbnail_url: isPerformancePreview
             ? performanceImageMode === 'baseline' ? performanceBaseline : performanceThumbnail
-            : media.thumbnail_url,
+            : publicDemoImages?.thumbnail || media.thumbnail_url,
         title: extractTitle,
         description: descText,
         location: loc?.address_text || 'Unknown',
