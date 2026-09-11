@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { Photo, DBMedia } from '../type';
-import { getSupabase } from '../lib/supabaseClient';
-import { isPerformancePreview, isPublicDemo, localFavoriteStorageKey, performanceImageMode } from '../lib/demoConfig';
-import { publicDemoSeedPhotos } from '../lib/demoSeedPhotos';
+import { getSupabase, missingSupabaseEnv } from '../lib/supabaseClient';
+import { demoUserId, isPerformancePreview, isPublicDemo, localFavoriteStorageKey, performanceImageMode } from '../lib/demoConfig';
+import { publicDemoSeedPhotos, publicDemoSeedCategories } from '../lib/demoSeedPhotos';
 import { resolvePublicDemoImageUrls } from '../lib/publicDemoImages';
 import { toast } from 'sonner';
 
@@ -13,6 +13,7 @@ interface PhotoStore {
     isInitialized: boolean;   // 초기화 완료 여부
     isLoading: boolean;       // 데이터 로딩 중 여부
     loadError: string | null;  // 공개 데모에서 사용자에게 보여줄 데이터 로딩 오류
+    isDemoFallback: boolean;
     hasMore: boolean;         // 더 불러올 데이터가 있는지 여부
     currentUserId: string | null; // 현재 로드된 사용자 ID
     favoriteIds: Set<string>; // 현재 session에서 한 번 조회한 즐겨찾기 ID
@@ -151,6 +152,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     isInitialized: false,
     isLoading: false,
     loadError: null,
+    isDemoFallback: false,
     hasMore: true,
     currentUserId: null,
     favoriteIds: new Set<string>(),
@@ -160,17 +162,20 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         if (get().isInitialized && get().currentUserId === userId) return;
 
         console.log(`🔄 [PhotoStore] Initializing for user: ${userId}`);
+        const initialFavoriteIds = isPublicDemo ? mergeLocalFavoriteIds(new Set<string>()) : new Set<string>();
         set({
             isInitialized: true,
             isLoading: true,
             loadError: null,
             currentUserId: userId,
-            photos: isPublicDemo ? publicDemoSeedPhotos : [],
-            categories: [],
-            favoriteIds: new Set<string>()
+            photos: isPublicDemo ? publicDemoSeedPhotos.map(photo => ({ ...photo, isFavorite: initialFavoriteIds.has(photo.id) })) : [],
+            categories: isPublicDemo ? publicDemoSeedCategories : [],
+            isDemoFallback: isPublicDemo,
+            hasMore: !isPublicDemo,
+            favoriteIds: initialFavoriteIds
         });
 
-        if (isPerformancePreview) {
+        if (isPerformancePreview || (isPublicDemo && (missingSupabaseEnv || !demoUserId))) {
             set({ isLoading: false, hasMore: false });
             return;
         }
@@ -179,7 +184,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             get().fetchCategories(userId),
             get().fetchPhotos(userId)
         ]);
-        set({ isLoading: false });
+        set({ isLoading: false, ...(get().isDemoFallback ? { categories: publicDemoSeedCategories } : {}) });
     },
 
     fetchCategories: async (userId: string) => {
@@ -199,7 +204,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             }
         } catch (error) {
             console.error('카테고리 불러오기 실패:', error);
-            toast.error('앙범 목록을 불러오지 못했습니다.');
+            if (!isPublicDemo) toast.error('앨범 목록을 불러오지 못했습니다.');
         }
     },
 
@@ -244,6 +249,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
                     : loadedPhotos;
                 set({
                     photos: visiblePhotos,
+                    isDemoFallback: isPublicDemo && loadedPhotos.length === 0,
                     favoriteIds,
                     loadError: null,
                     hasMore: loadedPhotos.length === limit
@@ -252,7 +258,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         } catch (err) {
             console.error('사진 불러오기 중 예기치 못한 오류 발생:', err);
             set({ loadError: '사진을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도하세요.', hasMore: false });
-            toast.error('사진을 불러오는 중 오류가 발생했습니다.');
+            if (!isPublicDemo) toast.error('사진을 불러오는 중 오류가 발생했습니다.');
         }
     },
 
@@ -745,6 +751,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
             isInitialized: false,
             isLoading: false,
             loadError: null,
+            isDemoFallback: false,
             hasMore: true,
             currentUserId: null,
             favoriteIds: new Set<string>()

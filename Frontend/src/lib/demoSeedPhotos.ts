@@ -1,6 +1,6 @@
 import type { Photo } from '../type';
 import { isPerformancePreview, performanceImageMode } from './demoConfig';
-import { resolvePublicDemoImageUrls } from './publicDemoImages';
+import { getPublicDemoSourceUrl, publicDemoImageManifest, resolvePublicDemoImageUrls } from './publicDemoImages';
 
 const sourceDemoSeedPhotos: Photo[] = [
   {
@@ -89,7 +89,48 @@ const sourceDemoSeedPhotos: Photo[] = [
   }
 ];
 
-export const publicDemoSeedPhotos: Photo[] = sourceDemoSeedPhotos.map((photo, index) => {
+
+// Locations are illustrative demo metadata, not captured EXIF.
+const additionalDemoPhotos: Photo[] = [
+  { imageId: 2, title: 'Seoul Starlit Tree', location: 'Seoul', lat: 37.5665, lng: 126.9780, category: '자연' },
+  { imageId: 3, title: 'Singapore Evening Sky', location: 'Singapore', lat: 1.3521, lng: 103.8198, category: '밤하늘' },
+  { imageId: 4, title: 'Osaka Night Photograph', location: 'Osaka', lat: 34.6937, lng: 135.5023, category: '밤하늘' },
+  { imageId: 5, title: 'Sahara Stars', location: 'Sahara', lat: 23.4162, lng: 25.6628, category: '밤하늘' },
+  { imageId: 7, title: 'Sydney Astronomy', location: 'Sydney', lat: -33.8688, lng: 151.2093, category: '밤하늘' },
+  { imageId: 8, title: 'Bangkok Sun', location: 'Bangkok', lat: 13.7563, lng: 100.5018, category: '자연' },
+  { imageId: 9, title: 'Sahara Astronomy', location: 'Sahara', lat: 23.4162, lng: 25.6628, category: '밤하늘' },
+  { imageId: 10, title: 'Sydney Aurora', location: 'Sydney', lat: -33.8688, lng: 151.2093, category: '자연' },
+  { imageId: 11, title: 'Singapore Stars', location: 'Singapore', lat: 1.3521, lng: 103.8198, category: '밤하늘' },
+  { imageId: 12, title: 'Seoul Moon', location: 'Seoul', lat: 37.5665, lng: 126.9780, category: '밤하늘' },
+].map(({ imageId, ...metadata }) => {
+  const image = publicDemoImageManifest.find(item => item.id === imageId)!;
+  const url = getPublicDemoSourceUrl(image.fileName);
+  return {
+    ...metadata,
+    id: 'demo-seed-image-' + imageId,
+    url,
+    thumbnail_url: url,
+    date: 'Demo',
+    tags: ['Demo', metadata.category, metadata.location],
+    description: '기존 데모 사진입니다. 위치는 지도·앨범 탐색을 위한 예시 위치이며 실제 촬영 위치를 뜻하지 않습니다.',
+    isFavorite: false,
+    aspectRatio: 'h-[400px]',
+  };
+});
+
+const demoPhotos = isPerformancePreview ? sourceDemoSeedPhotos : [
+  ...sourceDemoSeedPhotos.map(photo => ({
+    ...photo,
+    tags: ['Demo', '밤하늘', photo.location],
+    category: '밤하늘',
+    description: '기존 데모 사진입니다. 위치는 지도·앨범 탐색을 위한 예시 위치이며 실제 촬영 위치를 뜻하지 않습니다.',
+  })),
+  ...additionalDemoPhotos,
+];
+
+export const publicDemoSeedCategories = [...new Set(demoPhotos.map(photo => photo.category).filter((category): category is string => Boolean(category)))];
+
+export const publicDemoSeedPhotos: Photo[] = demoPhotos.map((photo, index) => {
   if (!isPerformancePreview) {
     const images = resolvePublicDemoImageUrls(photo.url);
     return images ? { ...photo, url: images.display, thumbnail_url: images.thumbnail } : photo;

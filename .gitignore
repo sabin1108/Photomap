@@ -116,3 +116,12 @@ docs/performance/artifacts/*
 # Local Unity authoring/export projects
 /Unity/MapBoxweb/
 /Unity/mabboxhtml/
+
+# Local Playwright reports
+/Frontend/test-results/
+/Frontend/playwright-report/
+/test-results/
+
+# Local agent runtime and opt-in benchmark build
+/.omx/
+/Frontend/build-benchmark/

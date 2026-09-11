@@ -7,6 +7,7 @@ import { Drawer } from 'vaul';
 import type { Photo } from '../type';
 import { getPhotoImageUrl } from '../lib/imageUrl';
 import { PhotoModal } from './ui/photo-modal';
+import { PhotoSearch } from './ui/photo-search';
 
 interface Map2DViewProps {
   onNavigate?: (view: string) => void;
@@ -54,18 +55,19 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
   } | null>(null);
   const pendingFocusPhotoRef = useRef<Photo | null>(null);
 
+  const normalizedSearch = searchKeyword.trim().toLowerCase();
   const filteredPhotos = useMemo(() => photos.filter(photo => {
-    const matchesSearch = searchKeyword === '' ||
-      (photo.title || '').toLowerCase().includes(searchKeyword.toLowerCase()) ||
-      (photo.location || '').toLowerCase().includes(searchKeyword.toLowerCase()) ||
-      (photo.description || '').toLowerCase().includes(searchKeyword.toLowerCase());
+    const matchesSearch = normalizedSearch === '' ||
+      (photo.title || '').toLowerCase().includes(normalizedSearch) ||
+      (photo.location || '').toLowerCase().includes(normalizedSearch) ||
+      (photo.description || '').toLowerCase().includes(normalizedSearch);
 
     const matchesCategory = activeFilter === 'all' ||
       photo.category === activeFilter ||
       (photo.tags && photo.tags.includes(activeFilter));
 
     return matchesSearch && matchesCategory;
-  }), [activeFilter, photos, searchKeyword]);
+  }), [activeFilter, photos, normalizedSearch]);
 
   const mapPhotos = useMemo(() => filteredPhotos.filter(hasValidCoordinates), [filteredPhotos]);
   const mapMarkers = useMemo<MapMarkerPayload[]>(() => mapPhotos.map(photo => ({
@@ -211,16 +213,13 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
         <div className="flex flex-row items-center gap-2 max-w-full">
           <div className="flex-1 flex items-center gap-2 max-w-[85%] lg:max-w-md">
             {/* 검색바 */}
-            <div className="flex-1 bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-sm border border-white/50 flex items-center gap-2 overflow-hidden">
-              <Search className="w-5 h-5 text-stone-400 ml-2 flex-shrink-0" />
-              <input
-                type="text"
-                placeholder="장소, 제목, 설명 검색"
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                className="bg-transparent border-none outline-none text-sm text-stone-700 placeholder:text-stone-400 w-full"
-              />
-            </div>
+            <PhotoSearch
+              value={searchKeyword}
+              onChange={setSearchKeyword}
+              placeholder="장소, 제목, 설명 검색"
+              ariaLabel="장소, 제목, 설명 검색"
+              className="flex-1"
+            />
 
             {/* 필터 및 관리 통합 버튼 */}
             <Drawer.Root open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
@@ -282,7 +281,10 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
                         </div>
 
                         {categories
-                          .filter(cat => cat.toLowerCase().includes(categorySearch.toLowerCase()))
+                          .filter(cat => {
+                            const normalizedCategorySearch = categorySearch.trim().toLowerCase();
+                            return normalizedCategorySearch === '' || cat.toLowerCase().includes(normalizedCategorySearch);
+                          })
                           .map(cat => (
                             <div
                               key={cat}

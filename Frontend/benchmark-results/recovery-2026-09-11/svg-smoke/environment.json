@@ -1,0 +1,21 @@
+{
+  "target": "http://127.0.0.1:4187",
+  "deploymentId": null,
+  "sourceCommit": null,
+  "startedAt": "2026-09-11T07:55:05.272Z",
+  "browser": "151.0.7922.34",
+  "headless": true,
+  "os": "Windows_NT 10.0.26200",
+  "cpu": "AMD Ryzen 5 5600 6-Core Processor              ",
+  "ramBytes": 34265485312,
+  "concurrency": 1,
+  "cpuSlowdown": 1,
+  "networkThrottling": false,
+  "browserCache": "fresh context per run",
+  "cdnCache": "not cleared",
+  "sampleIntervalMs": 100,
+  "localSmokeOnly": true,
+  "pilot": false,
+  "imageCondition": "same-origin synthetic static images",
+  "repetitions": 1
+}

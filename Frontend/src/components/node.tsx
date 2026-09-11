@@ -240,6 +240,16 @@ export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean 
                     {/* 중앙 메인 노드 렌더링 */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 flex flex-col items-center">
                         <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#E09F87] p-1 shadow-lg relative transition duration-300 ${!isTagMode && !isExiting ? 'cursor-pointer hover:scale-105' : ''}`}
+                            role={!isTagMode ? "button" : undefined}
+                            aria-disabled={isExiting}
+                            tabIndex={!isTagMode && !isExiting ? 0 : -1}
+                            aria-label={!isTagMode ? "전체 태그로 돌아가기" : undefined}
+                            onKeyDown={(event) => {
+                                if (!isTagMode && !isExiting && (event.key === "Enter" || event.key === " ")) {
+                                    event.preventDefault();
+                                    handleTransition(null, selectedLocation);
+                                }
+                            }}
                             onClick={() => { if (!isTagMode && !isExiting) handleTransition(null, selectedLocation); }}>
                             <div className="w-full h-full rounded-full border-[3px] border-white overflow-hidden z-10 bg-stone-50 flex items-center justify-center">
                                 {centralPhoto ? <img alt="center" className={`w-full h-full object-cover transition-transform duration-700 ${!isExiting ? 'hover:scale-110' : ''}`} src={getPhotoImageUrl(centralPhoto, 'thumb')} /> : <div className="w-4 h-4 bg-stone-300 animate-pulse rounded-full" />}
@@ -261,6 +271,15 @@ export function NodeView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean 
                                     '--dx': `${node.x || 0}px`, '--dy': `${node.y || 0}px`,
                                     animationDelay: isExiting ? '0s' : `${i * 0.03}s`
                                 } as React.CSSProperties}
+                                role="button"
+                                aria-disabled={isExiting}
+                                tabIndex={isExiting ? -1 : 0}
+                                aria-label={node.type === "tag" ? `${node.label} 태그 사진 보기` : `${node.photo?.title || "사진"} 상세 보기`}
+                                onKeyDown={(event) => {
+                                    if (isExiting || (event.key !== "Enter" && event.key !== " ")) return;
+                                    event.preventDefault();
+                                    node.type === "tag" ? handleTransition(node.label!, selectedLocation) : setSelectedPhotoDetail(node.photo!);
+                                }}
                                 onPointerEnter={() => handleHoverNode(node.id)} onPointerLeave={() => handleHoverNode(null)}
                                 onPointerDown={(e) => handlePointerDown(e, node)}
                                 onPointerMove={(e) => handlePointerMove(e, node)}

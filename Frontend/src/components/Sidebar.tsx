@@ -62,7 +62,7 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
           {isReadOnlyDemo && (
             <div className="px-3 py-2">
               <p className="text-[11px] font-semibold text-stone-500">읽기 전용 데모</p>
-              <p className="mt-0.5 text-[10px] leading-4 text-stone-400">사진 아카이브 탐색만 가능합니다. 업로드와 관리 도구는 숨겨져 있습니다.</p>
+              <p className="mt-0.5 text-[10px] leading-4 text-stone-400">지도에서 위치를 찾고, 태그와 앨범으로 사진을 탐색하세요. 즐겨찾기는 이 브라우저에 저장됩니다.</p>
             </div>
           )}
           {isAdmin && (

@@ -33,6 +33,7 @@ function Root({ photo, onClose, children }: RootProps) {
 
     return createPortal(
         <div
+            data-photo-modal-id={photo.id}
             className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
             onClick={onClose}
         >

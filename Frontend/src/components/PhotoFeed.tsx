@@ -15,6 +15,7 @@ import { demoUserId, isPublicDemo } from '../lib/demoConfig';
 import { getGridImageLoadingPolicy, getPhotoImageUrl } from '../lib/imageUrl';
 
 interface PhotoFeedProps {
+  benchmarkMode?: 'all' | 'virtual';
   className?: string;
   filterCategory?: string | null;
   hideHeader?: boolean;
@@ -30,7 +31,8 @@ export function PhotoFeed({
   hideHeader,
   isExternalSelectMode,
   onSelectModeChange,
-  isReadOnlyDemo
+  isReadOnlyDemo,
+  benchmarkMode
 }: PhotoFeedProps) {
   const {
     photos,
@@ -105,7 +107,12 @@ export function PhotoFeed({
     getScrollElement: () => parentRef.current,
     estimateSize: () => 200,
     overscan: 5,
+    enabled: benchmarkMode !== 'all',
   });
+
+  const renderedRows = benchmarkMode === 'all'
+    ? Array.from({ length: rowCount }, (_, index) => ({ index, start: 0 }))
+    : rowVirtualizer.getVirtualItems();
 
   const { user } = useAuthStore();
   const feedUserId = isPublicDemo ? demoUserId : user?.id;
@@ -172,7 +179,14 @@ export function PhotoFeed({
   };
 
   return (
-    <div className={cn("p-4 md:p-10 h-full overflow-y-auto custom-scrollbar relative", className)} ref={parentRef}>
+    <div className={cn("p-4 md:p-10 h-full overflow-y-auto custom-scrollbar relative", className)} ref={parentRef}
+      data-benchmark-feed={benchmarkMode ? "" : undefined}
+      data-loaded-count={benchmarkMode ? photos.length : undefined}
+      data-filtered-count={benchmarkMode ? displayPhotos.length : undefined}
+      data-columns={benchmarkMode ? effectiveColumns : undefined}
+      data-row-count={benchmarkMode ? rowCount : undefined}
+      data-selected-photo-id={benchmarkMode ? currentPhoto?.id : undefined}
+    >
       {!hideHeader && (
         <div className="mb-8 flex justify-between items-end">
           <div>
@@ -180,7 +194,7 @@ export function PhotoFeed({
             <div className="h-1 w-20 bg-[#E09F87] rounded-full opacity-60"></div>
           </div>
 
-          <Button
+          {!isReadOnlyDemo && <Button
             variant={isSelectMode ? "secondary" : "outline"}
             size="sm"
             onClick={toggleSelectMode}
@@ -188,7 +202,7 @@ export function PhotoFeed({
           >
             {isSelectMode ? <X className="w-4 h-4" /> : <MousePointer2 className="w-4 h-4" />}
             {isSelectMode ? "취소" : "선택"}
-          </Button>
+          </Button>}
         </div>
       )}
 
@@ -217,17 +231,17 @@ export function PhotoFeed({
       ) : (
         <div
           className="relative w-full pb-24"
-          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+          style={benchmarkMode === 'all' ? undefined : { height: `${rowVirtualizer.getTotalSize()}px` }}
         >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          {renderedRows.map((virtualRow) => {
             return (
               <div
                 key={virtualRow.index}
                 data-index={virtualRow.index}
-                ref={rowVirtualizer.measureElement}
-                className="absolute top-0 left-0 w-full grid"
+                ref={benchmarkMode === 'all' ? undefined : rowVirtualizer.measureElement}
+                className={benchmarkMode === "all" ? "w-full grid" : "absolute top-0 left-0 w-full grid"}
                 style={{
-                  transform: `translateY(${virtualRow.start}px)`,
+                  transform: benchmarkMode === 'all' ? undefined : `translateY(${virtualRow.start}px)`,
                   gridTemplateColumns: `repeat(${effectiveColumns}, minmax(0, 1fr))`,
                   gap: `${gap}px`
                 }}
@@ -243,6 +257,7 @@ export function PhotoFeed({
                   return (
                     <div
                       key={photo.id}
+                      data-photo-id={benchmarkMode ? photo.id : undefined}
                       onClick={() => handlePhotoClick(photo)}
                       className={cn(
                         "group relative aspect-square overflow-hidden cursor-pointer bg-stone-100",

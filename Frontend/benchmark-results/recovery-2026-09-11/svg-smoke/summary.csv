@@ -1,0 +1,5 @@
+id,valid,maxCards,failure
+mobile-1000-1-all,true,1000,""
+mobile-1000-1-virtual,true,57,""
+desktop-1000-1-all,true,1000,""
+desktop-1000-1-virtual,true,136,""

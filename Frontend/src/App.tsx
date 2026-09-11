@@ -24,6 +24,8 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { demoUserId, isPerformancePreview, isPublicDemo } from './lib/demoConfig';
 import { missingSupabaseEnv } from './lib/supabaseClient';
 
+export type AppBenchmarkMode = 'all' | 'virtual';
+
 function MissingConfigScreen({ message }: { message: string }) {
   return (
     <div className="min-h-screen bg-[#F5F2EB] flex items-center justify-center p-6 text-stone-800">
@@ -35,15 +37,18 @@ function MissingConfigScreen({ message }: { message: string }) {
   );
 }
 
-export default function App() {
+export default function App({ benchmarkMode }: { benchmarkMode?: AppBenchmarkMode }) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [shouldRenderGlobe, setShouldRenderGlobe] = useState(false);
+  const isBenchmarkApp = benchmarkMode !== undefined;
+  const isReadOnly = isPublicDemo || isBenchmarkApp;
 
   const { user, loading, signOut, isAdmin } = useAuthStore();
-  const { photos, initialize, clearPhotos } = usePhotoStore(
+  const { photos, isDemoFallback, initialize, clearPhotos } = usePhotoStore(
     useShallow(state => ({
       photos: state.photos,
+      isDemoFallback: state.isDemoFallback,
       initialize: state.initialize,
       clearPhotos: state.clear,
     }))
@@ -61,13 +66,14 @@ export default function App() {
   }, [activeCategory, isAdmin, loading]);
 
   useEffect(() => {
+    if (isBenchmarkApp) return;
     const targetUserId = isPerformancePreview
       ? 'performance-fixture'
-      : isPublicDemo ? demoUserId : user?.id;
-    if ((isPerformancePreview || !missingSupabaseEnv) && targetUserId) {
+      : isPublicDemo ? demoUserId || 'public-demo' : user?.id;
+    if ((isPublicDemo || isPerformancePreview || !missingSupabaseEnv) && targetUserId) {
       initialize(targetUserId);
     }
-  }, [user?.id, initialize]);
+  }, [isBenchmarkApp, user?.id, initialize]);
 
   const uniqueCountries = useMemo(() => {
     const countries = new Set(photos.map(p => {
@@ -77,15 +83,12 @@ export default function App() {
     return countries.size;
   }, [photos]);
 
-  if (!isPerformancePreview && missingSupabaseEnv) {
+  if (!isBenchmarkApp && !isPublicDemo && !isPerformancePreview && missingSupabaseEnv) {
     return <MissingConfigScreen message="VITE_SUPABASE_URL과 VITE_SUPABASE_ANON_KEY를 Vercel 환경변수에 등록해 주세요." />;
   }
 
-  if (!isPerformancePreview && isPublicDemo && !demoUserId) {
-    return <MissingConfigScreen message="로그인 없는 공개 데모를 위해 VITE_DEMO_USER_ID를 Vercel 환경변수에 등록해 주세요." />;
-  }
 
-  if (!isPublicDemo && loading) {
+  if (!isBenchmarkApp && !isPublicDemo && loading) {
     return (
       <div className="flex h-screen bg-[#F5F2EB] text-stone-800 font-sans overflow-hidden">
         <div className="w-20 md:w-64 border-r border-stone-200 bg-white/50 animate-pulse" />
@@ -117,7 +120,7 @@ export default function App() {
     }
   };
 
-  if (!isPublicDemo && !user) {
+  if (!isBenchmarkApp && !isPublicDemo && !user) {
     return (
       <>
         {activeCategory === 'signup' ? (
@@ -144,7 +147,7 @@ export default function App() {
         onSelectCategory={setActiveCategory}
         onSignOut={handleSignOut}
         isAdmin={!isPublicDemo && isAdmin}
-        isReadOnlyDemo={isPublicDemo}
+        isReadOnlyDemo={isReadOnly}
         className="flex-shrink-0 md:z-20 z-50"
       />
 
@@ -195,10 +198,10 @@ export default function App() {
                   )}
                 </div>
                 <p className="mt-1 text-[11px] md:text-xs leading-5 text-stone-600">
-                  여행 사진을 위치, 시간, 관계로 탐색하는 공개 데모입니다.
+                  {isDemoFallback ? `예시 사진 ${photos.length}장으로 지도·태그·앨범을 탐색해 보세요. 위치는 탐색용 예시입니다.` : '여행 사진을 위치, 시간, 관계로 탐색하는 공개 데모입니다.'}
                 </p>
                 <p className="mt-2 text-[10px] md:text-xs text-stone-500 tabular-nums">
-                  {uniqueCountries} countries · {photos.length} memories
+                  {uniqueCountries} places · {photos.length} memories
                 </p>
               </div>
               {isPublicDemo && (
@@ -209,13 +212,13 @@ export default function App() {
             </div>
 
             <div className="w-full md:w-1/2 flex-1 md:h-full order-2 md:order-1 relative z-10 min-h-0">
-              <PhotoFeed className="h-full pb-20 md:pb-10" isReadOnlyDemo={isPublicDemo} />
+              <PhotoFeed className="h-full pb-20 md:pb-10" isReadOnlyDemo={isReadOnly} benchmarkMode={benchmarkMode} />
             </div>
           </>
         )}
       </main>
 
-      {!isPublicDemo && (
+      {!isReadOnly && (
         <div className="fixed bottom-20 right-6 z-40 md:hidden">
           <Button
             size="icon"
@@ -228,7 +231,7 @@ export default function App() {
         </div>
       )}
 
-      {!isPublicDemo && (
+      {!isReadOnly && (
         <div className="fixed bottom-24 right-8 z-40 hidden md:block">
           <Button
             className="bg-[#E09F87] hover:bg-[#D08E76] text-white rounded-full px-6 shadow-lg hover:shadow-xl transition-colors duration-200"

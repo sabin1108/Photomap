@@ -47,6 +47,7 @@
       },
       "scripts": {
             "dev": "vite --port 3000",
+            "test:demo": "playwright test --config playwright.demo.config.js",
             "test:map": "playwright test tests/map-flow.spec.js",
             "build": "vite build",
             "build:perf": "vite build --mode performance",

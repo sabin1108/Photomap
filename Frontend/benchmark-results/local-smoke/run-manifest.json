@@ -1,0 +1,106 @@
+[
+  {
+    "id": "mobile-1000-1-all",
+    "count": 1000,
+    "profile": {
+      "name": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 2
+    },
+    "mode": "all",
+    "startedAt": "2026-09-09T03:29:02.554Z",
+    "errors": [],
+    "valid": true,
+    "warmupStartedAt": "2026-09-09T03:29:03.971Z",
+    "warmupFinishedAt": "2026-09-09T03:29:06.989Z",
+    "clickCheck": {
+      "photoId": "fixture-0001",
+      "selectedId": "fixture-0001",
+      "modalImageVisible": true
+    },
+    "continuousBlankSamples": 0,
+    "maxCards": 1000,
+    "finishedAt": "2026-09-09T03:29:28.965Z"
+  },
+  {
+    "id": "mobile-1000-1-virtual",
+    "count": 1000,
+    "profile": {
+      "name": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 2
+    },
+    "mode": "virtual",
+    "startedAt": "2026-09-09T03:29:28.970Z",
+    "errors": [],
+    "valid": true,
+    "warmupStartedAt": "2026-09-09T03:29:30.065Z",
+    "warmupFinishedAt": "2026-09-09T03:29:32.709Z",
+    "clickCheck": {
+      "photoId": "fixture-0001",
+      "selectedId": "fixture-0001",
+      "modalImageVisible": true
+    },
+    "continuousBlankSamples": 0,
+    "maxCards": 57,
+    "finishedAt": "2026-09-09T03:29:51.893Z"
+  },
+  {
+    "id": "desktop-1000-1-all",
+    "count": 1000,
+    "profile": {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "deviceScaleFactor": 1
+    },
+    "mode": "all",
+    "startedAt": "2026-09-09T03:29:51.897Z",
+    "errors": [],
+    "valid": true,
+    "warmupStartedAt": "2026-09-09T03:29:53.264Z",
+    "warmupFinishedAt": "2026-09-09T03:29:56.311Z",
+    "clickCheck": {
+      "photoId": "fixture-0001",
+      "selectedId": "fixture-0001",
+      "modalImageVisible": true
+    },
+    "continuousBlankSamples": 0,
+    "maxCards": 1000,
+    "finishedAt": "2026-09-09T03:30:17.903Z"
+  },
+  {
+    "id": "desktop-1000-1-virtual",
+    "count": 1000,
+    "profile": {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "deviceScaleFactor": 1
+    },
+    "mode": "virtual",
+    "startedAt": "2026-09-09T03:30:17.916Z",
+    "errors": [],
+    "valid": true,
+    "warmupStartedAt": "2026-09-09T03:30:19.002Z",
+    "warmupFinishedAt": "2026-09-09T03:30:21.662Z",
+    "clickCheck": {
+      "photoId": "fixture-0001",
+      "selectedId": "fixture-0001",
+      "modalImageVisible": true
+    },
+    "continuousBlankSamples": 0,
+    "maxCards": 136,
+    "finishedAt": "2026-09-09T03:30:40.971Z"
+  }
+]

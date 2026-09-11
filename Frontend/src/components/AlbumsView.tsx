@@ -11,6 +11,7 @@ import { UploadScreen } from './UploadScreen';
 import { cn } from './ui/utils';
 import { useGridBreakpoints } from '../hooks/useGridBreakpoints';
 import { getPhotoImageUrl } from '../lib/imageUrl';
+import { PhotoSearch } from './ui/photo-search';
 interface Album {
   id: string;
   title: string;
@@ -86,7 +87,7 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
   // 카테고리별 필터 적용
   const categorizedAlbums = useMemo(() => {
     const filterFn = (a: Album) => searchQuery.trim()
-      ? a.title.toLowerCase().includes(searchQuery.toLowerCase())
+      ? a.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
       : true;
 
     return {
@@ -206,17 +207,13 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
 
           <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-center">
             {/* 검색바 */}
-            <div className="relative w-full md:w-64">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-stone-400" />
-              </div>
-              <Input
-                placeholder="앨범 검색"
-                className="block w-full pl-10 bg-white/50 border-white/50 shadow-sm rounded-2xl h-10 text-stone-800 placeholder:text-stone-400 focus-visible:ring-1 focus-visible:ring-[#E09F87]"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            <PhotoSearch
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="앨범 검색"
+              ariaLabel="앨범 검색"
+              className="md:w-64"
+            />
 
             {canWrite && <div className="hidden md:flex gap-2">
               <Button onClick={handleOpenCreate} className="bg-stone-900 hover:bg-stone-800 text-white rounded-2xl shadow-sm gap-1.5 font-medium h-10">

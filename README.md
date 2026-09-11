@@ -178,6 +178,9 @@ VITE_DEMO_USER_ID=<read-only demo data owner user id>
 
 - 로그인과 회원가입 없이 접근
 - `VITE_DEMO_USER_ID` 기준 read-only Supabase query 사용
+- 초기 화면에는 저장소에 포함된 예시 사진 16장을 표시. 설정 없음·조회 실패·빈 결과에서도 예시 사진과 앨범/태그 탐색 유지
+- DB에 사진이 있으면 해당 결과로 교체하며 예시 사진을 DB 목록에 섞지 않음
+- 예시 위치는 탐색용 메타데이터이며 실제 촬영 위치를 뜻하지 않음
 - 업로드, 삭제, 카테고리 수정, 관리자 기능 숨김 또는 비활성화
 - 좋아요 상태는 브라우저 `localStorage`에만 저장
 - 성능 모니터 UI는 `VITE_SHOW_PERFORMANCE_MONITOR=true`일 때만 노출
@@ -244,7 +247,7 @@ VITE_PUBLIC_DEMO=false
 
 ## Supabase 데모 데이터 조건
 
-로그인 없는 공개 데모를 위해 Supabase에는 `VITE_DEMO_USER_ID`에 해당하는 read-only 샘플 데이터가 있어야 합니다.
+Supabase 데이터를 보여주려면 `VITE_DEMO_USER_ID`에 해당하는 read-only 샘플 데이터가 필요합니다. 설정이 없거나 조회에 실패하거나 결과가 비어 있으면 로컬 예시 사진 16장으로 탐색할 수 있습니다.
 
 필요 테이블:
 
@@ -297,3 +300,9 @@ RLS를 사용하는 경우 anon role은 의도한 데모 사용자 row만 select
 - 개발 일지를 통한 주 단위 진행 상황 및 기술적 이슈 해결 과정 문서화
 - 마일스톤 캘린더를 활용한 개발 일정 및 주요 데드라인 시각화
 - 디스코드를 통한 회의 및 화면 공유로 실시간 피드백 진행
+
+### 공개 데모 회귀 검증
+
+`Frontend`에서 `npm run test:demo` 실행. 테스트 서버가 자동 시작되며 가짜 공개 API 응답으로 장애·빈 결과·정상 조회를 검증합니다. DB에 데이터를 쓰지 않습니다. Chrome 설치가 필요합니다.
+
+[2026-09-11 데모 복구 및 피드백 반영](docs/qa/demo-recovery-2026-09-11.md)
