@@ -23,6 +23,7 @@ import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { demoUserId, isPerformancePreview, isPublicDemo } from './lib/demoConfig';
 import { missingSupabaseEnv } from './lib/supabaseClient';
+import { useExploreParam } from './hooks/useExploreParam';
 
 export type AppBenchmarkMode = 'all' | 'virtual';
 
@@ -38,7 +39,9 @@ function MissingConfigScreen({ message }: { message: string }) {
 }
 
 export default function App({ benchmarkMode }: { benchmarkMode?: AppBenchmarkMode }) {
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeCategory, setActiveCategory] = useExploreParam('view', 'all', {
+    values: ['all', 'map', 'node', 'timeline', 'favorites', 'albums', 'admin', 'signup', 'login'],
+  });
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [shouldRenderGlobe, setShouldRenderGlobe] = useState(false);
   const isBenchmarkApp = benchmarkMode !== undefined;
@@ -188,7 +191,7 @@ export default function App({ benchmarkMode }: { benchmarkMode?: AppBenchmarkMod
                   <Spinner />
                 )}
               </div>
-              <div className="absolute top-4 right-4 left-4 md:left-auto bg-white/75 backdrop-blur-md p-4 rounded-xl shadow-sm border border-white/50 max-w-none md:max-w-sm md:top-8 md:right-8">
+              <div className="absolute top-16 right-4 left-4 md:left-auto bg-white/75 backdrop-blur-md p-4 rounded-xl shadow-sm border border-white/50 max-w-none md:max-w-sm md:top-8 md:right-8">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-medium text-stone-800 text-sm md:text-base">Photomap Public Archive</h2>
                   {isPublicDemo && (
@@ -200,6 +203,12 @@ export default function App({ benchmarkMode }: { benchmarkMode?: AppBenchmarkMod
                 <p className="mt-1 text-[11px] md:text-xs leading-5 text-stone-600">
                   {isDemoFallback ? `예시 사진 ${photos.length}장으로 지도·태그·앨범을 탐색해 보세요. 위치는 탐색용 예시입니다.` : '여행 사진을 위치, 시간, 관계로 탐색하는 공개 데모입니다.'}
                 </p>
+                {!isBenchmarkApp && !isPerformancePreview && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button size="sm" onClick={() => setActiveCategory('map')}>장소로 찾기</Button>
+                    <Button size="sm" variant="outline" onClick={() => setActiveCategory('albums')}>앨범 둘러보기</Button>
+                  </div>
+                )}
                 <p className="mt-2 text-[10px] md:text-xs text-stone-500 tabular-nums">
                   {uniqueCountries} places · {photos.length} memories
                 </p>

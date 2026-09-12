@@ -8,6 +8,9 @@ import type { Photo } from '../type';
 import { getPhotoImageUrl } from '../lib/imageUrl';
 import { PhotoModal } from './ui/photo-modal';
 import { PhotoSearch } from './ui/photo-search';
+import { PhotoFavoriteButton } from './ui/photo-favorite-button';
+import { Button } from './ui/button';
+import { useExploreParam } from '../hooks/useExploreParam';
 
 interface Map2DViewProps {
   onNavigate?: (view: string) => void;
@@ -29,13 +32,13 @@ const hasValidCoordinates = (photo: Photo) =>
   Number.isFinite(photo.lng) &&
   !(photo.lat === 0 && photo.lng === 0);
 
-export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [searchKeyword, setSearchKeyword] = useState('');
+export function Map2DView({ onNavigate, isReadOnlyDemo = false }: Map2DViewProps) {
+  const [activeFilter, setActiveFilter] = useExploreParam('mapTag', 'all');
+  const [searchKeyword, setSearchKeyword] = useExploreParam('mapSearch', '', { history: 'replace' });
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [categorySearch, setCategorySearch] = useState('');
   const [isIframeReady, setIsIframeReady] = useState(false);
-  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
+  const [selectedPhotoId, setSelectedPhotoId] = useExploreParam('mapPhoto', '', { history: 'replace' });
   const [detailPhoto, setDetailPhoto] = useState<Photo | null>(null);
   const [focusStatus, setFocusStatus] = useState<'waiting' | 'moving' | 'focused'>('waiting');
 
@@ -46,6 +49,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
       isLoading: state.isLoading
     }))
   );
+  const currentDetailPhoto = detailPhoto ? photos.find(photo => photo.id === detailPhoto.id) ?? detailPhoto : null;
   const updateCategory = usePhotoStore(state => state.updateCategory);
   const deleteCategory = usePhotoStore(state => state.deleteCategory);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -193,7 +197,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/90 px-3 py-2 text-xs font-medium text-stone-600 shadow-sm backdrop-blur-md">
             <MapPin className="h-3.5 w-3.5 text-[#E09F87]" />
-            <span>지도 표시 {mapPhotos.length}장</span>
+            <span role="status">지도 표시 {mapPhotos.length}장</span>
             {photosWithoutCoordinates > 0 && (
               <span className="text-stone-400">/ 위치 없음 {photosWithoutCoordinates}장</span>
             )}
@@ -205,9 +209,10 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
           )}
         </div>
 
-        {filteredPhotos.length > 0 && mapPhotos.length === 0 && (
+        {mapPhotos.length === 0 && !isLoading && (
           <div className="mb-3 max-w-md rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-sm text-amber-900 shadow-sm backdrop-blur-md">
-            이 필터에는 지도에 표시할 사진이 없습니다. 전체 사진이나 다른 태그를 선택해 보세요.
+            <p role="status">이 조건에는 지도에 표시할 사진이 없습니다.</p>
+            <button type="button" className="mt-2 underline font-medium" onClick={() => { setSearchKeyword(''); setActiveFilter('all'); }}>검색·필터 초기화</button>
           </div>
         )}
         <div className="flex flex-row items-center gap-2 max-w-full">
@@ -224,7 +229,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
             {/* 필터 및 관리 통합 버튼 */}
             <Drawer.Root open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
               <Drawer.Trigger asChild>
-                <button className={cn(
+                <button aria-label="지도 필터 열기" className={cn(
                   "p-3 rounded-2xl bg-white/90 backdrop-blur-md border shadow-sm transition-all flex items-center gap-2 flex-shrink-0 group relative",
                   activeFilter !== 'all' ? "border-[#E09F87] text-[#E09F87] pr-4 md:pr-4" : "border-white/50 text-stone-500 hover:text-[#E09F87]"
                 )}>
@@ -247,7 +252,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
                       <Drawer.Title className="text-xl font-bold text-stone-800 mb-2 flex items-center justify-between">
                         <span>지도 필터</span>
                         <Drawer.Close asChild>
-                          <button className="p-2 rounded-full hover:bg-stone-100"><X className="w-5 h-5" /></button>
+                          <button aria-label="지도 필터 닫기" className="p-2 rounded-full hover:bg-stone-100"><X className="w-5 h-5" /></button>
                         </Drawer.Close>
                       </Drawer.Title>
                       <p className="text-sm text-stone-500 mb-6 font-medium">
@@ -259,6 +264,7 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
                         <Search className="w-4 h-4 text-stone-400" />
                         <input
                           type="text"
+                          aria-label="태그 검색"
                           placeholder="태그 검색"
                           value={categorySearch}
                           onChange={(e) => setCategorySearch(e.target.value)}
@@ -269,16 +275,16 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
                       {/* 카테고리 목록 */}
                       <div className="overflow-y-auto pr-2 flex-1 no-scrollbar space-y-2">
                         {/* '전체' 옵션 */}
-                        <div
+                        <button type="button" aria-pressed={activeFilter === 'all'}
                           onClick={() => { setActiveFilter('all'); setIsDrawerOpen(false); }}
                           className={cn(
-                            "flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all border",
+                            "w-full flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all border",
                             activeFilter === 'all' ? "bg-[#E09F87]/10 border-[#E09F87]/30" : "bg-white border-stone-100 hover:border-stone-200"
                           )}
                         >
                           <span className={cn("text-sm font-bold", activeFilter === 'all' ? "text-[#E09F87]" : "text-stone-700")}>전체 보기</span>
-                          {activeFilter === 'all' && <div className="w-2 h-2 rounded-full bg-[#E09F87]" />}
-                        </div>
+                          {activeFilter === 'all' && <span className="w-2 h-2 rounded-full bg-[#E09F87]" />}
+                        </button>
 
                         {categories
                           .filter(cat => {
@@ -288,18 +294,12 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
                           .map(cat => (
                             <div
                               key={cat}
-                              onClick={(e) => {
-                                // Prevent trigger if clicking on action buttons
-                                if ((e.target as HTMLElement).closest('.action-btn')) return;
-                                setActiveFilter(cat);
-                                setIsDrawerOpen(false);
-                              }}
                               className={cn(
-                                "flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all border group/item",
+                                "flex items-center justify-between rounded-2xl transition-all border group/item",
                                 activeFilter === cat ? "bg-[#E09F87]/10 border-[#E09F87]/30" : "bg-white border-stone-100 hover:border-stone-200"
                               )}
                             >
-                              <span className={cn("text-sm font-medium", activeFilter === cat ? "text-[#E09F87] font-bold" : "text-stone-700")}>{cat}</span>
+                              <button type="button" aria-pressed={activeFilter === cat} onClick={() => { setActiveFilter(cat); setIsDrawerOpen(false); }} className={cn("flex-1 text-left p-4 rounded-2xl text-sm font-medium", activeFilter === cat ? "text-stone-900 font-bold" : "text-stone-700")}>{cat}</button>
                               <div className="flex items-center gap-1">
                                 {!isReadOnlyDemo && (
                                   <>
@@ -434,11 +434,15 @@ export function Map2DView({ isReadOnlyDemo = false }: Map2DViewProps) {
         </section>
       )}
 
-      <PhotoModal.Root photo={detailPhoto} onClose={() => setDetailPhoto(null)}>
+      <PhotoModal.Root photo={currentDetailPhoto} onClose={() => setDetailPhoto(null)}>
         <PhotoModal.Image />
         <PhotoModal.Panel>
           <PhotoModal.Header />
           <PhotoModal.Metadata isReadOnly={isReadOnlyDemo} />
+          <PhotoModal.Actions>
+            <PhotoFavoriteButton photo={currentDetailPhoto} />
+            {onNavigate && <Button variant="outline" className="h-12" onClick={() => onNavigate('favorites')}>좋아요 모아보기</Button>}
+          </PhotoModal.Actions>
         </PhotoModal.Panel>
       </PhotoModal.Root>
     </div>

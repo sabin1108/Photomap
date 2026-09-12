@@ -1,7 +1,7 @@
-﻿const { defineConfig } = require('@playwright/test');
+const { defineConfig } = require('@playwright/test');
 module.exports = defineConfig({
   testDir: './tests',
-  testMatch: 'demo-recovery.spec.js',
+  testMatch: ['demo-recovery.spec.js', 'photo-modal-accessibility.spec.js', 'frontend-journey.spec.js', 'album-accessibility.spec.js', 'favorites-flow.spec.js'],
   timeout: 30000,
   workers: 1,
   use: { channel: 'chrome' },

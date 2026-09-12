@@ -1,4 +1,4 @@
-import { Compass, Map, Image as ImageIcon, Menu, LogOut, Network, Database } from 'lucide-react';
+import { Compass, Map, Image as ImageIcon, Menu, LogOut, Network, Database, Heart } from 'lucide-react';
 import { Button } from './ui/button';
 import { useState } from 'react';
 import { Sidebar as SidebarUI } from './ui/sidebar';
@@ -23,7 +23,7 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
   return (
     <>
       <div className="md:hidden fixed top-4 left-4 z-50">
-        <Button variant="ghost" size="icon" aria-label="메뉴 열기" onClick={() => setIsOpen(!isOpen)} className="bg-white/50 backdrop-blur-md hover:bg-white/70 shadow-sm border border-stone-200">
+        <Button variant="ghost" size="icon" aria-label="메뉴 열기" aria-expanded={isOpen} onClick={() => setIsOpen(!isOpen)} className="bg-white/50 backdrop-blur-md hover:bg-white/70 shadow-sm border border-stone-200">
           <Menu className="w-5 h-5 text-stone-700" />
         </Button>
       </div>
@@ -55,6 +55,12 @@ export function Sidebar({ className, activeCategory, onSelectCategory, onSignOut
             label="앨범"
             isActive={activeCategory === 'albums'}
             onClick={() => handleSelect('albums')}
+          />
+          <SidebarUI.Item
+            icon={Heart}
+            label="좋아요"
+            isActive={activeCategory === 'favorites'}
+            onClick={() => handleSelect('favorites')}
           />
         </SidebarUI.Nav>
 

@@ -1,5 +1,5 @@
-import { useState, useMemo, useRef } from 'react';
-import { Plus, Pencil, ArrowLeft, MousePointer2, X, CheckCircle2, Trash, FolderPlus, MapPin, Heart, Image as ImageIcon, Search } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { Plus, Pencil, ArrowLeft, MousePointer2, X, CheckCircle2, Trash, FolderPlus, MapPin, Heart, Image as ImageIcon, Search, type LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from './ui/button';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -10,21 +10,19 @@ import { PhotoFeed } from './PhotoFeed';
 import { UploadScreen } from './UploadScreen';
 import { cn } from './ui/utils';
 import { useGridBreakpoints } from '../hooks/useGridBreakpoints';
-import { getPhotoImageUrl } from '../lib/imageUrl';
 import { PhotoSearch } from './ui/photo-search';
-interface Album {
-  id: string;
-  title: string;
-  cover: string;
-  count: number;
-  date: string;
-  theme: 'light' | 'dark';
-  icon?: any;
-  isLocation?: boolean;
+import { useExploreParam } from '../hooks/useExploreParam';
+import { useScrollRestoration } from '../hooks/useScrollRestoration';
+import { buildPhotoAlbums, type PhotoAlbum } from '../lib/photoAlbums';
+
+interface Album extends PhotoAlbum {
+  icon?: LucideIcon;
 }
 
+const albumTabs = ['all', 'system', 'places', 'collections'] as const;
+type AlbumTab = typeof albumTabs[number];
+
 export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolean }) {
-  // 상태 관리
   const categories = usePhotoStore(state => state.categories);
   const photos = usePhotoStore(state => state.photos);
   const addCategory = usePhotoStore(state => state.addCategory);
@@ -37,9 +35,11 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
   const [editingAlbumName, setEditingAlbumName] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({ title: '' });
 
-  const [activeAlbum, setActiveAlbum] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'system' | 'places' | 'collections'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeAlbumParam, setActiveAlbumParam] = useExploreParam('album', '', { history: 'push' });
+  const [activeTabParam, setActiveTabParam] = useExploreParam('albumTab', 'all', { history: 'push', values: albumTabs });
+  const [searchQuery, setSearchQuery] = useExploreParam('albumSearch', '', { history: 'replace' });
+  const activeAlbum = activeAlbumParam || null;
+  const activeTab = activeTabParam as AlbumTab;
 
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedAlbumNames, setSelectedAlbumNames] = useState<string[]>([]);
@@ -47,48 +47,22 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   const canWrite = !isReadOnlyDemo;
-
-  // 그리드 설정
   const parentRef = useRef<HTMLDivElement>(null);
   const { columns, gap } = useGridBreakpoints();
 
-  // 시스템 앨범 생성
-  const systemAlbums: Album[] = useMemo(() => {
-    const favPhotos = photos.filter(p => p.isFavorite);
-    return [
-      { id: 'system_all', title: '전체 사진', cover: photos[0] ? getPhotoImageUrl(photos[0], 'thumb') : '', count: photos.length, date: photos[0]?.date || '비어 있음', theme: 'light', icon: ImageIcon },
-      { id: 'system_favorites', title: '좋아요', cover: favPhotos[0] ? getPhotoImageUrl(favPhotos[0], 'thumb') : '', count: favPhotos.length, date: favPhotos[0]?.date || '비어 있음', theme: 'light', icon: Heart }
-    ];
-  }, [photos]);
+  useScrollRestoration(parentRef, `albums:${activeTab}:${searchQuery.trim().toLowerCase()}`, !activeAlbum);
 
-  // 장소 앨범 생성
-  const placeAlbums: Album[] = useMemo(() => {
-    const locations = Array.from(new Set(photos.map(p => p.location).filter(Boolean)));
-    return locations.map((loc): Album => {
-      const locPhotos = photos.filter(p => p.location === loc);
-      const sortedPhotos = [...locPhotos].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      return {
-        id: `loc_${loc}`, title: loc as string, cover: sortedPhotos[0] ? getPhotoImageUrl(sortedPhotos[0], 'thumb') : '', count: locPhotos.length, date: sortedPhotos[0]?.date || '새 항목', theme: 'light', icon: MapPin, isLocation: true
-      };
-    }).sort((a, b) => b.count - a.count);
-  }, [photos]);
+  const albumGroups = useMemo(() => buildPhotoAlbums(photos, categories), [photos, categories]);
+  const systemAlbums: Album[] = useMemo(() => albumGroups.system.map(album => ({
+    ...album,
+    icon: album.id === 'system_favorites' ? Heart : ImageIcon,
+  })), [albumGroups.system]);
+  const placeAlbums: Album[] = useMemo(() => albumGroups.places.map(album => ({ ...album, icon: MapPin })), [albumGroups.places]);
+  const customAlbums: Album[] = albumGroups.collections;
 
-  // 커스텀 앨범 생성
-  const customAlbums: Album[] = useMemo(() => {
-    return categories.map(category => {
-      const categoryPhotos = photos.filter(p => p.category === category || p.tags.includes(category));
-      const sortedPhotos = [...categoryPhotos].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      return {
-        id: category, title: category.charAt(0).toUpperCase() + category.slice(1), cover: sortedPhotos[0] ? getPhotoImageUrl(sortedPhotos[0], 'thumb') : '', count: categoryPhotos.length, date: sortedPhotos[0]?.date || '새 항목', theme: 'light'
-      };
-    });
-  }, [categories, photos]);
-
-  // 카테고리별 필터 적용
   const categorizedAlbums = useMemo(() => {
-    const filterFn = (a: Album) => searchQuery.trim()
-      ? a.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
-      : true;
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const filterFn = (album: Album) => normalizedQuery ? album.title.toLowerCase().includes(normalizedQuery) : true;
 
     return {
       system: systemAlbums.filter(filterFn),
@@ -97,7 +71,6 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
     };
   }, [systemAlbums, placeAlbums, customAlbums, searchQuery]);
 
-  // 탭 필터링 어레이
   const filteredAlbums = useMemo(() => {
     if (activeTab === 'system') return categorizedAlbums.system;
     if (activeTab === 'places') return categorizedAlbums.places;
@@ -110,13 +83,23 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
     ];
   }, [activeTab, categorizedAlbums]);
 
-  // 핸들러 모음
+  const allAlbums = useMemo(() => [
+    ...categorizedAlbums.system,
+    ...categorizedAlbums.places,
+    ...categorizedAlbums.collections
+  ], [categorizedAlbums]);
+
+  const setActiveAlbum = (albumId: string | null) => setActiveAlbumParam(albumId ?? '');
+  const resetAlbumFilters = () => {
+    setSearchQuery('');
+    setActiveTabParam('all');
+  };
+
   const handleOpenCreate = () => { if (!canWrite) return; setFormData({ title: '' }); setIsDialogOpen(true); };
   const handleSave = () => { if (!canWrite) return; if (formData.title.trim()) { addCategory(formData.title.trim()); setIsDialogOpen(false); } };
   const handleUpdateAlbum = async () => { if (!canWrite) return; if (editingAlbumName && editFormData.title.trim()) { await updateCategory(editingAlbumName, editFormData.title.trim()); setEditingAlbumName(null); } };
   const handleDeleteAlbum = async () => { if (!canWrite) return; if (editingAlbumName) { if (window.confirm('이 컬렉션을 삭제하시겠습니까?')) { await deleteCategory(editingAlbumName); setEditingAlbumName(null); } } };
 
-  // 클릭 이벤트
   const handleAlbumClick = (albumId: string) => {
     if (isSelectMode && canWrite) {
       if (albumId.startsWith('system_') || albumId.startsWith('loc_')) return;
@@ -126,17 +109,15 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
     }
   };
 
-  // 일괄 삭제
   const handleBatchDeleteAlbums = async () => { if (!canWrite) return; if (selectedAlbumNames.length > 0 && window.confirm('선택한 항목들을 삭제하시겠습니까?')) { await batchDeleteCategories(selectedAlbumNames); setIsSelectMode(false); setSelectedAlbumNames([]); } };
 
-  // 활성화 앨범 렌더링
   if (activeAlbum) {
     const albumInfo = [...systemAlbums, ...placeAlbums, ...customAlbums].find(a => a.id === activeAlbum);
     return (
       <div className="w-full h-full bg-[#F5F2EB] flex flex-col relative overflow-hidden">
         <div className="flex-none px-4 pt-14 pb-4 md:px-10 md:pt-12 flex items-center justify-between z-10 border-b border-stone-200/50 bg-[#F5F2EB]/90 backdrop-blur-md">
           <div className="flex items-center gap-2 md:gap-4">
-            <button onClick={() => setActiveAlbum(null)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-stone-600 shadow-sm border border-stone-200">
+            <button type="button" aria-label="앨범 목록으로 돌아가기" onClick={() => setActiveAlbum(null)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-stone-600 shadow-sm border border-stone-200">
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div className="min-w-0">
@@ -179,11 +160,8 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
 
   return (
     <div className="w-full h-full bg-[#F5F2EB] flex flex-col relative overflow-hidden font-sans selection:bg-[#E09F87] selection:text-white pb-24">
-
-      {/* 헤더 (탭/검색) */}
       <div className="flex-none pt-12 md:pt-16 pb-4 px-4 md:px-8 border-b border-stone-200/50 z-10 bg-[#F5F2EB]/90 backdrop-blur-xl shrink-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-
           <div className="flex items-center justify-between md:justify-start gap-4">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -197,7 +175,7 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
                 )}
               </div>
               <p className="mt-1 text-sm text-stone-500">
-                위치와 카테고리별로 사진을 탐색합니다. 공개 데모에서는 앨범이 필터처럼 동작합니다.
+                위치, 좋아요, 태그 보관함으로 같은 사진 묶음을 빠르게 다시 엽니다.
               </p>
             </div>
             {canWrite && <Button variant="outline" onClick={handleOpenCreate} className="rounded-full shadow-sm border-stone-200 h-9 px-3 text-stone-600 gap-1.5 md:hidden">
@@ -206,7 +184,6 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
           </div>
 
           <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-center">
-            {/* 검색바 */}
             <PhotoSearch
               value={searchQuery}
               onChange={setSearchQuery}
@@ -226,12 +203,13 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
           </div>
         </div>
 
-        {/* 탭 메뉴 */}
-        <div className="flex gap-1 overflow-x-auto mt-4 md:mt-6 pb-1 [&::-webkit-scrollbar]:hidden snap-x">
-          {(['all', 'system', 'places', 'collections'] as const).map(tab => (
+        <div className="flex gap-1 overflow-x-auto mt-4 md:mt-6 pb-1 [&::-webkit-scrollbar]:hidden snap-x" aria-label="앨범 필터">
+          {albumTabs.map(tab => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              type="button"
+              onClick={() => setActiveTabParam(tab)}
+              aria-pressed={activeTab === tab}
               className={cn(
                 "px-4 md:px-5 py-2 rounded-full text-sm font-medium transition-all snap-start whitespace-nowrap",
                 activeTab === tab
@@ -247,49 +225,25 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
 
       <div className="flex-1 overflow-y-auto px-1 md:px-4 py-2 md:py-4 [&::-webkit-scrollbar]:hidden bg-transparent" ref={parentRef}>
         {activeTab === 'all' ? (
-          <div className="space-y-12 pb-24">
-            {/* 위치 섹션 */}
-            {categorizedAlbums.places.length > 0 && (
-              <section>
-                <h2 className="px-2 mb-4 text-xs font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2">
-                  <span className="w-1 h-1 bg-[#E09F87] rounded-full" /> 위치 정보
-                </h2>
-                <div className="grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
-                  {categorizedAlbums.places.map(album => (
-                    <AlbumItem key={album.id} album={album} isSelectMode={isSelectMode} isSelected={selectedAlbumNames.includes(album.id)} onClick={() => handleAlbumClick(album.id)} onEdit={() => { setEditingAlbumName(album.id); setEditFormData({ title: album.title }); }} isReadOnlyDemo={isReadOnlyDemo} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* 구분선 */}
-            {categorizedAlbums.places.length > 0 && categorizedAlbums.collections.length > 0 && (
-              <div className="px-2">
-                <div className="h-px bg-stone-200/50 w-full" />
-              </div>
-            )}
-
-            {/* 태그 섹션 */}
-            {categorizedAlbums.collections.length > 0 && (
-              <section>
-                <h2 className="px-2 mb-4 text-xs font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2">
-                  <span className="w-1 h-1 bg-[#E09F87] rounded-full" /> 태그 보관함
-                </h2>
-                <div className="grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
-                  {categorizedAlbums.collections.map(album => (
-                    <AlbumItem key={album.id} album={album} isSelectMode={isSelectMode} isSelected={selectedAlbumNames.includes(album.id)} onClick={() => handleAlbumClick(album.id)} onEdit={() => { setEditingAlbumName(album.id); setEditFormData({ title: album.title }); }} isReadOnlyDemo={isReadOnlyDemo} />
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
+          allAlbums.length === 0 ? (
+            <AlbumEmptyState searchQuery={searchQuery} activeTab={activeTab} onReset={resetAlbumFilters} />
+          ) : (
+            <div className="space-y-12 pb-24">
+              {categorizedAlbums.system.length > 0 && (
+                <AlbumSection title="기본 보기" albums={categorizedAlbums.system} columns={columns} gap={gap} isSelectMode={isSelectMode} selectedAlbumNames={selectedAlbumNames} onAlbumClick={handleAlbumClick} onEditAlbum={(album) => { setEditingAlbumName(album.id); setEditFormData({ title: album.title }); }} isReadOnlyDemo={isReadOnlyDemo} />
+              )}
+              {categorizedAlbums.places.length > 0 && (
+                <AlbumSection title="위치 정보" albums={categorizedAlbums.places} columns={columns} gap={gap} isSelectMode={isSelectMode} selectedAlbumNames={selectedAlbumNames} onAlbumClick={handleAlbumClick} onEditAlbum={(album) => { setEditingAlbumName(album.id); setEditFormData({ title: album.title }); }} isReadOnlyDemo={isReadOnlyDemo} />
+              )}
+              {categorizedAlbums.collections.length > 0 && (
+                <AlbumSection title="태그 보관함" albums={categorizedAlbums.collections} columns={columns} gap={gap} isSelectMode={isSelectMode} selectedAlbumNames={selectedAlbumNames} onAlbumClick={handleAlbumClick} onEditAlbum={(album) => { setEditingAlbumName(album.id); setEditFormData({ title: album.title }); }} isReadOnlyDemo={isReadOnlyDemo} />
+              )}
+            </div>
+          )
         ) : (
           <div className="pb-24">
             {filteredAlbums.length === 0 ? (
-              <div className="w-full h-40 flex flex-col items-center justify-center text-stone-400 gap-2">
-                <Search className="w-8 h-8 opacity-20" />
-                <p>조건에 맞는 앨범이 없습니다</p>
-              </div>
+              <AlbumEmptyState searchQuery={searchQuery} activeTab={activeTab} onReset={resetAlbumFilters} />
             ) : (
               <div className="grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
                 {filteredAlbums.map(album => (
@@ -301,10 +255,6 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
         )}
       </div>
 
-      {/* 하위 컴포넌트: 앨범 아이템 */}
-      {/* (내부 함수 형태로 선언하여 사용하거나 외부에 분리) */}
-
-      {/* 배치 작업 컨트롤 */}
       <AnimatePresence>
         {canWrite && isSelectMode && selectedAlbumNames.length > 0 && (
           <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-stone-900/95 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-full shadow-2xl text-white">
@@ -316,7 +266,6 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
         )}
       </AnimatePresence>
 
-      {/* 모달 영역 */}
       {canWrite && (
         <>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -343,7 +292,54 @@ export function AlbumsView({ isReadOnlyDemo = false }: { isReadOnlyDemo?: boolea
   );
 }
 
-// 아이템 컴포넌트
+function AlbumSection({ title, albums, columns, gap, isSelectMode, selectedAlbumNames, onAlbumClick, onEditAlbum, isReadOnlyDemo }: {
+  title: string;
+  albums: Album[];
+  columns: number;
+  gap: number;
+  isSelectMode: boolean;
+  selectedAlbumNames: string[];
+  onAlbumClick: (albumId: string) => void;
+  onEditAlbum: (album: Album) => void;
+  isReadOnlyDemo?: boolean;
+}) {
+  return (
+    <section>
+      <h2 className="px-2 mb-4 text-xs font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2">
+        <span className="w-1 h-1 bg-[#E09F87] rounded-full" /> {title}
+      </h2>
+      <div className="grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}>
+        {albums.map(album => (
+          <AlbumItem key={album.id} album={album} isSelectMode={isSelectMode} isSelected={selectedAlbumNames.includes(album.id)} onClick={() => onAlbumClick(album.id)} onEdit={() => onEditAlbum(album)} isReadOnlyDemo={isReadOnlyDemo} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AlbumEmptyState({ searchQuery, activeTab, onReset }: {
+  searchQuery: string;
+  activeTab: AlbumTab;
+  onReset: () => void;
+}) {
+  const hasFilters = searchQuery.trim() || activeTab !== 'all';
+
+  return (
+    <div className="w-full min-h-[14rem] flex flex-col items-center justify-center text-center text-stone-500 gap-3 px-6">
+      <Search className="w-8 h-8 text-stone-300" aria-hidden="true" />
+      <div>
+        <p className="font-medium text-stone-700">조건에 맞는 앨범이 없습니다</p>
+        <p className="mt-1 text-xs text-stone-400">검색어와 탭을 바꾸면 위치, 기본 보기, 태그 보관함을 다시 볼 수 있습니다.</p>
+      </div>
+      {hasFilters && (
+        <Button type="button" variant="outline" onClick={onReset} className="rounded-full border-stone-200 bg-white text-stone-600">
+          검색과 탭 초기화
+        </Button>
+      )}
+    </div>
+  );
+}
+
 function AlbumItem({ album, isSelectMode, isSelected, onClick, onEdit, isReadOnlyDemo }: {
   album: Album,
   isSelectMode: boolean,
@@ -354,42 +350,55 @@ function AlbumItem({ album, isSelectMode, isSelected, onClick, onEdit, isReadOnl
 }) {
   const isSystem = album.id.startsWith('system_');
   const isLocation = album.id.startsWith('loc_');
+  const isDisabledInSelectMode = isSelectMode && (isSystem || isLocation);
+  const label = isSelectMode ? `${album.title} 앨범 선택` : `${album.title} 앨범 열기`;
 
   return (
-    <div
+    <article
       key={album.id}
       className={cn(
-        "aspect-square relative group cursor-pointer overflow-hidden bg-white rounded-2xl shadow-sm border border-stone-100",
-        isSelectMode && (isSystem || isLocation) && "opacity-40 cursor-not-allowed grayscale"
+        "aspect-square relative group overflow-hidden bg-white rounded-2xl shadow-sm border border-stone-100",
+        isDisabledInSelectMode && "opacity-40 cursor-not-allowed grayscale"
       )}
-      onClick={onClick}
     >
-      {album.cover ? (
-        <ImageWithFallback
-          src={album.cover}
-          className={cn(
-            "w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-105",
-            isSelected && "scale-90 rounded-xl"
-          )}
-        />
-      ) : (
-        <div className="w-full h-full bg-stone-50 flex flex-col items-center justify-center">
-          {album.icon ? <album.icon className="w-6 h-6 md:w-8 md:h-8 text-stone-200" /> : <FolderPlus className="w-6 h-6 md:w-8 md:h-8 text-stone-200" />}
+      <button
+        type="button"
+        className="block h-full w-full text-left disabled:cursor-not-allowed"
+        onClick={onClick}
+        disabled={isDisabledInSelectMode}
+        aria-label={label}
+        aria-pressed={isSelectMode && !isDisabledInSelectMode ? isSelected : undefined}
+      >
+        {album.cover ? (
+          <ImageWithFallback
+            src={album.cover}
+            alt={`${album.title} 앨범 표지`}
+            loading="lazy"
+            sizes="(min-width: 768px) 22vw, 48vw"
+            className={cn(
+              "w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-105 group-focus-visible:scale-105",
+              isSelected && "scale-90 rounded-xl"
+            )}
+          />
+        ) : (
+          <div className="w-full h-full bg-stone-50 flex flex-col items-center justify-center">
+            {album.icon ? <album.icon className="w-6 h-6 md:w-8 md:h-8 text-stone-200" aria-hidden="true" /> : <FolderPlus className="w-6 h-6 md:w-8 md:h-8 text-stone-200" aria-hidden="true" />}
+          </div>
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex flex-col justify-end p-2 md:p-3 pointer-events-none">
+          <h3 className="text-white text-xs md:text-[13px] font-semibold truncate tracking-tight drop-shadow-md leading-tight">{album.title}</h3>
+          <p className="text-white/80 text-[10px] font-medium hidden md:block mt-0.5">{album.count}장</p>
         </div>
-      )}
+      </button>
 
       {isSelected && (
         <div className="absolute inset-0 bg-black/10 ring-4 ring-inset ring-[#E09F87] z-20 pointer-events-none rounded-2xl" />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex flex-col justify-end p-2 md:p-3">
-        <h3 className="text-white text-xs md:text-[13px] font-semibold truncate tracking-tight drop-shadow-md leading-tight">{album.title}</h3>
-        <p className="text-white/80 text-[10px] font-medium hidden md:block mt-0.5">{album.count}장</p>
-      </div>
-
       {isSelectMode && !isSystem && !isLocation && (
         <div className={cn(
-          "absolute top-2 left-2 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center transition-colors z-20",
+          "absolute top-2 left-2 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center transition-colors z-20 pointer-events-none",
           isSelected ? "bg-[#E09F87] border-[#E09F87] text-white" : "bg-white/20 backdrop-blur-md border-white/80 text-transparent"
         )}>
           <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4" />
@@ -400,15 +409,13 @@ function AlbumItem({ album, isSelectMode, isSelected, onClick, onEdit, isReadOnl
         <Button
           size="icon"
           variant="ghost"
-          className="absolute top-2 right-2 h-7 w-7 md:h-8 md:w-8 text-white bg-black/40 backdrop-blur-md rounded-full opacity-0 lg:group-hover:opacity-100 transition-opacity z-20 hover:bg-black/80"
-          onClick={(e: React.MouseEvent) => {
-            e.stopPropagation();
-            onEdit();
-          }}
+          aria-label={`${album.title} 앨범 편집`}
+          className="absolute top-2 right-2 h-7 w-7 md:h-8 md:w-8 text-white bg-black/40 backdrop-blur-md rounded-full opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity z-20 hover:bg-black/80"
+          onClick={onEdit}
         >
           <Pencil className="w-3 h-3 md:w-4 md:h-4" />
         </Button>
       )}
-    </div>
+    </article>
   );
 }

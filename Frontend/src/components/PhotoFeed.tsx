@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
-import { MapPin, Calendar, Folder, CheckCircle2, Trash, Trash2, Move, X, MousePointer2, Heart } from 'lucide-react';
+import { MapPin, Calendar, Folder, CheckCircle2, Trash, Trash2, Move, X, MousePointer2 } from 'lucide-react';
 import { cn } from './ui/utils';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { usePhotoStore } from '../store/usePhotoStore';
 import { PhotoModal } from './ui/photo-modal';
+import { PhotoFavoriteButton } from './ui/photo-favorite-button';
+import { useScrollRestoration } from '../hooks/useScrollRestoration';
 import { Button } from './ui/button';
 import type { Photo } from '../type';
 import { useRef, useEffect } from 'react';
@@ -18,6 +20,7 @@ interface PhotoFeedProps {
   benchmarkMode?: 'all' | 'virtual';
   className?: string;
   filterCategory?: string | null;
+  favoritesOnly?: boolean;
   hideHeader?: boolean;
   // 외부에서 선택 모드를 제어하기 위한 props
   isExternalSelectMode?: boolean;
@@ -28,6 +31,7 @@ interface PhotoFeedProps {
 export function PhotoFeed({
   className,
   filterCategory,
+  favoritesOnly = false,
   hideHeader,
   isExternalSelectMode,
   onSelectModeChange,
@@ -40,7 +44,6 @@ export function PhotoFeed({
     loadError,
     hasMore,
     fetchMorePhotos,
-    toggleFavorite,
     deletePhoto,
     batchDeletePhotos,
     batchMovePhotos,
@@ -52,7 +55,6 @@ export function PhotoFeed({
       loadError: state.loadError,
       hasMore: state.hasMore,
       fetchMorePhotos: state.fetchMorePhotos,
-      toggleFavorite: state.toggleFavorite,
       deletePhoto: state.deletePhoto,
       batchDeletePhotos: state.batchDeletePhotos,
       batchMovePhotos: state.batchMovePhotos,
@@ -82,19 +84,20 @@ export function PhotoFeed({
 
   // 카테고리에 따른 필터링 (useMemo로 최적화)
   const displayPhotos = useMemo(() => {
-    if (!filterCategory) return photos;
+    const candidates = favoritesOnly ? photos.filter(photo => photo.isFavorite) : photos;
+    if (!filterCategory) return candidates;
 
-    if (filterCategory === 'system_all') return photos;
-    if (filterCategory === 'system_favorites') return photos.filter(p => p.isFavorite);
-    if (filterCategory === 'system_uncategorized') return photos.filter(p => !p.category || p.category === '기타' || p.category === 'Uncategorized');
+    if (filterCategory === 'system_all') return candidates;
+    if (filterCategory === 'system_favorites') return candidates.filter(p => p.isFavorite);
+    if (filterCategory === 'system_uncategorized') return candidates.filter(p => !p.category || p.category === '기타' || p.category === 'Uncategorized');
 
     if (filterCategory.startsWith('loc_')) {
       const targetLocation = filterCategory.replace('loc_', '');
-      return photos.filter(p => p.location === targetLocation);
+      return candidates.filter(p => p.location === targetLocation);
     }
 
-    return photos.filter(p => p.category === filterCategory || p.tags.includes(filterCategory));
-  }, [photos, filterCategory]);
+    return candidates.filter(p => p.category === filterCategory || p.tags.includes(filterCategory));
+  }, [photos, filterCategory, favoritesOnly]);
 
   const effectiveColumns = useMemo(() => {
     if (displayPhotos.length === 0 || displayPhotos.length > columns * 2) return columns;
@@ -109,6 +112,8 @@ export function PhotoFeed({
     overscan: 5,
     enabled: benchmarkMode !== 'all',
   });
+
+  useScrollRestoration(parentRef, `feed:${favoritesOnly ? 'favorites' : 'photos'}:${filterCategory ?? 'all'}`, !benchmarkMode);
 
   const renderedRows = benchmarkMode === 'all'
     ? Array.from({ length: rowCount }, (_, index) => ({ index, start: 0 }))
@@ -180,6 +185,7 @@ export function PhotoFeed({
 
   return (
     <div className={cn("p-4 md:p-10 h-full overflow-y-auto custom-scrollbar relative", className)} ref={parentRef}
+      data-photo-feed=""
       data-benchmark-feed={benchmarkMode ? "" : undefined}
       data-loaded-count={benchmarkMode ? photos.length : undefined}
       data-filtered-count={benchmarkMode ? displayPhotos.length : undefined}
@@ -255,16 +261,19 @@ export function PhotoFeed({
                   const isSelected = selectedIds.includes(photo.id);
                   const imageLoading = getGridImageLoadingPolicy(photoIndex, effectiveColumns);
                   return (
-                    <div
+                    <button
+                      type="button"
+                      aria-label={`${photo.title || '제목 없는 사진'} ${isSelectMode ? '선택' : '상세 보기'}`}
+                      aria-pressed={isSelectMode ? isSelected : undefined}
                       key={photo.id}
                       data-photo-id={benchmarkMode ? photo.id : undefined}
                       onClick={() => handlePhotoClick(photo)}
                       className={cn(
-                        "group relative aspect-square overflow-hidden cursor-pointer bg-stone-100",
+                        "group relative aspect-square overflow-hidden cursor-pointer bg-stone-100 text-left focus-visible:outline focus-visible:outline-4 focus-visible:-outline-offset-4 focus-visible:outline-stone-900",
                         isSelected && "opacity-80"
                       )}
                     >
-                      <div className={cn("w-full h-full transition-transform duration-700", !isSelectMode && "group-hover:scale-105")}>
+                      <div className={cn("w-full h-full transition-transform duration-700", !isSelectMode && "motion-safe:group-hover:scale-105")}>
                         <ImageWithFallback
                           src={getPhotoImageUrl(photo, "thumb")}
                           alt={photo.title}
@@ -296,11 +305,11 @@ export function PhotoFeed({
                       {/* 오버레이 */}
                       <div className={cn(
                         "absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent transition-opacity duration-300 pointer-events-none",
-                        isSelectMode ? (isSelected ? "opacity-40" : "opacity-0") : "opacity-0 md:group-hover:opacity-100 opacity-100 lg:opacity-0"
+                        isSelectMode ? (isSelected ? "opacity-40" : "opacity-0") : "opacity-0 md:group-hover:opacity-100 group-focus-visible:opacity-100 opacity-100 lg:opacity-0"
                       )} />
 
                       {!isSelectMode && (
-                        <div className="absolute bottom-0 left-0 right-0 p-2 md:p-3 transition-opacity duration-300 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 pointer-events-none">
+                        <div className="absolute bottom-0 left-0 right-0 p-2 md:p-3 transition-opacity duration-300 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 group-focus-visible:opacity-100 pointer-events-none">
                           <p className="text-white font-semibold text-[10px] md:text-xs tracking-wide truncate drop-shadow-md">{photo.title || '제목 없는 사진'}</p>
                           <div className="mt-1 space-y-0.5">
                             <div className="flex items-center gap-1 min-w-0">
@@ -320,7 +329,7 @@ export function PhotoFeed({
                           </div>
                         </div>
                       )}
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -425,23 +434,7 @@ export function PhotoFeed({
           <PhotoModal.Header />
           <PhotoModal.Metadata isReadOnly={isReadOnlyDemo} />
           <PhotoModal.Actions>
-            <Button
-              variant="outline"
-              className={cn(
-                "flex-1 h-12 rounded-xl border-stone-200 gap-2 transition-all",
-                currentPhoto?.isFavorite
-                  ? "bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100 hover:text-rose-600"
-                  : "text-stone-500 hover:bg-stone-50 hover:border-stone-300"
-              )}
-              onClick={() => {
-                if (currentPhoto) {
-                  toggleFavorite(currentPhoto.id);
-                }
-              }}
-            >
-              <Heart size={18} className={currentPhoto?.isFavorite ? "fill-rose-500" : ""} />
-              {currentPhoto?.isFavorite ? "좋아요 취소" : "좋아요"}
-            </Button>
+            <PhotoFavoriteButton photo={currentPhoto} />
 
             {!isReadOnlyDemo && (
               <Button

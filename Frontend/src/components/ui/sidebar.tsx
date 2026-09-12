@@ -33,7 +33,7 @@ function Root({
         "fixed md:relative h-full z-40 transition-transform duration-300 ease-in-out",
         "w-64 bg-[#fcfbfa]/80 backdrop-blur-2xl border-r border-[#e09f87]/10 shadow-xl md:shadow-none flex-shrink-0",
         "flex flex-col py-8 px-4",
-        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+        isOpen ? "translate-x-0 visible" : "-translate-x-full invisible md:visible md:translate-x-0",
         className
       )}>
         {children}
@@ -60,7 +60,7 @@ function Header({ title, subtitle }: { title: string; subtitle?: string }) {
 
 function Nav({ children }: { children: React.ReactNode }) {
   return (
-    <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
+    <nav aria-label="사진 탐색" className="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
       {children}
     </nav>
   );
@@ -83,6 +83,7 @@ interface ItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 function Item({ icon: Icon, label, isActive, className, ...props }: ItemProps) {
   return (
     <button
+      aria-current={isActive ? "page" : undefined}
       className={cn(
         "w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-colors duration-200 group text-left",
         isActive

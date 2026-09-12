@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { createPortal } from "react-dom";
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Photo } from "../../type";
 import { X, MapPin, Calendar, Folder, AlignLeft } from "lucide-react";
 import { usePhotoStore } from "../../store/usePhotoStore";
@@ -7,7 +7,7 @@ import { isPublicDemo } from "../../lib/demoConfig";
 import { getPhotoImageUrl } from '../../lib/imageUrl';
 
 interface PhotoModalContextValue {
-    photo: Photo | null;
+    photo: Photo;
     onClose: () => void;
 }
 
@@ -29,37 +29,55 @@ interface RootProps {
 }
 
 function Root({ photo, onClose, children }: RootProps) {
-    if (!photo) return null;
+    const returnFocusRef = useRef<HTMLElement | null>(null);
 
-    return createPortal(
-        <div
-            data-photo-modal-id={photo.id}
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
-            onClick={onClose}
+    return (
+        <DialogPrimitive.Root
+            open={!!photo}
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
         >
-            <div
-                className="bg-white rounded-3xl overflow-hidden w-full max-w-6xl flex flex-col md:flex-row h-full max-h-[85vh] relative shadow-2xl shadow-black/50"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <PhotoModalContext.Provider value={{ photo, onClose }}>
-                    {children}
-                </PhotoModalContext.Provider>
-            </div>
-        </div>,
-        document.body
+            {photo && (
+                <DialogPrimitive.Portal>
+                    <DialogPrimitive.Overlay className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md" />
+                    <DialogPrimitive.Content
+                        data-photo-modal-id={photo.id}
+                        aria-describedby={undefined}
+                        onOpenAutoFocus={() => {
+                            const activeElement = document.activeElement;
+                            if (activeElement instanceof HTMLElement && !activeElement.closest('[data-photo-modal-id]')) {
+                                returnFocusRef.current = activeElement;
+                            }
+                        }}
+                        onCloseAutoFocus={(event) => {
+                            event.preventDefault();
+                            const element = returnFocusRef.current;
+                            if (element && document.contains(element)) {
+                                element.focus();
+                            }
+                        }}
+                        className="fixed inset-0 z-[100] m-auto bg-white rounded-3xl overflow-hidden w-[calc(100%-2rem)] md:w-[calc(100%-4rem)] max-w-6xl flex flex-col md:flex-row h-[calc(100%-2rem)] md:h-[calc(100%-4rem)] max-h-[85vh] shadow-2xl shadow-black/50 focus:outline-none"
+                    >
+                        <PhotoModalContext.Provider value={{ photo, onClose }}>
+                            {children}
+                        </PhotoModalContext.Provider>
+                    </DialogPrimitive.Content>
+                </DialogPrimitive.Portal>
+            )}
+        </DialogPrimitive.Root>
     );
 }
 
 function Image() {
     const { photo, onClose } = usePhotoModalContext();
-    const [visibleUrl, setVisibleUrl] = useState(() => photo ? getPhotoImageUrl(photo, 'thumb') : '');
+    const previewUrl = useMemo(() => getPhotoImageUrl(photo, 'thumb'), [photo.id, photo.thumbnail_url, photo.url]);
+    const fullUrl = useMemo(() => getPhotoImageUrl(photo, 'full'), [photo.id, photo.url, photo.thumbnail_url]);
+    const [visibleUrl, setVisibleUrl] = useState(previewUrl);
 
     useEffect(() => {
-        if (!photo) return;
-        const thumbnailUrl = getPhotoImageUrl(photo, 'thumb');
-        const fullUrl = getPhotoImageUrl(photo, 'full');
-        setVisibleUrl(thumbnailUrl);
-        if (fullUrl === thumbnailUrl) return;
+        setVisibleUrl(previewUrl);
+        if (fullUrl === previewUrl) return;
 
         const fullImage = new window.Image();
         fullImage.decoding = 'async';
@@ -68,7 +86,7 @@ function Image() {
         return () => {
             fullImage.onload = null;
         };
-    }, [photo]);
+    }, [previewUrl, fullUrl]);
 
     if (!photo) return null;
 
@@ -94,7 +112,7 @@ function Image() {
 
 function Panel({ children }: { children: React.ReactNode }) {
     return (
-        <div className="w-full md:w-1/3 bg-[#F5F2EB] flex flex-col h-1/2 md:h-full overflow-y-auto relative overscroll-contain">
+        <div className="w-full md:w-1/3 bg-[#F5F2EB] flex flex-col h-1/2 md:h-full overflow-hidden relative">
             {children}
         </div>
     );
@@ -106,9 +124,9 @@ function Header() {
 
     return (
         <div className="flex items-center justify-between p-6 border-b border-stone-200/50 flex-shrink-0">
-            <h3 className="text-2xl font-light text-stone-800 tracking-tight line-clamp-1 break-all">
+            <DialogPrimitive.Title className="text-2xl font-light text-stone-800 tracking-tight line-clamp-1 break-all">
                 {photo.title || "제목 없는 사진"}
-            </h3>
+            </DialogPrimitive.Title>
             <button
                 onClick={onClose}
                 aria-label="Close"
@@ -154,7 +172,7 @@ function Metadata({ isReadOnly = isPublicDemo }: { isReadOnly?: boolean }) {
     };
 
     return (
-        <div className="p-6 space-y-8 flex-1">
+        <div className="p-6 space-y-8 flex-1 min-h-0 overflow-y-auto overscroll-contain">
             {/* 촬영일 */}
             <div className="flex gap-4 items-start group">
                 <div className="p-3 bg-white rounded-2xl shadow-sm border border-stone-100/50 text-[#E09F87] group-hover:bg-[#E09F87] group-hover:text-white transition-colors">
