@@ -551,7 +551,14 @@
             }, '*');
         }
 
+        // Temporary product switch: keep map navigation, pause Unity carousel entry.
+        const unityCarouselEnabled = false;
+
         function showUnity(id, lng, lat, photoUrls) {
+            if (!unityCarouselEnabled) {
+                focusPhotoOnMap({ id, lng, lat }, 17);
+                return;
+            }
             const requestId = ++carouselRequestId;
             activeMarkerLngLat = [lng, lat];
             updateUnityPosition();
